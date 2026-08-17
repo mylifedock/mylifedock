@@ -47,8 +47,13 @@ export interface AttachmentRecord {
   fileName: string;
   mimeType: string;
   size: number;
+
   storageType: "indexeddb" | "google-drive";
+
   storageKey: string;
+
+  blob?: Blob;
+
   createdAt: string;
 }
 
@@ -111,6 +116,7 @@ export class MyLifeDockDatabase extends Dexie {
   products!: EntityTable<ProductRecord, "id">;
   coverages!: EntityTable<CoverageRecord, "id">;
   reminders!: EntityTable<ReminderRecord, "id">;
+  profiles!: EntityTable<ProfileRecord, "id">;
 
   constructor() {
     super("MyLifeDock");
@@ -126,8 +132,16 @@ export class MyLifeDockDatabase extends Dexie {
         "id, ownerId, productId, type, startDate, endDate",
       reminders:
         "id, ownerId, dueDate, enabled, relatedEntityType, relatedEntityId",
+      profiles: "id",
     });
   }
+}
+
+export interface ProfileRecord {
+  id: string;
+  displayName: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const db = new MyLifeDockDatabase();
