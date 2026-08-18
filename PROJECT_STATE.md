@@ -641,21 +641,18 @@ npm run build
 ```
 
 ## 15. Product Roadmap
-
 Current priority order:
 
 ``` text
-1. Finish attachment encryption at rest
-2. Complete security/privacy layer
-3. Products
-4. Warranty / extended warranty / AMC / insurance
-5. Reminder engine
-6. Broader Documents V2 improvements
-7. Google Drive integration
-8. PWA/offline refinement
-9. Android/Capacitor
-10. OCR/AI/search/voice/search/sharing
-11. Larger UI polish pass
+1. Products V1
+2. Warranty / extended warranty / AMC / insurance
+3. Reminder engine
+4. Broader Documents V2 improvements
+5. Google Drive integration
+6. PWA/offline refinement
+7. Android/Capacitor
+8. OCR/AI/search/voice/search/sharing
+9. Larger UI polish pass
 ```
 
 The roadmap can evolve, but do not deviate from the core product
@@ -728,19 +725,61 @@ Then provide this file if the new conversation cannot access the
 repository/file.
 
 The assistant should: 1. Read this state. 2. Confirm the current
-milestone. 3. Continue from **Attachment encryption at rest**. 4.
-Inspect current attachment service/component before coding. 5. Avoid
-re-teaching completed work.
+milestone. 3. Continue from **Products V1**. 4. Inspect the current
+database schema and existing UI/service patterns before coding. 5. Avoid
+re-teaching completed work or revisiting completed security/attachment
+work unless a regression is found.
 
 ## 20. Last Known Clean Checkpoint
 
-Security lifecycle tests passed and the application is functioning.
+Security, encrypted attachments, recovery, locking, and document
+download behavior have been validated end-to-end.
 
-The next coding task is NOT Products yet.
+### Security / vault completed
+- Vault passphrase initialization and unlock
+- AES-256-GCM vault key architecture
+- PBKDF2-SHA-256 passphrase wrapping
+- 256-bit hexadecimal recovery key
+- Recovery to a new passphrase
+- Old passphrase rejected after recovery
+- Repeated recovery-key use validated
+- Vault key converted back to non-extractable runtime key
+- Manual Lock Vault
+- 30-minute inactivity auto-lock (30-second development test validated)
+- Recovery/debug logging removed
 
-The next coding task is:
+### Documents / attachments completed
+- Attachment encryption at rest with AES-256-GCM
+- 12-byte random IV per encrypted attachment
+- Encrypted Blob stored in IndexedDB
+- PDF/JPG/PNG/WebP validation and 10 MB limit
+- Encrypted attachment preview after in-memory decryption
+- Download after decryption validated
+- Encrypted attachments remain usable after vault recovery
 
-**Attachment encryption at rest using the unlocked AES-256-GCM vault
-key.**
+### Validation
+- `npm run lint` passes
+- `npm run build` passes
+- Manual lock/unlock tested
+- Auto-lock tested
+- Recovery tested
+- Existing encrypted document tested after recovery
 
-Do not skip this security milestone.
+## 21. Exact Next Task
+
+**Products V1 — start with the domain/database layer.**
+
+Before coding, inspect the current Dexie schema and existing application
+service/UI patterns. Then implement Products in this order:
+
+1. ProductRecord/database table and indexes
+2. productService.ts
+3. ProductsPage foundation
+4. Create product
+5. Edit product
+6. Delete product
+7. Product details
+8. Prepare the model for warranty/AMC/insurance coverage
+
+Do not introduce Google authentication, cloud sync, Android, or a major
+landing-page redesign during this milestone.

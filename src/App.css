@@ -526,6 +526,80 @@
   resize: vertical;
 }
 
+/* Vault security action */
+
+.vault-lock-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 9px 13px;
+
+  border: 1px solid rgba(156, 169, 255, 0.18);
+  border-radius: 10px;
+
+  background: rgba(113, 131, 255, 0.07);
+  color: #aeb8ff;
+
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  cursor: pointer;
+
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.035),
+    0 4px 16px rgba(0, 0, 0, 0.12);
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.vault-lock-button:hover {
+  background: rgba(113, 131, 255, 0.13);
+  border-color: rgba(156, 169, 255, 0.32);
+  color: #c3caff;
+
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.045),
+    0 6px 20px rgba(113, 131, 255, 0.12);
+
+  transform: translateY(-1px);
+}
+
+.vault-lock-button:active {
+  transform: translateY(0);
+  background: rgba(113, 131, 255, 0.1);
+}
+
+.vault-lock-button:focus-visible {
+  outline: none;
+  border-color: rgba(156, 169, 255, 0.55);
+  box-shadow:
+    0 0 0 3px rgba(113, 131, 255, 0.12),
+    0 6px 20px rgba(113, 131, 255, 0.1);
+}
+
+.vault-lock-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 16px;
+  height: 16px;
+
+  color: #9ca9ff;
+}
+
+.vault-lock-button:hover .vault-lock-button-icon {
+  color: #c3caff;
+}
+
 .primary-button {
   border: 0;
   border-radius: 10px;
@@ -873,8 +947,17 @@
 }
 
 .attachment-download {
+  border: 0;
+  background: transparent;
+  padding: 0;
   color: #a9a0ff;
   text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.attachment-download:hover {
+  text-decoration: underline;
 }
 
 .attachment-download:hover {
@@ -909,4 +992,33 @@
 
 .document-delete:hover {
   color: #ff8f9c;
+}
+
+.vault-gate-card {
+  position: relative;
+}
+
+.vault-gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.vault-gate-form label {
+  margin-top: 6px;
+}
+
+.vault-gate-form input {
+  margin-top: 0;
+}
+
+.vault-error {
+  padding: 11px 13px;
+  border: 1px solid rgba(255, 120, 140, 0.2);
+  border-radius: 9px;
+  background: rgba(255, 80, 110, 0.07);
+  color: #ff9aaa;
+  font-size: 13px;
+  line-height: 1.45;
 }

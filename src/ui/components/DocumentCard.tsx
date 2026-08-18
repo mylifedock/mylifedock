@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import {
+  getAttachment,
   getAttachmentsForDocument,
 } from "../../application/attachmentService";
 
@@ -19,6 +20,8 @@ function AttachmentPreview({
 }: {
   attachment: Attachment;
 }) {
+  const [downloadError, setDownloadError] = useState("");
+
   const url = useMemo(() => {
     if (!attachment.blob) {
       return "";
@@ -35,6 +38,53 @@ function AttachmentPreview({
     };
   }, [url]);
 
+  async function handleDownload() {
+    setDownloadError("");
+
+    try {
+      /*
+       * Fetch the attachment again so the download has its own
+       * decrypted Blob and its own object URL.
+       */
+      const freshAttachment = await getAttachment(attachment.id);
+
+      if (!freshAttachment?.blob) {
+        throw new Error("Attachment data is missing.");
+      }
+
+      const downloadUrl = URL.createObjectURL(
+        freshAttachment.blob,
+      );
+
+      const anchor = document.createElement("a");
+
+      anchor.href = downloadUrl;
+      anchor.download = freshAttachment.fileName;
+      anchor.style.display = "none";
+
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+
+      /*
+       * Keep the object URL alive long enough for Chromium
+       * to start the download.
+       */
+      window.setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+      }, 10_000);
+    } catch (error) {
+      console.error(
+        "Attachment download failed:",
+        error,
+      );
+
+      setDownloadError(
+        "Unable to download this attachment.",
+      );
+    }
+  }
+
   if (!url) {
     return (
       <div className="attachment-preview">
@@ -50,13 +100,13 @@ function AttachmentPreview({
       <div className="attachment-header">
         <span>📎 {attachment.fileName}</span>
 
-        <a
-          href={url}
-          download={attachment.fileName}
+        <button
+          type="button"
+          onClick={handleDownload}
           className="attachment-download"
         >
           Download
-        </a>
+        </button>
       </div>
 
       {attachment.mimeType.startsWith("image/") && (
@@ -73,6 +123,12 @@ function AttachmentPreview({
           title={attachment.fileName}
           className="attachment-pdf"
         />
+      )}
+
+      {downloadError && (
+        <div className="vault-error">
+          {downloadError}
+        </div>
       )}
     </div>
   );
