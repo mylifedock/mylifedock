@@ -1,44 +1,43 @@
 # MyLifeDock — PROJECT_STATE
 
-> **Single source of truth for continuing MyLifeDock development across ChatGPT conversations.**
+> **Single source of truth for continuing MyLifeDock development.**
 >
-> Update this file at meaningful milestones and commit it to Git.
->
-> **Last consolidated from:** `PROJECT_STATE(3).md` + `PROJECT_STATE1.md`
-> **Consolidation date:** 2026-08-18
+> **Last updated:** 2026-08-30
+> **Current Release Branch:** `release/v1.0.0`
 
 ---
 
 ## 0. Current Resume Snapshot
 
 **Product:** MyLifeDock  
-**Current milestone:** **Products V1**  
-**Security milestone:** **COMPLETE — do not revisit unless a regression is found**  
-**Attachment encryption:** **COMPLETE**  
-**Document/attachment download:** **WORKING**  
-**Vault lock/unlock:** **WORKING**  
-**Auto-lock:** **WORKING — production timeout restored to 30 minutes**  
-**Lint:** **PASS**  
-**Build:** **PASS**
+**Current milestone:** **v1.0.0 Production Release Ready**  
+**Desktop Target:** Tauri v2 Windows Setup (`MyLifeDock_1.0.0_x64-setup.exe` & `.msi`)  
+**Mobile Target:** Capacitor v8 Android & iOS  
+**Web / PWA Target:** Vite production dist / PWA Service Worker  
+**Security Milestone:** **COMPLETE** (AES-256-GCM, PBKDF2 100k rounds, Zero-Knowledge, 30-min Auto-Lock)  
+**About & Support:** **COMPLETE** (Self-service FAQs, Smart Diagnostics, Support Email `mylifedock@gmail.com`)  
+**Documentation Suite:** **COMPLETE** (4 HTML + 4 MD guides with Mermaid flowcharts in `docs/`)  
+**Lint (ESLint Security):** **PASS (0 errors, 0 warnings)**  
+**Type Check (tsc):** **PASS (0 errors)**  
+**Build:** **PASS (Web dist + Windows NSIS .exe)**  
 
-### Immediate next objective
-
-Build **Products V1**, beginning with the domain/database layer.
-
-### Do NOT restart completed work
-
-Do not re-implement or repeatedly troubleshoot:
-
-- Vault initialization
-- Vault unlock/lock
-- Recovery flow
-- AES-256-GCM attachment encryption
-- Attachment preview/decryption
-- Attachment download
-- 30-minute production auto-lock
-- Existing Documents V1 behavior
-
-Only revisit those areas if a new regression is demonstrated.
+### How to Resume Next Session:
+1. **Start Browser Dev Server:**
+   ```powershell
+   npm run dev
+   ```
+2. **Build / Run Desktop App:**
+   ```powershell
+   npm run tauri:dev
+   # or build installer:
+   npm run tauri:build:win
+   ```
+3. **View Documentation Suite:**
+   Double-click `docs/MyLifeDock_User_Handbook.html` or `docs/MyLifeDock_Future_Scope_Strategy.html`.
+4. **Next Implementation Objectives:**
+   - Execute Phase A from `docs/MyLifeDock_Future_Scope_Strategy.md` (Trademark / Provisional Patent prep).
+   - Deploy Web/Landing page to Cloudflare Pages / GitHub Pages.
+   - Generate Signed Android `.aab` for Google Play Console submission.
 
 ---
 

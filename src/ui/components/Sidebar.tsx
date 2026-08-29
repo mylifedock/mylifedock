@@ -163,6 +163,16 @@ function Sidebar({
 
       <div className="sidebar-bottom">
         <button
+          className={`nav-item ${activePage === "about" ? "nav-item-active" : ""}`}
+          type="button"
+          onClick={() => handleNav("about")}
+        >
+          <span className="nav-icon">
+            ℹ️
+          </span>
+          <span>About & Support</span>
+        </button>
+        <button
           className={`nav-item ${activePage === "settings" ? "nav-item-active" : ""}`}
           type="button"
           onClick={() => handleNav("settings")}

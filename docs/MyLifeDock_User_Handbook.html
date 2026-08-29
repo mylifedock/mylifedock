@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Handbook & Operational Manual - MyLifeDock</title>
+    <!-- Mermaid for Flowcharts & Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --text-color: #e2e8f0;
+            --heading-color: #38bdf8;
+            --border-color: #1e293b;
+            --accent-color: #22c55e;
+            --code-bg: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 24px 16px;
+        }
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 32px;
+        }
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.6rem; }
+        h3 { font-size: 1.3rem; }
+        a { color: #38bdf8; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e293b;
+            color: #f8fafc;
+        }
+        tr:nth-child(even) { background-color: #0f172a; }
+        tr:nth-child(odd) { background-color: #111827; }
+        pre, code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: var(--code-bg);
+            border-radius: 6px;
+        }
+        code { padding: 2px 6px; font-size: 88%; color: #7dd3fc; }
+        pre { padding: 16px; overflow-x: auto; border: 1px solid var(--border-color); }
+        pre code { padding: 0; background: none; color: inherit; }
+        .mermaid {
+            background: #ffffff;
+            color: #000000;
+            padding: 24px;
+            border-radius: 8px;
+            margin: 24px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            border: 1px solid #38bdf8;
+        }
+        blockquote {
+            margin: 16px 0;
+            padding: 8px 16px;
+            color: #94a3b8;
+            border-left: 4px solid #38bdf8;
+            background: rgba(56, 189, 248, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-links a {
+            margin-left: 14px;
+            font-size: 14px;
+            background: #1e293b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+        }
+        .nav-links a:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-header">
+            <strong>🛡️ MyLifeDock Documentation Suite</strong>
+            <div class="nav-links">
+                <a href="MyLifeDock_User_Handbook.html">User Handbook</a>
+                <a href="MyLifeDock_Product_Documentation.html">Architecture</a>
+                <a href="MyLifeDock_Production_Release_Guide.html">Release Guide</a>
+                <a href="MyLifeDock_Future_Scope_Strategy.html">Future Strategy</a>
+            </div>
+        </div>
+        <div id="content">
+            <h1>📘 MyLifeDock User Handbook &amp; Operational Manual</h1>
+<p><strong>Version:</strong> 1.0.0 (Production Release)<br><strong>Security Model:</strong> Zero-Knowledge, Client-Side AES-256-GCM Encrypted, 100% Offline-First<br><strong>Supported Platforms:</strong> Windows (x64 Setup / MSI), macOS (DMG), Android (APK / AAB), iOS, Web (PWA)</p>
+<hr>
+<h2>🌟 1. Introduction: What is MyLifeDock?</h2>
+<p><strong>MyLifeDock</strong> is your personal, family, and asset management digital safe. Unlike traditional cloud services where third parties or employees can read your records, <strong>MyLifeDock is built on a Zero-Knowledge Architecture</strong>:</p>
+<ul>
+<li>🔒 <strong>All records and attachments are encrypted locally</strong> on your device using <strong>AES-256-GCM</strong> before touching storage.</li>
+<li>🔑 <strong>Only your master passphrase or 24-word recovery key can decrypt your vault.</strong></li>
+<li>🛡️ <strong>Zero Cloud Tracking:</strong> No central server stores your data, emails, passwords, or personal documents.</li>
+</ul>
+<hr>
+<h2>🚀 2. Quick Start: Initial Setup Flowchart</h2>
+<pre class="mermaid">flowchart TD
+    Start(["🚀 Launch MyLifeDock"]) --> MasterPass["🔑 Set Master Passphrase<br/>(Min. 12 characters recommended)"]
+    MasterPass --> GenKey["🛡️ Cryptographic Key Generation<br/>(PBKDF2-SHA256 100,000 rounds)"]
+    GenKey --> EmSheet["📥 Download / Print Emergency Recovery PDF<br/>(Store in a physical safe or safety deposit box)"]
+    EmSheet --> BioPrompt{"👆 Enable Biometric Unlock?"}
+    BioPrompt -- Yes --> SetupBio["Scan Fingerprint / Windows Hello / Face ID"]
+    BioPrompt -- No / Later --> Dashboard(["🎉 Welcome to Your Active Vault Dashboard"])
+    SetupBio --> Dashboard</pre><h3>Step 1: Initialize Your Master Passphrase</h3>
+<ol>
+<li>When you first launch MyLifeDock, you will be prompted to choose a <strong>Master Passphrase</strong>.</li>
+<li>Pick a strong passphrase (at least 12 characters recommended, including letters, numbers, and symbols).</li>
+<li>Confirm your passphrase.</li>
+</ol>
+<h3>Step 2: Save Your Emergency Recovery PDF / Key</h3>
+<ol>
+<li>The app generates a cryptographic <strong>Emergency Recovery Key</strong>.</li>
+<li><strong>Download or print your Emergency Recovery PDF</strong>. Store it in a safe place (e.g., a physical safe or safety deposit box).</li>
+<li>If you forget your passphrase, this recovery key is the <strong>only way</strong> to restore access to your vault.</li>
+</ol>
+<h3>Step 3: Enable Biometric Unlock (Optional &amp; Recommended)</h3>
+<ol>
+<li>Go to <strong>Settings</strong> (<code>⚙️</code>).</li>
+<li>Under <strong>Biometric Unlock</strong>, click <strong>Enable Biometric Unlock</strong>.</li>
+<li>Type your master passphrase once to authorize hardware integration.</li>
+<li>Scan your <strong>Fingerprint, Face ID, or Windows Hello / Touch ID</strong>.</li>
+<li>Subsequent vault unlocks will only require a quick biometric touch!</li>
+</ol>
+<hr>
+<h2>📂 3. Feature Operations &amp; Visual Workflows</h2>
+<h3>📄 3.1. Adding a Document with Smart OCR (Workflow)</h3>
+<pre class="mermaid">flowchart LR
+    A["📄 Click '+ Add Document'"] --> B["Upload Image / PDF"]
+    B --> C["👁️ On-Device OCR Scanner"]
+    C --> D["Auto-Fill Dates & Amounts"]
+    D --> E["Select Category & Notes"]
+    E --> F["🔒 AES-256 Encrypt & Save"]</pre><ul>
+<li><strong>Organize Life Documents:</strong> Categorized by Identity (Passports, National IDs), Medical, Property Deeds, Legal/Tax, Education, Employment, and Estate Planning.</li>
+<li><strong>Client-Side Encrypted Attachments (📎):</strong> Attach PDFs, photos, and scans. Every file is encrypted in memory using AES-256-GCM with distinct IVs before storage.</li>
+<li><strong>On-Demand Lightbox Preview &amp; Sharing:</strong> Preview PDFs and images directly within the app without saving plaintext copies to your disk.</li>
+<li><strong>Instant Optical Character Recognition (OCR):</strong> Uploading receipts or invoices extracts warranty dates, amounts, and dates automatically.</li>
+</ul>
+<hr>
+<h3>🚨 3.2. Emergency Family Access Kit (Crisis Response Flow)</h3>
+<pre class="mermaid">flowchart TD
+    EmergencyEvent(["🚨 Medical Emergency or Family Crisis"]) --> OpenKit["Open Emergency Kit Tab (One-Tap Access)"]
+    OpenKit --> VitalView["View Key Family Profiles & Blood Groups"]
+    OpenKit --> DirectContact["Direct Doctor & Hospital Phone Links"]
+    OpenKit --> PolicySummary["Active Health & Life Insurance Policy Numbers"]
+    VitalView --> Action(["🏥 Fast, Coordinated Crisis Response"])
+    DirectContact --> Action
+    PolicySummary --> Action</pre><ul>
+<li><strong>One-Tap Emergency Access:</strong> Summarizes emergency contacts, blood groups, primary physicians, hospital affiliations, and active insurance policies.</li>
+<li><strong>Offline Reliability:</strong> Accessible even during network outages or cellular downtime.</li>
+</ul>
+<hr>
+<h3>🚗 3.3. Products, Vehicles &amp; Property Management</h3>
+<ul>
+<li><strong>Products &amp; Warranties:</strong> Track gadgets and appliances with automatic warranty status indicators (<em>Active</em>, <em>Expiring Soon</em>, <em>Expired</em>).</li>
+<li><strong>Vehicles:</strong> Log registration numbers, VINs, insurance policy details, road tax due dates, and maintenance records.</li>
+<li><strong>Properties:</strong> Store title deeds, mortgage details, annual property tax schedules, and maintenance records.</li>
+</ul>
+<hr>
+<h3>💳 3.4. Finances &amp; Digital Secrets</h3>
+<ul>
+<li><strong>Finances:</strong> Secure account numbers, IFSC/SWIFT codes, and card expirations.</li>
+<li><strong>Recurring Subscriptions:</strong> Monthly and yearly subscription spend tracking with renewal alerts.</li>
+<li><strong>Digital Secrets &amp; Master Keys:</strong> Wi-Fi keys, server passwords, and backup seeds with masked fields and temporary clipboard copy protection.</li>
+</ul>
+<hr>
+<h2>🔄 4. Backup &amp; Disaster Recovery Decision Guide</h2>
+<pre class="mermaid">flowchart TD
+    BackupDecision{"Select Backup Method"}
+    BackupDecision -->|Option A: USB / Drive File| LocalBackup["📁 Local Encrypted Backup (.mldv)<br/>• Settings -> Export File<br/>• Saves password-protected .mldv"]
+    BackupDecision -->|Option B: Google Drive| CloudSync["☁️ Zero-Knowledge Cloud Sync<br/>• Settings -> Backup to Google Drive<br/>• Encrypted locally before upload<br/>• Stored in private appDataFolder"]
+
+    RestoreNeed{"Restore on New Device?"}
+    RestoreNeed -->|From File| ImportLocal["Settings -> Import File (.mldv)"]
+    RestoreNeed -->|From Drive| ImportCloud["Settings -> Restore from Drive"]
+
+    ImportLocal --> DecryptCheck["Enter Master Passphrase or 24-Word Key"]
+    ImportCloud --> DecryptCheck
+    DecryptCheck --> Restored(["🎉 Entire Vault Restored in Seconds"])</pre><hr>
+<h2>🔒 5. Security Best Practices &amp; FAQ</h2>
+<table>
+<thead>
+<tr>
+<th align="left">Question</th>
+<th align="left">Recommended Action / Guarantee</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>What happens if I lose my Master Passphrase?</strong></td>
+<td align="left">Use your <strong>Emergency Recovery PDF / 24-Word Key</strong> to reset access. Because MyLifeDock is zero-knowledge, no customer support team can reset your password for you.</td>
+</tr>
+<tr>
+<td align="left"><strong>Can Google read my cloud backup?</strong></td>
+<td align="left"><strong>No.</strong> The <code>.mldv</code> file is encrypted on your device using AES-256-GCM <em>before</em> transmission. Google only sees an opaque binary blob.</td>
+</tr>
+<tr>
+<td align="left"><strong>How does Auto-Lock protect me?</strong></td>
+<td align="left">If you step away from your device for 30 minutes, MyLifeDock wipes the AES-256 encryption key from RAM. Returning requires your passphrase or biometric touch.</td>
+</tr>
+<tr>
+<td align="left"><strong>Can I use MyLifeDock on an airplane / offline?</strong></td>
+<td align="left"><strong>Yes.</strong> MyLifeDock is 100% offline-first. All core features, search, OCR, and document viewers work without an internet connection.</td>
+</tr>
+</tbody></table>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof mermaid !== "undefined") {
+                mermaid.initialize({ 
+                    startOnLoad: true, 
+                    theme: 'default',
+                    securityLevel: 'loose'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production & Store Release Playbook - MyLifeDock</title>
+    <!-- Mermaid for Flowcharts & Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --text-color: #e2e8f0;
+            --heading-color: #38bdf8;
+            --border-color: #1e293b;
+            --accent-color: #22c55e;
+            --code-bg: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 24px 16px;
+        }
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 32px;
+        }
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.6rem; }
+        h3 { font-size: 1.3rem; }
+        a { color: #38bdf8; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e293b;
+            color: #f8fafc;
+        }
+        tr:nth-child(even) { background-color: #0f172a; }
+        tr:nth-child(odd) { background-color: #111827; }
+        pre, code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: var(--code-bg);
+            border-radius: 6px;
+        }
+        code { padding: 2px 6px; font-size: 88%; color: #7dd3fc; }
+        pre { padding: 16px; overflow-x: auto; border: 1px solid var(--border-color); }
+        pre code { padding: 0; background: none; color: inherit; }
+        .mermaid {
+            background: #ffffff;
+            color: #000000;
+            padding: 24px;
+            border-radius: 8px;
+            margin: 24px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            border: 1px solid #38bdf8;
+        }
+        blockquote {
+            margin: 16px 0;
+            padding: 8px 16px;
+            color: #94a3b8;
+            border-left: 4px solid #38bdf8;
+            background: rgba(56, 189, 248, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-links a {
+            margin-left: 14px;
+            font-size: 14px;
+            background: #1e293b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+        }
+        .nav-links a:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-header">
+            <strong>🛡️ MyLifeDock Documentation Suite</strong>
+            <div class="nav-links">
+                <a href="MyLifeDock_User_Handbook.html">User Handbook</a>
+                <a href="MyLifeDock_Product_Documentation.html">Architecture</a>
+                <a href="MyLifeDock_Production_Release_Guide.html">Release Guide</a>
+                <a href="MyLifeDock_Future_Scope_Strategy.html">Future Strategy</a>
+            </div>
+        </div>
+        <div id="content">
+            <h1>🚀 MyLifeDock Production &amp; Store Release Playbook</h1>
+<p><strong>Scope:</strong> Windows (.exe / Store), Android (Google Play), Web Hosting, Google Cloud Console, and Marketing.<br><strong>Strategy:</strong> Low-Cost / Free Tier First • Zero Maintenance Backend • Maximum User Trust  </p>
+<hr>
+<h2>🌐 Phase 1: Web Hosting &amp; Landing Page (Free / Ultra-Low Cost)</h2>
+<p>Because MyLifeDock is a client-side offline app, you do not need expensive backend servers, databases, or Redis instances. Hosting is <strong>100% free on global edge networks</strong>.</p>
+<h3>Recommended Hosting Options:</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Platform</th>
+<th align="left">Cost</th>
+<th align="left">Custom Domain + SSL</th>
+<th align="left">Build Command</th>
+<th align="left">Output Dir</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Cloudflare Pages (Recommended)</strong></td>
+<td align="left">Free ($0/mo)</td>
+<td align="left">Free Unlimited SSL</td>
+<td align="left"><code>npm run build</code></td>
+<td align="left"><code>dist</code></td>
+</tr>
+<tr>
+<td align="left"><strong>Vercel</strong></td>
+<td align="left">Free Tier</td>
+<td align="left">Free SSL</td>
+<td align="left"><code>npm run build</code></td>
+<td align="left"><code>dist</code></td>
+</tr>
+<tr>
+<td align="left"><strong>GitHub Pages</strong></td>
+<td align="left">Free ($0/mo)</td>
+<td align="left">Free SSL</td>
+<td align="left">GitHub Actions</td>
+<td align="left"><code>dist</code></td>
+</tr>
+</tbody></table>
+<h3>Step-by-Step Deployment to Cloudflare Pages:</h3>
+<ol>
+<li>Create a free account at <a href="https://cloudflare.com">cloudflare.com</a>.</li>
+<li>Connect your GitHub repository <code>mylifedock/mylifedock</code>.</li>
+<li>Set <strong>Framework Preset</strong>: <code>Vite</code>.</li>
+<li>Set <strong>Build command</strong>: <code>npm run build</code>.</li>
+<li>Set <strong>Build output directory</strong>: <code>dist</code>.</li>
+<li>Add Environment Variable: <code>VITE_GOOGLE_CLIENT_ID=&lt;your-id&gt;</code>.</li>
+<li>Click <strong>Save and Deploy</strong>. Your web app and PWA are live globally within 60 seconds!</li>
+</ol>
+<hr>
+<h2>🪟 Phase 2: Windows Release Strategy (.exe &amp; Microsoft Store)</h2>
+<h3>Option 1: Direct Download Installer (Free &amp; Instant)</h3>
+<ul>
+<li><strong>Built File:</strong> <code>src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/MyLifeDock_1.0.0_x64-setup.exe</code></li>
+<li><strong>Distribution:</strong> Upload this <code>.exe</code> directly to <strong>GitHub Releases</strong> or host it as a direct download link on your marketing website.</li>
+<li><strong>Auto-Updates:</strong> Tauri includes a built-in auto-updater mechanism that checks a free GitHub Releases JSON endpoint and auto-updates the user&#39;s PC!</li>
+</ul>
+<h3>Option 2: Microsoft Store Submission</h3>
+<ul>
+<li><strong>Cost:</strong> One-time developer registration fee of <strong>$19 USD</strong> (no annual renewal).</li>
+<li><strong>Format:</strong> Package as <code>.msix</code> or submit the <code>.exe</code> via MSIX Packaging Tool / Microsoft Partner Center.</li>
+<li><strong>Benefit:</strong> Automatic installation, seamless background updates, and zero Windows SmartScreen warnings.</li>
+</ul>
+<hr>
+<h2>🤖 Phase 3: Android Release (Google Play Store)</h2>
+<h3>Step 1: Google Play Developer Account</h3>
+<ul>
+<li>Go to <a href="https://play.google.com/console/signup">play.google.com/console/signup</a>.</li>
+<li>Pay the <strong>one-time $25 USD registration fee</strong>.</li>
+</ul>
+<h3>Step 2: Generate Release Keystore</h3>
+<p>Run in PowerShell:</p>
+<pre><code class="language-powershell">keytool -genkey -v -keystore mylifedock-release.keystore -alias mylifedock -keyalg RSA -keysize 2048 -validity 10000</code></pre><p><em>(Store this keystore file and passphrase in your private backup safe!)</em></p>
+<h3>Step 3: Build Android App Bundle (.aab)</h3>
+<ol>
+<li>Open Android Studio:<pre><code class="language-powershell">npx cap open android</code></pre></li>
+<li>In Android Studio: <strong>Build</strong> -&gt; <strong>Generate Signed Bundle / APK</strong> -&gt; <strong>Android App Bundle (.aab)</strong>.</li>
+<li>Select your <code>mylifedock-release.keystore</code>.</li>
+<li>Output file: <code>app-release.aab</code>.</li>
+</ol>
+<h3>Step 4: Google Play Store Data Safety &amp; Privacy Declarations</h3>
+<p>Because MyLifeDock is Zero-Knowledge:</p>
+<ul>
+<li><strong>Data Collection:</strong> Select &quot;No personal data collected or shared with third parties&quot;.</li>
+<li><strong>Data Encryption in Transit:</strong> Select &quot;Yes, all data is encrypted locally using AES-256&quot;.</li>
+<li><strong>Account Deletion:</strong> Local data is deleted whenever the user uninstalls the app or clicks &quot;Clear Vault&quot;.</li>
+</ul>
+<hr>
+<h2>☁️ Phase 4: Google Cloud Console Configuration Checklist</h2>
+<p>To ensure Google Drive Cloud Backup works in production:</p>
+<ol>
+<li><strong>Open Google Cloud Console:</strong> <a href="https://console.cloud.google.com">console.cloud.google.com</a></li>
+<li><strong>OAuth Consent Screen:</strong><ul>
+<li>App Name: <code>MyLifeDock</code></li>
+<li>User Support Email: <code>support@mylifedock.com</code> (or your email)</li>
+<li>Scope: Add <code>https://www.googleapis.com/auth/drive.appdata</code></li>
+<li>Publishing Status: Change from <em>Testing</em> to <em>Production</em> (or add test user emails).</li>
+</ul>
+</li>
+<li><strong>Credentials / OAuth Client IDs:</strong><ul>
+<li><strong>Web Application Client ID:</strong><ul>
+<li>Authorized JavaScript Origins:<ul>
+<li><code>http://localhost:5173</code> (Development)</li>
+<li><code>https://your-domain.com</code> (Production Web)</li>
+<li><code>tauri://localhost</code> (Windows / macOS Desktop)</li>
+</ul>
+</li>
+<li>Authorized Redirect URIs:<ul>
+<li><code>http://localhost:5173</code></li>
+<li><code>https://your-domain.com</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Android Client ID (for native Google Auth):</strong><ul>
+<li>Package name: <code>com.mylifedock.app</code></li>
+<li>SHA-1 certificate fingerprint: Paste the SHA-1 from <code>keytool -list -v -keystore mylifedock-release.keystore</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>🍏 Phase 5: macOS &amp; iOS Roadmap (Future Steps)</h2>
+<ul>
+<li><strong>Apple Developer Account:</strong> $99/year.</li>
+<li><strong>macOS Build:</strong> Run <code>npm run tauri:build:mac</code> on a Mac to produce <code>MyLifeDock.dmg</code> and notarize with <code>xcrun notarytool</code>.</li>
+<li><strong>iOS Build:</strong> Run <code>npx cap open ios</code> on a Mac, archive in Xcode, and submit to TestFlight / App Store.</li>
+</ul>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof mermaid !== "undefined") {
+                mermaid.initialize({ 
+                    startOnLoad: true, 
+                    theme: 'default',
+                    securityLevel: 'loose'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

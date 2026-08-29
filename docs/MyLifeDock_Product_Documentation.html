@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Architecture & Technical Specs - MyLifeDock</title>
+    <!-- Mermaid for Flowcharts & Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --text-color: #e2e8f0;
+            --heading-color: #38bdf8;
+            --border-color: #1e293b;
+            --accent-color: #22c55e;
+            --code-bg: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 24px 16px;
+        }
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 32px;
+        }
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.6rem; }
+        h3 { font-size: 1.3rem; }
+        a { color: #38bdf8; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e293b;
+            color: #f8fafc;
+        }
+        tr:nth-child(even) { background-color: #0f172a; }
+        tr:nth-child(odd) { background-color: #111827; }
+        pre, code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: var(--code-bg);
+            border-radius: 6px;
+        }
+        code { padding: 2px 6px; font-size: 88%; color: #7dd3fc; }
+        pre { padding: 16px; overflow-x: auto; border: 1px solid var(--border-color); }
+        pre code { padding: 0; background: none; color: inherit; }
+        .mermaid {
+            background: #ffffff;
+            color: #000000;
+            padding: 24px;
+            border-radius: 8px;
+            margin: 24px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            border: 1px solid #38bdf8;
+        }
+        blockquote {
+            margin: 16px 0;
+            padding: 8px 16px;
+            color: #94a3b8;
+            border-left: 4px solid #38bdf8;
+            background: rgba(56, 189, 248, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-links a {
+            margin-left: 14px;
+            font-size: 14px;
+            background: #1e293b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+        }
+        .nav-links a:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-header">
+            <strong>🛡️ MyLifeDock Documentation Suite</strong>
+            <div class="nav-links">
+                <a href="MyLifeDock_User_Handbook.html">User Handbook</a>
+                <a href="MyLifeDock_Product_Documentation.html">Architecture</a>
+                <a href="MyLifeDock_Production_Release_Guide.html">Release Guide</a>
+                <a href="MyLifeDock_Future_Scope_Strategy.html">Future Strategy</a>
+            </div>
+        </div>
+        <div id="content">
+            <h1>🏛️ MyLifeDock Product Architecture &amp; Technical Specifications</h1>
+<p><strong>Document Ref:</strong> MLD-ARCH-V1.0<br><strong>Classification:</strong> Technical Architecture, Security Model &amp; System Topology<br><strong>Security Level:</strong> Zero-Knowledge, Client-Side AES-256-GCM, 100% Offline-First  </p>
+<hr>
+<h2>🌐 1. Complete System Architecture Overview (High-Level View)</h2>
+<p>The following diagram illustrates the complete end-to-end architecture of MyLifeDock across all platforms, abstraction layers, hardware bridges, and security boundaries.</p>
+<pre class="mermaid">graph TD
+    subgraph UI["1. PRESENTATION & USER INTERACTION LAYER (React 19)"]
+        Dashboard["📊 Dashboard & Stats"]
+        Docs["📄 Documents & Attachments"]
+        Products["📦 Products & Warranties"]
+        Finance["💳 Finance & Subscriptions"]
+        Secrets["🔐 Secrets & Keys"]
+        Emergency["🚨 Emergency Family Kit"]
+        Settings["⚙️ Settings & Backups"]
+    end
+
+    subgraph Bridge["2. PLATFORM ADAPTATION & HARDWARE BRIDGE"]
+        WebBridge["🌐 Browser / PWA Engine"]
+        TauriBridge["🪟 Tauri v2 Desktop Bridge (Rust)<br/>Windows Hello • OS Save Dialog • Tray • Windows Action Center"]
+        CapBridge["📱 Capacitor v8 Mobile Bridge<br/>Biometric Keystore • Filesystem • Local Notifications • Native Share"]
+    end
+
+    subgraph Core["3. APPLICATION DOMAIN & WORKER SERVICES"]
+        DocService["Document Engine"]
+        ProdService["Warranty Engine"]
+        OCRWorker["👁️ Tesseract.js OCR Worker<br/>(On-Device WebAssembly)"]
+        BackupService["💾 Backup & Export Engine"]
+        NotifService["🔔 Reminder & Push Scheduler"]
+        DriveService["☁️ Google Drive Sync Bridge"]
+    end
+
+    subgraph Security["4. CRYPTOGRAPHIC & SECURITY BOUNDARY (Zero-Knowledge)"]
+        KDF["🔑 PBKDF2-SHA256<br/>100,000 Iterations • 16-byte Salt"]
+        MasterKey["🛡️ Ephemeral AES-256 Key<br/>(In-Memory Only, extractable: false)"]
+        CipherEngine["🔒 AES-GCM 256-bit Engine<br/>12-byte Unique Nonce per Entity"]
+        AutoLock["⏱️ 30-Minute Inactivity Sentinel"]
+    end
+
+    subgraph Storage["5. PERSISTENCE & DATA STORAGE LAYER"]
+        IndexedDB["🗄️ IndexedDB / Dexie.js<br/>(Client Encrypted Tables)"]
+        TauriStore["📂 OS AppData Store<br/>(mylifedock.dat)"]
+        DriveAppData["☁️ Google Drive appDataFolder<br/>(Hidden Encrypted .mldv)"]
+    end
+
+    UI --> Bridge
+    Bridge --> Core
+    Core --> Security
+    Security --> Storage
+    DocService --> OCRWorker
+    BackupService --> Security
+    DriveService --> Security</pre><hr>
+<h2>🔒 2. Data Flow Diagram: Ingestion &amp; Encryption (Level 1 DFD)</h2>
+<p>This diagram details the exact cryptographic lifecycle of documents, metadata, and binary attachments from the moment the user selects a file.</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor User as 👤 User
+    participant UI as 🖥️ React UI
+    participant OCR as 👁️ WebAssembly OCR
+    participant Core as ⚙️ Document Service
+    participant Crypto as 🔐 Web Crypto API (AES-256)
+    participant DB as 🗄️ Encrypted Storage (Dexie)
+
+    User->>UI: Select Document / Bill (PDF or Photo)
+    UI->>OCR: Send Image Buffer to Web Worker
+    OCR-->>UI: Extract Invoice Date, Amount & Warranty Period
+    User->>UI: Review & Confirm Document Metadata
+    UI->>Core: Save Document & Attachment Blob
+    Core->>Crypto: Request Encryption with Master Key
+    Note over Crypto: Generates Unique 12-byte Random IV<br/>Applies AES-GCM 256-bit + 128-bit Auth Tag
+    Crypto-->>Core: Returns [12-byte IV + Encrypted Ciphertext]
+    Core->>DB: Persist Encrypted Entity Record & Blob
+    DB-->>UI: Confirm Write Success
+    UI-->>User: Display Document in Vault with Active Shield</pre><hr>
+<h2>🔄 3. Zero-Knowledge Cloud Sync &amp; Recovery Dataflow</h2>
+<pre class="mermaid">flowchart TD
+    subgraph DeviceA["📱 Local Device (Source)"]
+        A1["Unencrypted Vault Tables in RAM"] -->|Serialize to JSON| A2["Plaintext JSON Payload"]
+        A2 -->|Compress & Pack| A3["Memory Stream"]
+        A3 -->|Encrypt with AES-256-GCM + Random IV| A4["Encrypted .mldv Binary Blob"]
+    end
+
+    subgraph Transport["☁️ Zero-Knowledge Cloud Transport"]
+        A4 -->|Google OAuth 2.0 Scope: drive.appdata| T1["Google Drive Hidden appDataFolder"]
+        Note1["Google servers only see<br/>opaque ciphertext. Zero access to keys."]
+    end
+
+    subgraph DeviceB["💻 New Device (Destination)"]
+        T1 -->|Download Blob via OAuth| B1["Encrypted .mldv Blob"]
+        B1 -->|Provide Master Passphrase OR 24-Word Recovery Key| B2["PBKDF2 Key Derivation"]
+        B2 -->|Decrypt AES-GCM| B3["Integrity Verified JSON"]
+        B3 -->|Dexie Transaction Bulk Replace| B4["Vault Restored Successfully 🎉"]
+    end</pre><hr>
+<h2>⏱️ 4. Vault Lifecycle &amp; Auto-Lock State Machine</h2>
+<pre class="mermaid">stateDiagram-v2
+    [*] --> LockedState : App Launch / Cold Boot
+
+    state LockedState {
+        [*] --> PromptInput
+        PromptInput --> PassphraseInput : Type Passphrase
+        PromptInput --> BiometricPrompt : Touch Fingerprint / Windows Hello
+        PassphraseInput --> KeyDerivation : Validate Hash
+        BiometricPrompt --> KeyRetrieval : Hardware Decrypt
+    }
+
+    LockedState --> UnlockedState : Key Validated (AES-256 in RAM)
+    LockedState --> LockedState : Invalid Passphrase / Cancelled
+
+    state UnlockedState {
+        [*] --> ActiveTimer
+        ActiveTimer --> ActiveTimer : User Activity (Click / Scroll / Keypress)
+        ActiveTimer --> AutoLocked : 30 Minutes Inactivity
+        ActiveTimer --> ManualLocked : Click "Lock Vault" / Tray Menu
+    }
+
+    UnlockedState --> LockedState : Master Key Purged from Memory (Garbage Collected)</pre><hr>
+<h2>⚙️ 5. Technical Specifications Matrix</h2>
+<table>
+<thead>
+<tr>
+<th align="left">Dimension</th>
+<th align="left">Specification</th>
+<th align="left">Standard / Compliance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Symmetric Encryption</strong></td>
+<td align="left">AES-256-GCM (Galois/Counter Mode)</td>
+<td align="left">FIPS 197 / NIST SP 800-38D</td>
+</tr>
+<tr>
+<td align="left"><strong>Key Derivation</strong></td>
+<td align="left">PBKDF2-HMAC-SHA256 (100,000 rounds)</td>
+<td align="left">NIST SP 800-132</td>
+</tr>
+<tr>
+<td align="left"><strong>Nonce / IV Generation</strong></td>
+<td align="left">Cryptographically Secure CSPRNG (<code>crypto.getRandomValues</code>)</td>
+<td align="left">96-bit (12 bytes) unique per operation</td>
+</tr>
+<tr>
+<td align="left"><strong>Integrity Tag</strong></td>
+<td align="left">128-bit Authentication Tag</td>
+<td align="left">AEAD (Authenticated Encryption)</td>
+</tr>
+<tr>
+<td align="left"><strong>Client Memory Model</strong></td>
+<td align="left">Ephemeral Non-Extractable CryptoKey</td>
+<td align="left">Web Crypto API (<code>extractable: false</code>)</td>
+</tr>
+<tr>
+<td align="left"><strong>OCR Processing</strong></td>
+<td align="left">Tesseract.js (WebAssembly on-device)</td>
+<td align="left">100% Offline, Zero Cloud Telemetry</td>
+</tr>
+<tr>
+<td align="left"><strong>Desktop Shell</strong></td>
+<td align="left">Tauri v2 (Rust 2021, Webview2 / WKWebView)</td>
+<td align="left">Memory-safe, ~3.4 MB bundle footprint</td>
+</tr>
+<tr>
+<td align="left"><strong>Mobile Shell</strong></td>
+<td align="left">Capacitor v8 (Android / iOS)</td>
+<td align="left">Android Keystore / Apple Keychain isolation</td>
+</tr>
+</tbody></table>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof mermaid !== "undefined") {
+                mermaid.initialize({ 
+                    startOnLoad: true, 
+                    theme: 'default',
+                    securityLevel: 'loose'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

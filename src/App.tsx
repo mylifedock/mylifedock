@@ -40,6 +40,7 @@ import InsurancePage from "./ui/pages/InsurancePage";
 import { VehiclesPage } from "./ui/pages/VehiclesPage";
 import { SubscriptionsPage } from "./ui/pages/SubscriptionsPage";
 import { EmergencyKitPage } from "./ui/pages/EmergencyKitPage";
+import AboutPage from "./ui/pages/AboutPage";
 
 const AUTO_LOCK_TIMEOUT_MS =
   30 * 60 * 1000;
@@ -357,6 +358,8 @@ function App() {
       return <SubscriptionsPage />;
     case "emergency":
       return <EmergencyKitPage />;
+    case "about":
+      return <AboutPage />;
     case "settings":
       return <SettingsPage />;
 
