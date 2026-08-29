@@ -1,88 +1,155 @@
-# MyLifeDock --- PROJECT_STATE
+# MyLifeDock — PROJECT_STATE
 
-> Single source of truth for continuing MyLifeDock development across
-> ChatGPT conversations. Update this file at meaningful milestones and
-> commit it to Git.
+> **Single source of truth for continuing MyLifeDock development across ChatGPT conversations.**
+>
+> Update this file at meaningful milestones and commit it to Git.
+>
+> **Last consolidated from:** `PROJECT_STATE(3).md` + `PROJECT_STATE1.md`
+> **Consolidation date:** 2026-08-18
 
-## 1. Project Identity
+---
 
--   Product: **MyLifeDock**
--   GitHub organization/user: `mylifedock`
--   Repository: `mylifedock/mylifedock`
--   GitHub email: `mylifedock@gmail.com`
--   Local project path:
-    `C:\Users\bollu_flogivn\Documents\PersonalVault\app`
--   Current primary branch used during development:
-    `feature/project-foundation`
--   Main branch: `main`
+## 0. Current Resume Snapshot
 
-## 2. Product Objective
+**Product:** MyLifeDock  
+**Current milestone:** **Products V1**  
+**Security milestone:** **COMPLETE — do not revisit unless a regression is found**  
+**Attachment encryption:** **COMPLETE**  
+**Document/attachment download:** **WORKING**  
+**Vault lock/unlock:** **WORKING**  
+**Auto-lock:** **WORKING — production timeout restored to 30 minutes**  
+**Lint:** **PASS**  
+**Build:** **PASS**
+
+### Immediate next objective
+
+Build **Products V1**, beginning with the domain/database layer.
+
+### Do NOT restart completed work
+
+Do not re-implement or repeatedly troubleshoot:
+
+- Vault initialization
+- Vault unlock/lock
+- Recovery flow
+- AES-256-GCM attachment encryption
+- Attachment preview/decryption
+- Attachment download
+- 30-minute production auto-lock
+- Existing Documents V1 behavior
+
+Only revisit those areas if a new regression is demonstrated.
+
+---
+
+# 1. Project Identity
+
+- Product: **MyLifeDock**
+- GitHub organization/user: `mylifedock`
+- Repository: `mylifedock/mylifedock`
+- GitHub email: `mylifedock@gmail.com`
+- Local project path:
+  `C:\Users\bollu_flogivn\Documents\PersonalVault\app`
+- Primary development branch: `feature/project-foundation`
+- Main branch: `main`
+
+---
+
+# 2. Product Vision
 
 MyLifeDock is a **privacy-first personal/family life-management vault**.
 
-The main goal is to build a genuinely useful, polished product. It must
-NOT become a DevOps-learning project disguised as an application.
+The goal is to build a genuinely useful, polished product — **not a DevOps learning project disguised as an application**.
 
-DevOps learning is secondary and should happen naturally through useful
-engineering practices such as: - Git/GitHub - CI/CD - quality gates -
-build/release practices - environment/configuration management - useful
-automation
+DevOps learning is secondary and should happen naturally through:
 
-## 3. Non-Negotiable Constraints
+- Git/GitHub
+- CI/CD
+- Quality gates
+- Build/release practices
+- Configuration management
+- Useful automation
+- Deployment
+- Observability
 
-### Cost
+The product itself remains the priority.
 
-Prefer free/open-source tools, libraries and resources wherever
-feasible.
+---
 
-Do NOT introduce: - paid SaaS - paid UI kits - paid APIs - unnecessary
-subscriptions - proprietary services when a good free/open-source/native
-alternative exists
+# 3. Non-Negotiable Product Constraints
+
+## Cost
+
+Prefer free, open-source, native, or self-contained solutions wherever feasible.
+
+Do not introduce:
+
+- Paid SaaS
+- Paid UI kits
+- Paid APIs
+- Unnecessary subscriptions
+- Proprietary services where a good free/open-source/native alternative exists
 
 Only unavoidable Google Play Store fees are acceptable.
 
-If a paid dependency/service genuinely becomes necessary, stop and
-discuss it before introducing it.
+If a paid dependency or service genuinely becomes necessary, **stop and discuss it before introducing it**.
 
-### UI
+## UI
 
-The product should look: - premium - modern - classy - clean - simple -
-uncluttered - responsive - polished - smooth
+Target:
 
-Use thoughtful transitions and micro-interactions where appropriate.
+- Premium
+- Modern
+- Classy
+- Clean
+- Simple
+- Uncluttered
+- Responsive
+- Polished
+- Smooth
 
-Do not sacrifice UI quality just to make something technically
-functional.
+Maintain thoughtful transitions and micro-interactions where useful.
 
-### Platforms
+Do not sacrifice UI quality merely to make a feature technically functional.
 
-Current priority: 1. Web/PWA 2. Android later
+## Platform
 
-Architecture should remain Android-ready, but Android must NOT derail
-the current web-first development flow.
+Priority:
 
-Likely future Android route: Capacitor or another appropriate
-free/open-source approach, to be decided later.
+1. Web/PWA
+2. Android later
 
-## 4. Current Technology Stack
+Architecture should remain Android-ready, but Android must not derail web-first development.
 
--   React
--   TypeScript
--   Vite
--   Dexie
--   IndexedDB
--   Browser Web Crypto API for planned encryption
--   Git/GitHub
--   GitHub Actions CI
+Potential future Android approach: Capacitor or another suitable free/open-source approach. Decision deferred until needed.
 
-Current environment previously verified: - Node: `v24.15.0` - npm:
-`11.12.1` - Git: `2.55.0.windows.4` - VS Code: `1.133.0`
+---
 
-## 5. Architecture
+# 4. Technology Stack
 
-Current source structure:
+- React
+- TypeScript
+- Vite
+- Dexie
+- IndexedDB
+- Browser Web Crypto API
+- Git/GitHub
+- GitHub Actions CI
 
-``` text
+Previously verified environment:
+
+- Node: `v24.15.0`
+- npm: `11.12.1`
+- Git: `2.55.0.windows.4`
+- VS Code: `1.133.0`
+
+---
+
+# 5. Architecture
+
+Current architectural direction:
+
+```text
 src/
 ├── app/
 ├── application/
@@ -97,28 +164,36 @@ src/
     └── pages/
 ```
 
-Architecture principles: - UI should not directly own persistence
-logic. - Application services coordinate use cases. - Infrastructure
-owns database/storage concerns. - Security stays isolated in
-`src/security`. - Storage should remain abstract enough for future
-Google Drive support. - Avoid unnecessary dependencies. - Prefer
-complete, coherent changes over scattered patches.
+## Architecture principles
 
-## 6. Current Database Schema
+1. UI must not directly own persistence logic.
+2. Application services coordinate use cases.
+3. Infrastructure owns database/storage concerns.
+4. Security remains isolated in `src/security`.
+5. Storage should remain abstract enough for future Google Drive support.
+6. Avoid unnecessary dependencies.
+7. Prefer complete, coherent changes over scattered patches.
+8. Keep the architecture suitable for future Android packaging.
+9. Do not introduce cloud architecture prematurely.
+10. Do not mix security/encryption implementation into UI components.
 
-Current `src/infrastructure/database/db.ts` uses Dexie.
+### Important audit note
 
-Database:
+The two supplied state documents describe the intended/current architecture, but the actual source repository folder was **not included in the uploaded materials for this consolidation**.
 
-``` text
-MyLifeDock
-```
+Therefore this state document does **not invent file-level architecture findings** beyond what the supplied state documents establish.
 
-### Existing records
+When the actual repository is available, perform one deliberate architecture pass over the complete source tree before making major structural changes.
 
-#### DocumentRecord
+---
 
-``` text
+# 6. Current Database Model
+
+Database: **MyLifeDock**, implemented with Dexie/IndexedDB.
+
+## DocumentRecord
+
+```text
 id
 ownerId
 title
@@ -136,9 +211,9 @@ createdAt
 updatedAt
 ```
 
-#### AttachmentRecord
+## AttachmentRecord
 
-``` text
+```text
 id
 ownerId
 documentId
@@ -151,9 +226,11 @@ blob?: Blob
 createdAt
 ```
 
-#### ProductRecord
+Encrypted attachment state additionally requires the encryption metadata used by the implemented attachment encryption architecture.
 
-``` text
+## ProductRecord
+
+```text
 id
 ownerId
 category
@@ -172,20 +249,20 @@ createdAt
 updatedAt
 ```
 
-#### CoverageRecord
+## CoverageRecord
 
 Coverage types:
 
-``` text
+```text
 warranty
 extended-warranty
 amc
 insurance
 ```
 
-Fields include:
+Fields:
 
-``` text
+```text
 id
 ownerId
 productId
@@ -201,9 +278,9 @@ createdAt
 updatedAt
 ```
 
-#### ReminderRecord
+## ReminderRecord
 
-``` text
+```text
 id
 ownerId
 title
@@ -215,36 +292,36 @@ createdAt
 updatedAt
 ```
 
-#### ProfileRecord
+## ProfileRecord
 
-``` text
+```text
 id
 displayName
 createdAt
 updatedAt
 ```
 
-### Sensitivity levels
+## Sensitivity
 
-``` text
+```text
 normal
 sensitive
 critical
 ```
 
-### Storage policies
+## Storage policies
 
-``` text
+```text
 local-only
 drive-allowed
 sync-allowed
 ```
 
-### Database versions
+## Database versions
 
-Version 1 contains:
+Version 1:
 
-``` text
+```text
 documents
 attachments
 products
@@ -253,15 +330,15 @@ reminders
 profiles
 ```
 
-Version 2 adds:
+Version 2 added:
 
-``` text
+```text
 vaultSecurity
 ```
 
-`VaultSecurityRecord` contains:
+`VaultSecurityRecord`:
 
-``` text
+```text
 id
 keyVersion
 kdf: "PBKDF2"
@@ -273,123 +350,113 @@ createdAt
 updatedAt
 ```
 
-The user's passphrase is NOT stored.
+The user's passphrase is never stored.
 
-The vault encryption key is NOT stored in plaintext.
+The vault encryption key is never stored in plaintext.
 
-## 7. Git / CI Status
+---
 
-Git was installed and configured.
+# 7. Completed Product Functionality
 
-Git identity:
+## Foundation
 
-``` text
-user.name = mylifedock
-user.email = mylifedock@gmail.com
-```
+- React + TypeScript + Vite initialized
+- Git/GitHub initialized
+- GitHub Actions CI added
+- Architecture folders created
+- Dexie installed
+- IndexedDB database established
 
-Remote:
+## Dashboard
 
-``` text
-https://github.com/mylifedock/mylifedock.git
-```
+- Dashboard exists
+- Sidebar/navigation exists
+- Local profile onboarding exists
+- Existing visual direction is considered good
+- Avoid unnecessary redesign
 
-Initial React project was committed and pushed.
+## Documents V1
 
-A GitHub Actions CI pipeline was added intentionally because it is
-useful DevOps learning, but CI/CD remains secondary to product
-development.
+Working functionality:
 
-Routine Git operations do not need detailed teaching; user is
-comfortable with:
+- Create document metadata
+- Categories
+- Document type
+- Issuer
+- Issue date
+- Expiry date
+- Sensitivity
+- Storage policy
+- Notes
+- Attachment selection
+- Attachment validation
+- PDF/JPG/JPEG/PNG/WebP support
+- 10 MB maximum file size
+- IndexedDB persistence
+- Reactive updates via `useLiveQuery`
+- PDF preview
+- Image preview
+- Download
+- Delete document
+- Delete related attachment
+- Persistence after refresh
+- File input reset after successful save
+- Duplicate-submit prevention
 
-``` text
-git status
-git add
-git commit
-git push
-git branch
-```
+## Attachment validation
 
-## 8. Completed Product Work
+Validation occurs before document creation.
 
-### Foundation
+Required behavior:
 
--   React + TypeScript + Vite initialized
--   Git/GitHub initialized
--   GitHub Actions CI added
--   Architecture folders created
--   Dexie installed
--   IndexedDB database established
-
-### Dashboard
-
--   MyLifeDock dashboard exists
--   Sidebar/navigation exists
--   Local profile onboarding exists
--   Visual direction is already considered good and should be
-    preserved/improved rather than redesigned unnecessarily
-
-### Documents V1
-
-Working features: - Create document metadata - Categories - Document
-type - Issuer - Issue date - Expiry date - Sensitivity - Storage
-policy - Notes - Attachment selection - Attachment validation -
-PDF/JPG/JPEG/PNG/WebP support - 10 MB maximum file size - IndexedDB
-persistence - Reactive updates with `useLiveQuery` - PDF preview - Image
-preview - Download - Delete document - Delete related attachments -
-Persistence after refresh - File input clears after successful save -
-Duplicate-submit prevention with saving state
-
-### Attachment validation behavior
-
-Invalid files are validated BEFORE document creation.
-
-Expected behavior:
-
-``` text
+```text
 invalid attachment
-→ error
-→ no document created
+    ↓
+error
+    ↓
+no document created
 ```
 
-This was specifically fixed after an earlier bug where an invalid
-attachment could leave a document behind.
+This prevents the earlier bug where invalid attachments could leave an orphaned document.
 
-### Atomic document + attachment save
+## Atomic document + attachment persistence
 
-Current application service has:
+Application service includes:
 
-``` text
+```text
 createDocument()
 createDocumentWithAttachment()
 deleteDocument()
 ```
 
-`createDocumentWithAttachment()` uses a Dexie read/write transaction
-over:
+`createDocumentWithAttachment()` uses a Dexie read/write transaction covering:
 
-``` text
+```text
 documents
 attachments
 ```
 
-Goal:
+Required atomic behavior:
 
-``` text
+```text
 document + attachment
-→ both commit
+    ↓
+both commit
+
 OR
-→ neither commits
+
+neither commits
 ```
 
-Delete also uses a transaction and removes related attachments.
+Deletion also uses a transaction and removes related attachments.
 
-## 9. Current Relevant Files
+---
 
-Important current files:
+# 8. Important Current Files
 
-``` text
+Known important files:
+
+```text
 src/application/documentService.ts
 src/application/attachmentService.ts
 src/infrastructure/database/db.ts
@@ -400,27 +467,31 @@ src/ui/components/DocumentCard.tsx
 src/App.tsx
 ```
 
-Temporary:
+Temporary security test page:
 
-``` text
+```text
 SecurityTestPage.tsx
 ```
 
-was created for testing and then removed.
+was created during testing and removed.
 
-## 10. Security Architecture
+Before modifying an area, inspect the actual current file rather than assuming its contents from this document.
 
-### Vault key lifecycle
+---
+
+# 9. Security Architecture — COMPLETE
+
+## Vault key lifecycle
 
 Implemented in:
 
-``` text
+```text
 src/security/vaultKeyService.ts
 ```
 
-Current design:
+Architecture:
 
-``` text
+```text
 User passphrase
     ↓
 PBKDF2-SHA-256
@@ -433,13 +504,13 @@ unwrap
 AES-256-GCM vault key
 ```
 
-Random 16-byte salt is generated for the vault.
+- Random 16-byte salt is generated.
+- The actual vault key remains only in application memory while unlocked.
+- User passphrase is not stored.
 
-The actual vault key is kept only in application memory while unlocked.
+Implemented functions:
 
-Functions currently implemented:
-
-``` text
+```text
 isVaultConfigured()
 initializeVault()
 unlockVault()
@@ -448,122 +519,80 @@ isVaultUnlocked()
 getUnlockedVaultKey()
 ```
 
-### Vault gate
+## Vault gate
 
 Implemented in:
 
-``` text
+```text
 src/security/VaultGate.tsx
 ```
 
-App flow:
+Application flow:
 
-``` text
+```text
 App starts
-  ↓
+    ↓
 load profile + vault configuration
-  ↓
+    ↓
 no profile
-  → profile onboarding
-  ↓
+    → profile onboarding
+
 profile exists but vault not configured
-  → create vault
-  ↓
+    → create vault
+
 vault configured but locked
-  → passphrase lock screen
-  ↓
+    → passphrase lock screen
+
 vault unlocked
-  → normal MyLifeDock application
+    → normal MyLifeDock application
 ```
 
-After browser refresh:
+Browser refresh removes the in-memory vault key and starts the application locked.
 
-``` text
-vault key is no longer in memory
-→ application starts locked
-```
+---
 
-## 11. Security Tests Completed
+# 10. Security / Recovery / Locking Status
 
-All passed:
+Completed and validated:
 
-``` text
-✓ Fresh vault creation
-✓ Dashboard opens after vault creation
-✓ Refresh locks the vault
-✓ Correct passphrase unlocks
-✓ Wrong passphrase rejected
-✓ Documents still works after security gate
-✓ PDF preview still works
-```
+- Fresh vault creation
+- Vault initialization
+- Correct passphrase unlock
+- Wrong passphrase rejection
+- Refresh → locked state
+- Manual Lock Vault
+- 30-second development auto-lock test
+- 30-minute production auto-lock restored
+- Recovery key flow
+- Recovery to a new passphrase
+- Old passphrase rejected after recovery
+- Repeated recovery-key use
+- Recovery/debug logging removed
+- Vault key returned to a non-extractable runtime key
+- Existing encrypted document remains usable after recovery
 
-A development database reset was performed because an earlier temporary
-test passphrase was unknown. This was safe because attachments have NOT
-yet been encrypted.
+### Security rule
 
-Current development passphrase is known to the developer, but it should
-NOT be considered a production credential.
+Never place an actual user vault passphrase in:
 
-## 12. Important Security Rule
+- Source code
+- Git
+- Environment files
+- Logs
+- Analytics
+- Cloud services
 
-Do NOT put the user's actual vault passphrase into source code, Git,
-environment files, logs, analytics, or cloud services.
+Recovery/export behavior must be designed carefully before production users depend on encrypted data.
 
-For production, recovery/export strategy must be designed BEFORE users
-depend on encrypted data.
+---
 
-We must not accidentally create a system where forgotten credentials
-cause irreversible loss without a carefully considered recovery design.
+# 11. Attachment Encryption — COMPLETE
 
-## 13. Current State: IMPORTANT
+Attachment encryption at rest is complete.
 
-### Completed
+Target architecture:
 
-``` text
-Foundation                         ✅
-React + TypeScript + Vite          ✅
-Git/GitHub                         ✅
-GitHub Actions CI                 ✅
-Architecture                       ✅
-Dexie/IndexedDB                   ✅
-Dashboard                          ✅
-Documents                          ✅
-Attachments                        ✅
-Attachment validation              ✅
-Atomic persistence                 ✅
-PDF/image preview                  ✅
-Download                           ✅
-Delete                             ✅
-Refresh persistence                ✅
-File-input reset UX                ✅
-Vault security metadata            ✅
-PBKDF2 key derivation              ✅
-AES-KW wrapped vault key           ✅
-AES-256-GCM vault key              ✅
-Vault initialize                   ✅
-Vault unlock                       ✅
-Vault lock                         ✅
-VaultGate UI                       ✅
-Security lifecycle tests           ✅
-```
-
-### Current NEXT TASK
-
-**Encrypt attachments at rest.**
-
-Current:
-
-``` text
-File
- ↓
-Blob
- ↓
-IndexedDB
-```
-
-Target:
-
-``` text
+```text
 File
  ↓
 AES-256-GCM encryption
@@ -573,213 +602,426 @@ Encrypted binary
 IndexedDB
 ```
 
-On unlock:
+Implemented/validated behavior:
 
-``` text
-Encrypted attachment
- ↓
-vault key
- ↓
-decrypt
- ↓
-PDF/image preview
-```
+- AES-256-GCM
+- Unique random 12-byte IV per encrypted attachment
+- Encrypted Blob stored in IndexedDB
+- Supported PDF/JPG/JPEG/PNG/WebP files
+- 10 MB validation remains intact
+- Preview decrypts only after vault unlock
+- Download decrypts before returning the file
+- Encrypted attachments remain usable after vault recovery
 
-On locked state:
+Locked state:
 
-``` text
+```text
 No vault key
- ↓
-Encrypted attachments cannot be decrypted
+    ↓
+Encrypted attachment cannot be decrypted
 ```
 
-### Critical implementation caution
+### Critical invariant
 
-Before modifying attachment encryption: - Inspect the actual current
-`attachmentService.ts` - Inspect the actual current `DocumentCard.tsx` -
-Preserve current working PDF/image preview - Preserve download
-behavior - Preserve IndexedDB persistence - Preserve atomic
-document+attachment save - Avoid breaking existing unencrypted
-development data - Decide how migration from existing plaintext
-development attachments should work - Do NOT blindly encrypt existing
-records without a migration plan - Use unique AES-GCM IVs/nonces per
-encrypted attachment - Never reuse an IV with the same AES-GCM key -
-Store required encryption metadata alongside the encrypted attachment -
-Keep encryption/decryption logic in `src/security` or a clean
-security/storage abstraction, not directly inside UI components
+Never reuse an AES-GCM IV with the same encryption key.
 
-## 14. Development Process Rules
+Encryption/decryption logic must remain outside UI components.
 
-User explicitly wants fewer troubleshooting loops.
+---
 
-Before giving code: 1. Check complete dependency chain. 2. Verify file
-paths/imports. 3. Verify types. 4. Verify DB APIs. 5. Verify React hook
-placement. 6. Consider lint rules. 7. Consider TypeScript build. 8.
-Consider runtime behavior. 9. Prefer complete-file replacements for
-nontrivial changes.
+# 12. Current Validation Checkpoint
 
-After meaningful changes:
+Latest known clean checkpoint:
 
-``` text
-npm run lint
-npm run build
+```text
+npm run lint   → PASS
+npm run build  → PASS
 ```
 
-Only run the dev server after lint/build pass.
+Validated manually:
 
-User is comfortable with routine Git commands, so don't spend tokens
-teaching basic Git unless something unusual happens.
-
-Command explanations should be brief:
-
-``` text
-npm run lint
-→ checks code quality/rules
-
-npm run build
-→ verifies TypeScript + production build
+```text
+✓ Vault creation
+✓ Vault unlock
+✓ Vault lock
+✓ Auto-lock
+✓ Recovery
+✓ Document persistence
+✓ Encrypted attachment persistence
+✓ PDF preview
+✓ Image preview
+✓ Attachment download
+✓ Existing encrypted document after recovery
 ```
 
-## 15. Product Roadmap
-Current priority order:
+The attachment download issue that existed during development has been resolved.
 
-``` text
+---
+
+# 13. Product Roadmap
+
+Current priority:
+
+```text
 1. Products V1
 2. Warranty / extended warranty / AMC / insurance
 3. Reminder engine
-4. Broader Documents V2 improvements
+4. Documents V2 improvements
 5. Google Drive integration
 6. PWA/offline refinement
 7. Android/Capacitor
-8. OCR/AI/search/voice/search/sharing
-9. Larger UI polish pass
+8. OCR / AI / search / voice search / sharing
+9. Larger UI/design-system polish pass
 ```
 
-The roadmap can evolve, but do not deviate from the core product
-objective without a reason.
+Roadmap may evolve, but changes should remain aligned with the core product objective.
 
-## 16. Future Product Areas
+---
 
-MyLifeDock is intended to eventually manage: - Documents - Product
-records - Warranty - Extended warranty - AMC - Insurance - Reminders -
-Financial assets/liabilities - Vehicles - Properties - Travel
-information - Tax information - Memberships - Important family
-information - OCR/document extraction - Search - Voice search - Google
-Drive backup/sync - Sharing/family access - Authentication -
-Device/biometric protection
+# 14. EXACT NEXT MILESTONE — Products V1
 
-Sensitive information should be handled conservatively.
+Start with the **domain/database layer**.
 
-Do not store: - passwords - CVVs - bank credentials - full secret
-credentials
+Before coding:
 
-Financial records should prefer limited metadata where appropriate, such
-as:
+1. Inspect the actual current Dexie schema.
+2. Inspect current application service patterns.
+3. Inspect current page/component patterns.
+4. Verify existing imports and types.
+5. Confirm database migration/version strategy.
+6. Then implement Products coherently.
 
-``` text
-Bank: HDFC
-Card: Infinia
-Last 4: 1234
-```
+Implementation order:
 
-## 17. UI Direction
-
-Current UI is already described by the user as looking cool and should
-continue in this direction.
-
-Maintain: - dark/premium visual language - clean spacing - restrained
-use of color - polished forms - readable native controls - smooth
-transitions - useful empty states - meaningful loading states -
-responsive desktop/mobile layout - accessibility and keyboard support
-
-A dedicated design-system polish pass should happen later rather than
-constantly redesigning during architecture work.
-
-## 18. DevOps Learning Philosophy
-
-The product is the main objective.
-
-DevOps is integrated only where it provides real value:
-
-``` text
-Git
-CI
-lint
-build
-tests
-release discipline
-automation
-deployment
-observability
-```
-
-Do not turn MyLifeDock into a DevOps-centric demo project.
-
-## 19. How to Resume in a New Chat
-
-Start with:
-
-> Resume MyLifeDock from PROJECT_STATE.md.
-
-Then provide this file if the new conversation cannot access the
-repository/file.
-
-The assistant should: 1. Read this state. 2. Confirm the current
-milestone. 3. Continue from **Products V1**. 4. Inspect the current
-database schema and existing UI/service patterns before coding. 5. Avoid
-re-teaching completed work or revisiting completed security/attachment
-work unless a regression is found.
-
-## 20. Last Known Clean Checkpoint
-
-Security, encrypted attachments, recovery, locking, and document
-download behavior have been validated end-to-end.
-
-### Security / vault completed
-- Vault passphrase initialization and unlock
-- AES-256-GCM vault key architecture
-- PBKDF2-SHA-256 passphrase wrapping
-- 256-bit hexadecimal recovery key
-- Recovery to a new passphrase
-- Old passphrase rejected after recovery
-- Repeated recovery-key use validated
-- Vault key converted back to non-extractable runtime key
-- Manual Lock Vault
-- 30-minute inactivity auto-lock (30-second development test validated)
-- Recovery/debug logging removed
-
-### Documents / attachments completed
-- Attachment encryption at rest with AES-256-GCM
-- 12-byte random IV per encrypted attachment
-- Encrypted Blob stored in IndexedDB
-- PDF/JPG/PNG/WebP validation and 10 MB limit
-- Encrypted attachment preview after in-memory decryption
-- Download after decryption validated
-- Encrypted attachments remain usable after vault recovery
-
-### Validation
-- `npm run lint` passes
-- `npm run build` passes
-- Manual lock/unlock tested
-- Auto-lock tested
-- Recovery tested
-- Existing encrypted document tested after recovery
-
-## 21. Exact Next Task
-
-**Products V1 — start with the domain/database layer.**
-
-Before coding, inspect the current Dexie schema and existing application
-service/UI patterns. Then implement Products in this order:
-
-1. ProductRecord/database table and indexes
+```text
+1. ProductRecord / database table / indexes
 2. productService.ts
 3. ProductsPage foundation
 4. Create product
 5. Edit product
 6. Delete product
 7. Product details
-8. Prepare the model for warranty/AMC/insurance coverage
+8. Prepare model for warranty / AMC / insurance coverage
+```
 
-Do not introduce Google authentication, cloud sync, Android, or a major
-landing-page redesign during this milestone.
+Do not introduce during this milestone:
+
+- Google authentication
+- Cloud sync
+- Android/Capacitor
+- Major landing-page redesign
+- Unnecessary dependencies
+- Unrelated security rewrites
+
+---
+
+# 15. Future Product Areas
+
+Eventually MyLifeDock may manage:
+
+- Documents
+- Products
+- Warranty
+- Extended warranty
+- AMC
+- Insurance
+- Reminders
+- Financial assets/liabilities
+- Vehicles
+- Properties
+- Travel information
+- Tax information
+- Memberships
+- Important family information
+- OCR/document extraction
+- Search
+- Voice search
+- Google Drive backup/sync
+- Family sharing
+- Authentication
+- Device/biometric protection
+
+### Sensitive data policy
+
+Do not store:
+
+- Passwords
+- CVVs
+- Bank credentials
+- Full secret credentials
+
+Financial records should prefer limited metadata where appropriate, e.g.:
+
+```text
+Bank: HDFC
+Card: Infinia
+Last 4: 1234
+```
+
+---
+
+# 16. UI Direction
+
+Preserve the existing visual direction.
+
+Maintain:
+
+- Dark/premium visual language
+- Clean spacing
+- Restrained use of color
+- Polished forms
+- Readable native controls
+- Smooth transitions
+- Useful empty states
+- Meaningful loading states
+- Responsive desktop/mobile layout
+- Accessibility
+- Keyboard support
+
+Do not repeatedly redesign the UI during architecture/product foundation work.
+
+A dedicated design-system polish pass should happen later.
+
+---
+
+# 17. Development Process Rules
+
+The user explicitly wants fewer troubleshooting loops.
+
+Before giving implementation code:
+
+1. Inspect the complete dependency chain.
+2. Verify file paths and imports.
+3. Verify TypeScript types.
+4. Verify database APIs.
+5. Verify React hook placement.
+6. Consider lint rules.
+7. Consider TypeScript build behavior.
+8. Consider runtime behavior.
+9. Prefer complete-file replacements for nontrivial changes.
+10. Preserve existing working behavior unless the change intentionally modifies it.
+
+After meaningful changes:
+
+```text
+npm run lint
+npm run build
+```
+
+Only run the dev server after lint/build pass.
+
+Routine Git commands do not need basic teaching.
+
+---
+
+# 18. Working Style for Future ChatGPT Sessions
+
+When continuing MyLifeDock:
+
+### First
+
+Read this file and identify:
+
+- Current milestone
+- Completed work
+- Immediate next task
+- Relevant architecture
+- Relevant constraints
+
+### Then
+
+Inspect the actual current repository files relevant to the task.
+
+Do not assume that an old state description is more accurate than the current source code.
+
+### During implementation
+
+- Make coherent changes.
+- Keep UI/application/domain/infrastructure/security responsibilities separated.
+- Avoid unnecessary dependencies.
+- Avoid unrelated refactoring.
+- Preserve working features.
+- Think through migration and backward compatibility before changing persisted data.
+- Prefer a complete dependency-chain review before providing code.
+
+### After implementation
+
+Run:
+
+```text
+npm run lint
+npm run build
+```
+
+Then perform targeted runtime/manual validation where appropriate.
+
+### Communication
+
+Do not re-teach already completed work.
+
+Do not repeatedly reopen completed security work.
+
+Explain unusual decisions, risks, migrations, and failures clearly, but keep routine Git/CLI explanations brief.
+
+---
+
+# 19. Architecture Audit Rule
+
+A deliberate full architecture review should be performed **once** when the actual repository source is available.
+
+Review:
+
+```text
+src/app/
+src/application/
+src/domain/
+src/infrastructure/
+src/security/
+src/shared/
+src/ui/
+```
+
+And relevant configuration:
+
+```text
+package.json
+tsconfig files
+vite config
+ESLint config
+GitHub Actions workflows
+Dexie/database schema
+```
+
+The review should answer:
+
+- Are responsibilities correctly separated?
+- Are there circular dependencies?
+- Is UI leaking persistence/security logic?
+- Are application services being used consistently?
+- Is the domain model coherent?
+- Is the database migration strategy safe?
+- Is the security boundary clean?
+- Are abstractions justified rather than over-engineered?
+- Is the architecture still Android-ready?
+- Are there unnecessary dependencies?
+- Is the current structure appropriate for the next roadmap stages?
+
+**Do not perform large refactors merely because a different architecture is theoretically cleaner.** Refactor only where there is a concrete product or engineering benefit.
+
+---
+
+# 20. Git / CI Status
+
+Git identity:
+
+```text
+user.name  = mylifedock
+user.email = mylifedock@gmail.com
+```
+
+Remote:
+
+```text
+https://github.com/mylifedock/mylifedock.git
+```
+
+GitHub Actions CI exists and is intentionally useful for DevOps learning.
+
+CI/CD remains secondary to product development.
+
+User is comfortable with:
+
+```text
+git status
+git add
+git commit
+git push
+git branch
+```
+
+---
+
+# 21. Resume Instruction
+
+In a new conversation, say:
+
+> **Resume MyLifeDock from PROJECT_STATE.md**
+
+Then provide this file if repository context is unavailable.
+
+The assistant should:
+
+1. Read this state.
+2. Confirm the current milestone.
+3. Inspect the actual relevant repository files.
+4. Continue from **Products V1**.
+5. Avoid revisiting completed security/attachment work unless a regression is found.
+6. Avoid unrelated architectural redesign.
+7. Keep the product objective above DevOps-learning objectives.
+
+---
+
+# 22. Current State Summary
+
+```text
+FOUNDATION                         ✅
+React + TypeScript + Vite          ✅
+Git/GitHub                         ✅
+GitHub Actions CI                 ✅
+Architecture foundation            ✅
+Dexie / IndexedDB                 ✅
+Dashboard                          ✅
+Profile onboarding                 ✅
+
+DOCUMENTS V1                       ✅
+Document CRUD                      ✅
+Attachment support                 ✅
+Attachment validation              ✅
+Atomic persistence                 ✅
+PDF/image preview                  ✅
+Download                           ✅
+Delete                             ✅
+Refresh persistence                ✅
+File-input reset UX                ✅
+
+VAULT / SECURITY                   ✅
+Vault initialization               ✅
+PBKDF2-SHA-256                     ✅
+AES-KW wrapped vault key           ✅
+AES-256-GCM vault key              ✅
+Vault unlock                       ✅
+Vault lock                         ✅
+Recovery                           ✅
+Recovery to new passphrase         ✅
+Manual lock                        ✅
+30-second auto-lock test           ✅
+30-minute production timeout       ✅
+Security lifecycle validation      ✅
+
+ATTACHMENT ENCRYPTION              ✅
+AES-256-GCM at rest                ✅
+Unique 12-byte IV                  ✅
+Encrypted IndexedDB Blob           ✅
+Encrypted preview                  ✅
+Encrypted download                 ✅
+Recovery compatibility             ✅
+
+QUALITY                            ✅
+npm run lint                       PASS
+npm run build                      PASS
+
+CURRENT MILESTONE                  → PRODUCTS V1
+NEXT ACTION                        → DATABASE / DOMAIN LAYER
+```
+
+---
+
+## Final Rule
+
+**Build MyLifeDock as a real product.**
+
+Security is foundational and already completed for the current milestone. Do not keep polishing the security layer instead of moving the product forward.
+
+The next meaningful work is:
+
+> **Products V1 → database/domain → service → UI → CRUD → details → coverage-ready model.**

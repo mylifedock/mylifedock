@@ -103,11 +103,10 @@ function decodeRecoveryKey(
         index * 2 + 2,
       );
 
-    bytes[index] =
-      Number.parseInt(
-        pair,
-        16,
-      );
+    bytes.set(
+      [Number.parseInt(pair, 16)],
+      index,
+    );
   }
 
   return buffer;

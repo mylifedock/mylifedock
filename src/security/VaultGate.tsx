@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   ensureRecoveryKey,
@@ -6,6 +6,7 @@ import {
   recoverVault,
   unlockVault,
 } from "./vaultKeyService";
+import { getPassphraseViaBiometrics, isBiometricEnabled } from "../application/biometricService";
 
 type GateMode =
   | "unlock"
@@ -20,11 +21,7 @@ function VaultGate({
   onUnlocked: () => void;
 }) {
   const [mode, setMode] =
-    useState<GateMode>(
-      configured
-        ? "unlock"
-        : "unlock",
-    );
+    useState<GateMode>("unlock");
 
   const [passphrase, setPassphrase] =
     useState("");
@@ -52,9 +49,43 @@ function VaultGate({
   const [busy, setBusy] =
     useState(false);
 
+  const [hasBiometrics, setHasBiometrics] =
+    useState(false);
+
   const isSetup =
     !configured &&
     mode === "unlock";
+
+  useEffect(() => {
+    async function checkBio() {
+      if (configured) {
+        const enabled = await isBiometricEnabled();
+        setHasBiometrics(enabled);
+      }
+    }
+    void checkBio();
+  }, [configured]);
+
+  async function handleBiometricUnlock() {
+    if (busy) return;
+    setError("");
+    setBusy(true);
+    try {
+      const bioPassphrase = await getPassphraseViaBiometrics();
+      if (!bioPassphrase) {
+        setBusy(false);
+        return;
+      }
+      await unlockVault(bioPassphrase);
+      onUnlocked();
+    } catch (err) {
+      console.error("Biometric unlock error:", err);
+      const msg = err instanceof Error ? err.message : "Biometric verification failed.";
+      setError(`${msg} (Or enter your passphrase below)`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function handleUnlock(
     event: React.FormEvent,
@@ -220,7 +251,10 @@ function VaultGate({
 
         <div className="onboarding-card vault-gate-card">
           <div className="brand-mark large">
-            M
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
           </div>
 
           <span className="eyebrow">
@@ -320,7 +354,10 @@ function VaultGate({
 
         <div className="onboarding-card vault-gate-card">
           <div className="brand-mark large">
-            M
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
           </div>
 
           <span className="eyebrow">
@@ -419,7 +456,7 @@ function VaultGate({
           </form>
 
           <button
-            className="primary-button"
+            className="secondary-button"
             type="button"
             onClick={() => {
               setError("");
@@ -442,7 +479,10 @@ function VaultGate({
 
       <div className="onboarding-card vault-gate-card">
         <div className="brand-mark large">
-          M
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
         </div>
 
         <span className="eyebrow">
@@ -472,6 +512,35 @@ function VaultGate({
             ? "Your vault key will be protected by a passphrase and an independent recovery key."
             : "Unlock your private vault to access your documents and personal information."}
         </p>
+
+        {hasBiometrics && !isSetup && (
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={handleBiometricUnlock}
+            disabled={busy}
+            style={{
+              marginBottom: "16px",
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              borderColor: "rgba(167, 139, 250, 0.4)",
+              background: "rgba(167, 139, 250, 0.1)",
+              color: "#e2e8f0",
+              fontWeight: 600,
+              padding: "12px",
+              borderRadius: "10px",
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a10 10 0 0 0-6.88 17.23l.12.11A9.97 9.97 0 0 0 12 22a9.97 9.97 0 0 0 6.76-2.66l.12-.11A10 10 0 0 0 12 2z"/>
+              <path d="M12 7a5 5 0 0 0-5 5v1a5 5 0 0 0 10 0v-1a5 5 0 0 0-5-5z"/>
+            </svg>
+            Unlock with Fingerprint / Face ID
+          </button>
+        )}
 
         <form
           className="vault-gate-form"
@@ -548,17 +617,19 @@ function VaultGate({
 
         {!isSetup && (
           <>
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => {
-                setError("");
-                setMode("recovery");
-              }}
-            >
-              Use recovery key
-              <span>↗</span>
-            </button>
+            <div style={{ marginTop: "12px" }}>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setMode("recovery");
+                }}
+              >
+                Use recovery key
+                <span>↗</span>
+              </button>
+            </div>
 
             <div className="onboarding-security">
               <span>●</span>

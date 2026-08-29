@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tauri Rust build cache (can be 1GB+, always regenerated)
+src-tauri/target/
+
+# Environment files and test results
+.env
+.env*.local
+test-results/

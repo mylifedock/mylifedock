@@ -93,12 +93,13 @@ export type CoverageType =
   | "warranty"
   | "extended-warranty"
   | "amc"
-  | "insurance";
+  | "insurance"
+  | "membership";
 
 export interface CoverageRecord {
   id: string;
   ownerId: string;
-  productId: string;
+  productId?: string; // Optional: Health/Life insurance might not tie to a physical product
   type: CoverageType;
   provider?: string;
   policyNumber?: string;
@@ -126,6 +127,63 @@ export interface ReminderRecord {
 export interface ProfileRecord {
   id: string;
   displayName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinanceRecord {
+  id: string;
+  ownerId: string;
+  category: "bank" | "card" | "investment" | "liability";
+  institution: string;
+  accountType?: string;
+  identifier?: string; // Last 4 digits ONLY (enforced by UI)
+  balance?: number;
+  currency?: string;
+  issueDate?: string;
+  expiryDate?: string;
+  notes?: string;
+  documentId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VehicleRecord {
+  id: string;
+  ownerId: string;
+  make: string;
+  model: string;
+  year?: number;
+  registrationNumber?: string;
+  vin?: string;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PropertyRecord {
+  id: string;
+  ownerId: string;
+  type: "house" | "land" | "rental" | "commercial" | "other";
+  address: string;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SecretCategory = "password" | "pin" | "crypto" | "combination" | "note";
+
+export interface SecretRecord {
+  id: string;
+  ownerId: string;
+  title: string;
+  category: SecretCategory;
+  value: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -218,6 +276,26 @@ export class MyLifeDockDatabase
     "id"
   >;
 
+  finance!: EntityTable<
+    FinanceRecord,
+    "id"
+  >;
+
+  vehicles!: EntityTable<
+    VehicleRecord,
+    "id"
+  >;
+
+  properties!: EntityTable<
+    PropertyRecord,
+    "id"
+  >;
+
+  secrets!: EntityTable<
+    SecretRecord,
+    "id"
+  >;
+
   constructor() {
     super("MyLifeDock");
 
@@ -246,6 +324,16 @@ export class MyLifeDockDatabase
     // Existing version-1 data remains untouched.
     this.version(2).stores({
       vaultSecurity: "id",
+    });
+
+    this.version(3).stores({
+      finance: "id, ownerId, category",
+      vehicles: "id, ownerId",
+      properties: "id, ownerId, type",
+    });
+
+    this.version(4).stores({
+      secrets: "id, ownerId, category",
     });
   }
 }
