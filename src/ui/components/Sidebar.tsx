@@ -146,7 +146,7 @@ function Sidebar({
                 : undefined
             }
           >
-            <span className="nav-icon">
+            <span className="nav-icon" aria-hidden="true">
               {item.icon}
             </span>
 
@@ -167,7 +167,7 @@ function Sidebar({
           type="button"
           onClick={() => handleNav("about")}
         >
-          <span className="nav-icon">
+          <span className="nav-icon" aria-hidden="true">
             ℹ️
           </span>
           <span>About & Support</span>
@@ -177,7 +177,7 @@ function Sidebar({
           type="button"
           onClick={() => handleNav("settings")}
         >
-          <span className="nav-icon">
+          <span className="nav-icon" aria-hidden="true">
             ⚙️
           </span>
           <span>Settings</span>
@@ -191,7 +191,7 @@ function Sidebar({
             onLock();
           }}
         >
-          <span className="nav-icon">🔒</span>
+          <span className="nav-icon" aria-hidden="true">🔒</span>
           <span>Lock / Logout</span>
         </button>
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useToast } from "../components/Toast";
 import { getSubscriptions, saveSubscription, deleteSubscription, type SubscriptionItem } from "../../application/subscriptionService";
+import { formatCurrency } from "../../application/currencyService";
 
 export function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>(() => getSubscriptions());
@@ -111,7 +112,7 @@ export function SubscriptionsPage() {
         <div className="stat-card">
           <div className="stat-card-top">
             <span style={{ fontSize: "20px" }}>📅</span>
-            <span className="stat-value">${monthlyTotal.toFixed(2)}</span>
+            <span className="stat-value">{formatCurrency(monthlyTotal)}</span>
           </div>
           <div className="stat-label">Monthly Outflow</div>
           <div className="stat-description">Average cost per month</div>
@@ -120,7 +121,7 @@ export function SubscriptionsPage() {
         <div className="stat-card">
           <div className="stat-card-top">
             <span style={{ fontSize: "20px" }}>📈</span>
-            <span className="stat-value">${yearlyTotal.toFixed(2)}</span>
+            <span className="stat-value">{formatCurrency(yearlyTotal)}</span>
           </div>
           <div className="stat-label">Annual Projected Cost</div>
           <div className="stat-description">Estimated 12-month spend</div>
@@ -244,7 +245,7 @@ export function SubscriptionsPage() {
 
                   <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                     <span style={{ fontSize: "16px", fontWeight: "bold", color: "#a78bfa" }}>
-                      ${sub.amount.toFixed(2)}
+                      {formatCurrency(sub.amount)}
                     </span>
                     <button type="button" className="text-button" onClick={() => handleEdit(sub)}>
                       Edit

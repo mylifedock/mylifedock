@@ -335,6 +335,13 @@ export class MyLifeDockDatabase
     this.version(4).stores({
       secrets: "id, ownerId, category",
     });
+
+    this.version(5).stores({
+      finance: "id, ownerId, category, createdAt",
+      vehicles: "id, ownerId, createdAt",
+      properties: "id, ownerId, type, createdAt",
+      secrets: "id, ownerId, category, createdAt",
+    });
   }
 }
 

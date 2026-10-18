@@ -10,11 +10,12 @@ export async function createLocalProfile(
   displayName: string,
 ): Promise<ProfileRecord> {
   const now = new Date().toISOString();
+  const existing = await db.profiles.get(LOCAL_PROFILE_ID);
 
   const profile: ProfileRecord = {
     id: LOCAL_PROFILE_ID,
     displayName: displayName.trim(),
-    createdAt: now,
+    createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
 

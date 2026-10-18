@@ -8,7 +8,10 @@ const files = [
   { md: "MyLifeDock_User_Handbook.md", html: "MyLifeDock_User_Handbook.html", title: "User Handbook & Operational Manual" },
   { md: "MyLifeDock_Product_Documentation.md", html: "MyLifeDock_Product_Documentation.html", title: "Product Architecture & Technical Specs" },
   { md: "MyLifeDock_Production_Release_Guide.md", html: "MyLifeDock_Production_Release_Guide.html", title: "Production & Store Release Playbook" },
-  { md: "MyLifeDock_Future_Scope_Strategy.md", html: "MyLifeDock_Future_Scope_Strategy.html", title: "Future Scope, Monetization & Legal Strategy" }
+  { md: "MyLifeDock_Future_Scope_Strategy.md", html: "MyLifeDock_Future_Scope_Strategy.html", title: "Future Scope, Monetization & Legal Strategy" },
+  { md: "MyLifeDock_Security_Audit_2026.md", html: "MyLifeDock_Security_Audit_2026.html", title: "Official Security Audit & Trust Report (2026)" },
+  { md: "Legal_Patent_Application_Guide.md", html: "Legal_Patent_Application_Guide.html", title: "Legal Entity, Patent & Global Monetization Blueprint" },
+  { md: "Android_PlayStore_Guide.md", html: "Android_PlayStore_Guide.html", title: "Android Play Store Production Deployment Playbook" }
 ];
 
 // Configure custom marked renderer

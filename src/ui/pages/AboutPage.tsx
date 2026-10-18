@@ -82,7 +82,7 @@ export function AboutPage() {
     const body = encodeURIComponent(
       `Hello MyLifeDock Support,\n\n[Please describe your issue or question here]\n\n\n--- Diagnostic Info ---\n${report}\n`
     );
-    window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
+    window.location.assign(`mailto:${supportEmail}?subject=${subject}&body=${body}`);
   }
 
   return (

@@ -10,7 +10,6 @@ import {
 } from "../../application/documentService";
 
 import { validateAttachment } from "../../application/attachmentService";
-import { extractTextFromImage, parseReceiptData } from "../../application/ocrService";
 
 import type {
   DocumentCategory,
@@ -99,7 +98,9 @@ function DocumentForm({
   const [ocrProgress, setOcrProgress] = useState(0);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraAttachmentRef = useRef<HTMLInputElement>(null);
   const ocrInputRef = useRef<HTMLInputElement>(null);
+  const ocrCameraRef = useRef<HTMLInputElement>(null);
 
   async function handleOcrScan(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -110,6 +111,7 @@ function DocumentForm({
       setOcrProgress(10);
       setSelectedFile(file);
       
+      const { extractTextFromImage, parseReceiptData } = await import("../../application/ocrService");
       const text = await extractTextFromImage(file, (progress) => {
         setOcrProgress(progress);
       });
@@ -238,7 +240,15 @@ function DocumentForm({
           </h2>
         </div>
 
-        <div>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            ref={ocrCameraRef}
+            style={{ display: "none" }}
+            onChange={handleOcrScan}
+          />
           <input
             type="file"
             accept="image/*"
@@ -249,12 +259,22 @@ function DocumentForm({
           <button
             type="button"
             className="secondary-button"
-            onClick={() => ocrInputRef.current?.click()}
+            onClick={() => ocrCameraRef.current?.click()}
             disabled={isOcrScanning || isSaving}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
           >
             <span>📷</span>
-            {isOcrScanning ? `Scanning (${ocrProgress}%)...` : "Scan / Auto-Fill from Image"}
+            {isOcrScanning ? `Scanning (${ocrProgress}%)...` : "Snap Invoice"}
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => ocrInputRef.current?.click()}
+            disabled={isOcrScanning || isSaving}
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px" }}
+          >
+            <span>🖼️</span>
+            Upload to Scan
           </button>
         </div>
       </div>
@@ -480,22 +500,54 @@ function DocumentForm({
                 Attachment
               </label>
 
-              <input
-                id="docAttachment"
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.webp"
-                onChange={(e) =>
-                  setSelectedFile(
-                    e.target.files?.[0],
-                  )
-                }
-              />
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "6px", flexWrap: "wrap" }}>
+                <input
+                  id="docAttachment"
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  style={{ display: "none" }}
+                  onChange={(e) =>
+                    setSelectedFile(
+                      e.target.files?.[0],
+                    )
+                  }
+                />
+                <input
+                  ref={cameraAttachmentRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: "none" }}
+                  onChange={(e) =>
+                    setSelectedFile(
+                      e.target.files?.[0],
+                    )
+                  }
+                />
+                <button
+                  type="button"
+                  className="secondary-button"
+                  style={{ padding: "6px 12px", fontSize: "12.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)", display: "flex", alignItems: "center", gap: "6px" }}
+                  onClick={() => cameraAttachmentRef.current?.click()}
+                >
+                  <span>📷</span>
+                  Snap Photo
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  style={{ padding: "6px 12px", fontSize: "12.5px", display: "flex", alignItems: "center", gap: "6px" }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <span>📁</span>
+                  Choose File
+                </button>
+              </div>
 
               {selectedFile && (
-                <small className="file-selection">
-                  Selected:{" "}
-                  {selectedFile.name}
+                <small className="file-selection" style={{ display: "block", marginTop: "6px", color: "#38bdf8" }}>
+                  Attached: {selectedFile.name}
                 </small>
               )}
             </div>

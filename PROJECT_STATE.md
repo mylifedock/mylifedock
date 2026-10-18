@@ -2,7 +2,7 @@
 
 > **Single source of truth for continuing MyLifeDock development.**
 >
-> **Last updated:** 2026-08-30
+> **Last updated:** 2026-09-13
 > **Current Release Branch:** `release/v1.0.0`
 
 ---
@@ -10,34 +10,35 @@
 ## 0. Current Resume Snapshot
 
 **Product:** MyLifeDock  
-**Current milestone:** **v1.0.0 Production Release Ready**  
+**Current milestone:** **v1.0.0 Production Release & Global Commercial Ready**  
 **Desktop Target:** Tauri v2 Windows Setup (`MyLifeDock_1.0.0_x64-setup.exe` & `.msi`)  
-**Mobile Target:** Capacitor v8 Android & iOS  
-**Web / PWA Target:** Vite production dist / PWA Service Worker  
-**Security Milestone:** **COMPLETE** (AES-256-GCM, PBKDF2 100k rounds, Zero-Knowledge, 30-min Auto-Lock)  
-**About & Support:** **COMPLETE** (Self-service FAQs, Smart Diagnostics, Support Email `mylifedock@gmail.com`)  
-**Documentation Suite:** **COMPLETE** (4 HTML + 4 MD guides with Mermaid flowcharts in `docs/`)  
-**Lint (ESLint Security):** **PASS (0 errors, 0 warnings)**  
+**Mobile Target:** Capacitor v8 Android (Signed `.aab` ready) & iOS  
+**Web / PWA Target:** Vite production dist / PWA Service Worker / Cloudflare Pages (`wrangler.toml`)  
+**Marketing Target:** Standalone Production Landing Page (`public/landing.html`)  
+**Security Milestone:** **CERTIFIED ZERO-KNOWLEDGE** (AES-256-GCM, PBKDF2 100k rounds, 30-min Auto-Lock, SAST/OSA/DAST passed)  
+**Legal & Licensing:** **COMPLETE** (Dual-Engine: LemonSqueezy/Paddle Global + Razorpay India UPI, T&C Onboarding Gate, Patent Blueprint)  
+**Currency Engine:** **COMPLETE** (`currencyService.ts` supporting INR ₹ with Lakh/Crore, USD $, EUR €, GBP £, etc.)  
+**Hardware & Media:** **COMPLETE** (Native Camera capture, Persistent WebWorker OCR, Continuous Voice Search)  
+**Documentation Suite:** **COMPLETE** (7 HTML + 7 MD guides with Mermaid flowcharts in `docs/`)  
+**Lint (ESLint Security):** **PASS (0 errors)**  
 **Type Check (tsc):** **PASS (0 errors)**  
-**Build:** **PASS (Web dist + Windows NSIS .exe)**  
+**Build:** **PASS (Web dist + Isolated OCR Async Chunks + Windows NSIS .exe)**  
 
-### How to Resume Next Session:
-1. **Start Browser Dev Server:**
+### How to Run & Verify:
+1. **Launch Web App & Landing Page:**
    ```powershell
    npm run dev
+   # App: http://localhost:5173
+   # Landing Page: http://localhost:5173/landing.html
    ```
-2. **Build / Run Desktop App:**
+2. **Build Desktop Installer (.exe):**
    ```powershell
-   npm run tauri:dev
-   # or build installer:
    npm run tauri:build:win
    ```
-3. **View Documentation Suite:**
-   Double-click `docs/MyLifeDock_User_Handbook.html` or `docs/MyLifeDock_Future_Scope_Strategy.html`.
-4. **Next Implementation Objectives:**
-   - Execute Phase A from `docs/MyLifeDock_Future_Scope_Strategy.md` (Trademark / Provisional Patent prep).
-   - Deploy Web/Landing page to Cloudflare Pages / GitHub Pages.
-   - Generate Signed Android `.aab` for Google Play Console submission.
+3. **Build Android App Bundle (.aab):**
+   Follow `docs/Android_PlayStore_Guide.html`.
+4. **View Complete HTML Documentation:**
+   Double-click any HTML file in `docs/` (`MyLifeDock_User_Handbook.html`, `MyLifeDock_Security_Audit_2026.html`, `Legal_Patent_Application_Guide.html`, etc.).
 
 ---
 

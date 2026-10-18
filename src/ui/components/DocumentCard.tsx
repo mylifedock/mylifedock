@@ -36,6 +36,15 @@ function DocumentCard({
         if ((e.target as HTMLElement).closest("button")) return;
         if (onView) onView();
       }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if ((e.target as HTMLElement).closest("button")) return;
+          if (onView) onView();
+        }
+      }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
@@ -131,7 +140,7 @@ function DocumentCard({
 
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onDelete(document.id); }}
+            onClick={(e) => { e.stopPropagation(); if(window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) onDelete(document.id); }}
             className="text-button"
             style={{ color: "var(--color-danger)" }}
           >

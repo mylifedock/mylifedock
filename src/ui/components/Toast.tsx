@@ -74,7 +74,7 @@ export function ToastProvider({
       {children}
 
       {toasts.length > 0 && (
-        <div className="toast-container">
+        <div className="toast-container" role="status" aria-live="polite">
           {toasts.map((toast) => (
             <div
               key={toast.id}

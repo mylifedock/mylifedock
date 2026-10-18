@@ -30,6 +30,9 @@ export async function updateFinance(id: string, updates: Partial<CreateFinanceIn
   if (updates.identifier && updates.identifier.length > 4) {
     throw new Error("For security, only store the last 4 digits of financial identifiers.");
   }
+  const existing = await db.finance.get(id);
+  if (!existing) throw new Error("Finance record not found.");
+  if (existing.ownerId !== LOCAL_PROFILE_ID) throw new Error("Access denied.");
   await db.finance.update(id, {
     ...updates,
     updatedAt: new Date().toISOString(),
@@ -37,5 +40,8 @@ export async function updateFinance(id: string, updates: Partial<CreateFinanceIn
 }
 
 export async function deleteFinance(id: string): Promise<void> {
+  const existing = await db.finance.get(id);
+  if (!existing) return;
+  if (existing.ownerId !== LOCAL_PROFILE_ID) throw new Error("Access denied.");
   await db.finance.delete(id);
 }

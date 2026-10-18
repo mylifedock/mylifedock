@@ -6,6 +6,14 @@ import {
 
 const LOCAL_PROFILE_ID = "local-profile";
 
+function getLocalDateString(d?: Date): string {
+  const date = d || new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export type CreateReminderInput = Omit<
   ReminderRecord,
   "id" | "ownerId" | "createdAt" | "updatedAt"
@@ -99,13 +107,9 @@ export async function getUpcomingReminders(
     futureDate.getDate() + withinDays,
   );
 
-  const todayStr = today
-    .toISOString()
-    .slice(0, 10);
+  const todayStr = getLocalDateString();
 
-  const futureStr = futureDate
-    .toISOString()
-    .slice(0, 10);
+  const futureStr = getLocalDateString(futureDate);
 
   const reminders = await db.reminders
     .where("ownerId")
@@ -134,9 +138,7 @@ export async function getUpcomingReminders(
 export async function getOverdueReminders(): Promise<
   ReminderRecord[]
 > {
-  const todayStr = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const todayStr = getLocalDateString();
 
   const reminders = await db.reminders
     .where("ownerId")
@@ -286,9 +288,7 @@ export async function syncCoverageReminders(): Promise<
         ),
     );
 
-  const todayStr = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const todayStr = getLocalDateString();
 
   let created = 0;
 
@@ -328,9 +328,7 @@ export async function syncCoverageReminders(): Promise<
     );
 
     const reminderDateStr =
-      reminderDate
-        .toISOString()
-        .slice(0, 10);
+      getLocalDateString(reminderDate);
 
     /*
      * Lookup the product name for a helpful
@@ -397,9 +395,7 @@ export async function syncDocumentReminders(): Promise<
         ),
     );
 
-  const todayStr = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const todayStr = getLocalDateString();
 
   let created = 0;
 
@@ -435,9 +431,7 @@ export async function syncDocumentReminders(): Promise<
     );
 
     const reminderDateStr =
-      reminderDate
-        .toISOString()
-        .slice(0, 10);
+      getLocalDateString(reminderDate);
 
     await createReminder({
       title: `${doc.title} expiring soon`,
@@ -452,4 +446,6 @@ export async function syncDocumentReminders(): Promise<
 
   return created;
 }
+
+
 

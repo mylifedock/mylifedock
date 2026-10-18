@@ -27,18 +27,29 @@ export function SearchPage({ onNavigate }: { onNavigate?: (page: string) => void
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = "en-US";
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setQuery(transcript);
-        setIsListening(false);
+        let interimTranscript = "";
+        let finalTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        // Show whatever we have so far
+        setQuery(finalTranscript || interimTranscript);
       };
 
       recognitionRef.current.onerror = () => {
-        showToast("Voice search failed", "error");
+        showToast("Voice search connection lost", "error");
         setIsListening(false);
       };
 
@@ -164,6 +175,9 @@ export function SearchPage({ onNavigate }: { onNavigate?: (page: string) => void
             key={r.id} 
             className="card fade-in"
             onClick={() => handleResultClick(r.type)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleResultClick(r.type); } }}
             style={{ cursor: "pointer", transition: "all 0.2s" }}
             onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
             onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}

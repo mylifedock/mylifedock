@@ -175,6 +175,7 @@ function DashboardPage({
                     style={{ cursor: "pointer" }}
                     role="button"
                     tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate("reminders"); } }}
                   >
                     <div>
                       <strong>
@@ -262,16 +263,24 @@ function DashboardPage({
         </div>
       </section>
 
-      <section className="privacy-card">
-        <div className="privacy-card-icon">⌁</div>
-
-        <div>
-          <strong>Privacy-first by design</strong>
-          <p>
-            MyLifeDock starts with local storage. Cloud storage and
-            sharing are optional and controlled by you.
-          </p>
+      <section className="privacy-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <div className="privacy-card-icon">🛡️</div>
+          <div>
+            <strong>Zero-Knowledge Security Active</strong>
+            <p>
+              Your vault is encrypted locally with AES-256-GCM. The developer and cloud providers cannot read your records.
+            </p>
+          </div>
         </div>
+        <button
+          type="button"
+          className="secondary-button"
+          style={{ fontSize: "12.5px", padding: "6px 14px", border: "1px solid rgba(56, 189, 248, 0.3)", color: "#38bdf8" }}
+          onClick={() => onNavigate("settings")}
+        >
+          Vault Backups &rarr;
+        </button>
       </section>
     </div>
   );

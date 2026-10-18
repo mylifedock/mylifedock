@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Play Store Production Deployment Playbook - MyLifeDock</title>
+    <!-- Mermaid for Flowcharts & Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --text-color: #e2e8f0;
+            --heading-color: #38bdf8;
+            --border-color: #1e293b;
+            --accent-color: #22c55e;
+            --code-bg: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 24px 16px;
+        }
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 32px;
+        }
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.6rem; }
+        h3 { font-size: 1.3rem; }
+        a { color: #38bdf8; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e293b;
+            color: #f8fafc;
+        }
+        tr:nth-child(even) { background-color: #0f172a; }
+        tr:nth-child(odd) { background-color: #111827; }
+        pre, code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: var(--code-bg);
+            border-radius: 6px;
+        }
+        code { padding: 2px 6px; font-size: 88%; color: #7dd3fc; }
+        pre { padding: 16px; overflow-x: auto; border: 1px solid var(--border-color); }
+        pre code { padding: 0; background: none; color: inherit; }
+        .mermaid {
+            background: #ffffff;
+            color: #000000;
+            padding: 24px;
+            border-radius: 8px;
+            margin: 24px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            border: 1px solid #38bdf8;
+        }
+        blockquote {
+            margin: 16px 0;
+            padding: 8px 16px;
+            color: #94a3b8;
+            border-left: 4px solid #38bdf8;
+            background: rgba(56, 189, 248, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-links a {
+            margin-left: 14px;
+            font-size: 14px;
+            background: #1e293b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+        }
+        .nav-links a:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-header">
+            <strong>🛡️ MyLifeDock Documentation Suite</strong>
+            <div class="nav-links">
+                <a href="MyLifeDock_User_Handbook.html">User Handbook</a>
+                <a href="MyLifeDock_Product_Documentation.html">Architecture</a>
+                <a href="MyLifeDock_Production_Release_Guide.html">Release Guide</a>
+                <a href="MyLifeDock_Future_Scope_Strategy.html">Future Strategy</a>
+            </div>
+        </div>
+        <div id="content">
+            <h1>🤖 Android Play Store Deployment Guide</h1>
+<p>To deploy MyLifeDock to the Google Play Store, we must generate a Signed Android App Bundle (<code>.aab</code>).</p>
+<h2>1. Generate the Keystore</h2>
+<p>Open PowerShell in the <code>android/app</code> directory and generate your signing key:</p>
+<pre><code class="language-powershell">keytool -genkey -v -keystore mylifedock-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mylifedock</code></pre><p><em>(Store this <code>.jks</code> file securely in your own encrypted vault! If you lose it, you cannot push updates to the Play Store).</em></p>
+<h2>2. Configure gradle.properties</h2>
+<p>In <code>android/gradle.properties</code>, append these lines:</p>
+<pre><code class="language-properties">MYLIFEDOCK_RELEASE_STORE_FILE=mylifedock-release-key.jks
+MYLIFEDOCK_RELEASE_KEY_ALIAS=mylifedock
+MYLIFEDOCK_RELEASE_STORE_PASSWORD=your_password_here
+MYLIFEDOCK_RELEASE_KEY_PASSWORD=your_password_here</code></pre><h2>3. Update build.gradle</h2>
+<p>In <code>android/app/build.gradle</code>, add the release signing config:</p>
+<pre><code class="language-groovy">android {
+    signingConfigs {
+        release {
+            if (project.hasProperty('MYLIFEDOCK_RELEASE_STORE_FILE')) {
+                storeFile file(MYLIFEDOCK_RELEASE_STORE_FILE)
+                storePassword MYLIFEDOCK_RELEASE_STORE_PASSWORD
+                keyAlias MYLIFEDOCK_RELEASE_KEY_ALIAS
+                keyPassword MYLIFEDOCK_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+}</code></pre><h2>4. Build the AAB</h2>
+<p>Run this from the root of the app directory:</p>
+<pre><code class="language-powershell">npm run build
+npx cap sync android
+cd android
+./gradlew bundleRelease</code></pre><p>The final file will be located at <code>android/app/build/outputs/bundle/release/app-release.aab</code>. Upload this file to the Google Play Console!</p>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof mermaid !== "undefined") {
+                mermaid.initialize({ 
+                    startOnLoad: true, 
+                    theme: 'default',
+                    securityLevel: 'loose'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

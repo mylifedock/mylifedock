@@ -62,5 +62,21 @@ export async function universalSearch(query: string): Promise<SearchResult[]> {
     }
   });
 
-  return results;
+  // Coverages / Insurance & Warranties
+  const coverages = await db.coverages.where("ownerId").equals(LOCAL_PROFILE_ID).toArray();
+  coverages.forEach(c => {
+    if ((c.provider && c.provider.toLowerCase().includes(q)) || (c.policyNumber && c.policyNumber.toLowerCase().includes(q)) || c.type.toLowerCase().includes(q)) {
+      results.push({ id: c.id, type: "coverage", title: c.provider || c.type.toUpperCase(), subtitle: `Coverage • ${c.type} (${c.policyNumber || "No Policy #"})` });
+    }
+  });
+
+  // Reminders
+  const reminders = await db.reminders.where("ownerId").equals(LOCAL_PROFILE_ID).toArray();
+  reminders.forEach(r => {
+    if (r.title.toLowerCase().includes(q)) {
+      results.push({ id: r.id, type: "reminder", title: r.title, subtitle: `Reminder • Due: ${r.dueDate}` });
+    }
+  });
+
+  return results.slice(0, 100);
 }

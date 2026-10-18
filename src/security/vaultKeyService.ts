@@ -666,3 +666,71 @@ export function getUnlockedVaultKey(): CryptoKey {
 
   return unlockedVaultKey;
 }
+
+export function setUnlockedVaultKey(key: CryptoKey): void {
+  unlockedVaultKey = key;
+}
+
+export function isRecoveryKeyFormat(value: string): boolean {
+  const normalized = value.trim().replace(/[\s-]/g, "");
+  return /^[0-9a-fA-F]{64}$/.test(normalized);
+}
+
+export async function unwrapVaultKeyWithPassphrase(
+  passphrase: string,
+  salt: ArrayBuffer,
+  wrappedVaultKey: ArrayBuffer,
+  kdfIterations = PBKDF2_ITERATIONS
+): Promise<CryptoKey> {
+  const passwordKey = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(passphrase),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  const wrappingKey = await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: kdfIterations,
+      hash: "SHA-256",
+    },
+    passwordKey,
+    { name: "AES-KW", length: 256 },
+    false,
+    ["unwrapKey"]
+  );
+
+  return crypto.subtle.unwrapKey(
+    "raw",
+    wrappedVaultKey,
+    wrappingKey,
+    "AES-KW",
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+export async function unwrapVaultKeyWithRecovery(
+  recoveryKey: string,
+  wrappedRecoveryVaultKey: ArrayBuffer
+): Promise<CryptoKey> {
+  const recoveryBytes = decodeRecoveryKey(recoveryKey);
+  try {
+    const recoveryWrappingKey = await importRecoveryWrappingKey(recoveryBytes);
+    return await crypto.subtle.unwrapKey(
+      "raw",
+      wrappedRecoveryVaultKey,
+      recoveryWrappingKey,
+      "AES-KW",
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  } finally {
+    new Uint8Array(recoveryBytes).fill(0);
+  }
+}

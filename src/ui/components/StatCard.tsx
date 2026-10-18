@@ -46,7 +46,7 @@ function StatCard({
         >
           {icon}
         </div>
-        <span className="stat-value">{value}</span>
+        <span className="stat-value" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
       </div>
 
       <div className="stat-label">{label}</div>

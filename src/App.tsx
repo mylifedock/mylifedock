@@ -26,6 +26,11 @@ import {
 
 import VaultGate from "./security/VaultGate";
 
+import { useGoogleLogin } from "@react-oauth/google";
+import { useToast } from "./ui/components/Toast";
+import { listBackups, downloadBackup } from "./application/googleDriveService";
+import { restoreVaultFromBackup } from "./application/backupService";
+
 import Sidebar from "./ui/components/Sidebar";
 import DashboardPage from "./ui/pages/DashboardPage";
 import DocumentsPage from "./ui/pages/DocumentsPage";
@@ -35,6 +40,7 @@ import { FinancePage } from "./ui/pages/FinancePage";
 import { AssetsPage } from "./ui/pages/AssetsPage";
 import { SearchPage } from "./ui/pages/SearchPage";
 import SettingsPage from "./ui/pages/SettingsPage";
+import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import SecretsPage from "./ui/pages/SecretsPage";
 import InsurancePage from "./ui/pages/InsurancePage";
 import { VehiclesPage } from "./ui/pages/VehiclesPage";
@@ -46,11 +52,39 @@ const AUTO_LOCK_TIMEOUT_MS =
   30 * 60 * 1000;
 
 function App() {
+  const { showToast } = useToast();
   const [profile, setProfile] =
     useState<ProfileRecord>();
 
   const [displayName, setDisplayName] =
     useState("");
+
+  const [acceptedTerms, setAcceptedTerms] =
+    useState(false);
+
+  const [onboardingTab, setOnboardingTab] =
+    useState<"create" | "restore">("create");
+
+  const [isRestoring, setIsRestoring] =
+    useState(false);
+
+  const [showRestoreModal, setShowRestoreModal] =
+    useState(false);
+
+  const [pendingRestoreBlob, setPendingRestoreBlob] =
+    useState<Blob | File | null>(null);
+
+  const [restoreSource, setRestoreSource] =
+    useState<string>("");
+
+  const [restorePassphrase, setRestorePassphrase] =
+    useState("");
+
+  const [restoreError, setRestoreError] =
+    useState("");
+
+  const restoreFileInputRef =
+    useRef<HTMLInputElement>(null);
 
   const [activePage, setActivePage] =
     useState("dashboard");
@@ -213,7 +247,77 @@ function App() {
         );
       }
     };
-  }, [vaultUnlocked]);
+  }, [vaultUnlocked]);  const handleGoogleDriveRestore = useGoogleLogin({
+    scope: "https://www.googleapis.com/auth/drive.appdata",
+    onSuccess: async (tokenResponse) => {
+      try {
+        setIsRestoring(true);
+        showToast("Connecting to Google Drive...", "info");
+        const token = tokenResponse.access_token;
+
+        const files = await listBackups(token);
+        if (files.length === 0) {
+          showToast("No backups found in Google Drive.", "error");
+          setIsRestoring(false);
+          return;
+        }
+
+        const latestBackup = files[0];
+        showToast("Downloading backup from Google Drive...", "info");
+        const blob = await downloadBackup(token, latestBackup.id);
+
+        setPendingRestoreBlob(blob);
+        setRestoreSource("Google Drive");
+        setRestoreError("");
+        setRestorePassphrase("");
+        setShowRestoreModal(true);
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Failed to fetch cloud backup", "error");
+      } finally {
+        setIsRestoring(false);
+      }
+    },
+    onError: () => {
+      showToast("Google authentication cancelled or failed.", "error");
+      setIsRestoring(false);
+    },
+  });
+
+  function handleFileRestoreSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPendingRestoreBlob(file);
+    setRestoreSource(`File (${file.name})`);
+    setRestoreError("");
+    setRestorePassphrase("");
+    setShowRestoreModal(true);
+    e.target.value = "";
+  }
+
+  async function handleExecuteRestore(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pendingRestoreBlob || !restorePassphrase.trim() || isRestoring) return;
+
+    setRestoreError("");
+    setIsRestoring(true);
+    try {
+      const result = await restoreVaultFromBackup(pendingRestoreBlob, restorePassphrase.trim());
+      showToast(`Vault restored! Welcome back, ${result.profileName}.`, "success");
+
+      const updatedProfile = await getLocalProfile();
+      setProfile(updatedProfile);
+      setVaultConfigured(true);
+      setVaultUnlocked(true);
+      setShowRestoreModal(false);
+      setPendingRestoreBlob(null);
+      setRestorePassphrase("");
+    } catch (err) {
+      setRestoreError(err instanceof Error ? err.message : "Failed to restore vault.");
+    } finally {
+      setIsRestoring(false);
+    }
+  }
 
   async function handleCreateProfile() {
     if (!displayName.trim()) {
@@ -262,59 +366,220 @@ function App() {
             <span>One private dock.</span>
           </h1>
 
-          <p>
-            Keep documents, products, warranties,
-            reminders and important life
-            information organized in one place.
-          </p>
-
-          <label htmlFor="displayName">
-            What should we call you?
-          </label>
-
-          <input
-            id="displayName"
-            value={displayName}
-            onChange={(event) =>
-              setDisplayName(
-                event.target.value,
-              )
-            }
-            placeholder="Your name"
-            autoFocus
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                void handleCreateProfile();
-              }
-            }}
-          />
-
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() =>
-              void handleCreateProfile()
-            }
-            disabled={!displayName.trim()}
-          >
-            Create my local vault
-            <span>→</span>
-          </button>
-
-          <div className="onboarding-security">
-            <span>●</span>
-
-            <div>
-              <strong>
-                Private by default
-              </strong>
-
-              <small>
-                Your first vault lives only on
-                this device.
-              </small>
-            </div>
+          {/* New vs Returning User Tab Toggle */}
+          <div style={{ display: "flex", background: "rgba(255, 255, 255, 0.06)", padding: "4px", borderRadius: "8px", margin: "18px 0 16px 0", gap: "4px" }}>
+            <button
+              type="button"
+              onClick={() => setOnboardingTab("create")}
+              style={{
+                flex: 1,
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "none",
+                background: onboardingTab === "create" ? "#38bdf8" : "transparent",
+                color: onboardingTab === "create" ? "#0f172a" : "#94a3b8",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              ✨ Create New Vault
+            </button>
+            <button
+              type="button"
+              onClick={() => setOnboardingTab("restore")}
+              style={{
+                flex: 1,
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "none",
+                background: onboardingTab === "restore" ? "#38bdf8" : "transparent",
+                color: onboardingTab === "restore" ? "#0f172a" : "#94a3b8",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              🔄 Restore Existing Vault
+            </button>
           </div>
+
+          {onboardingTab === "create" ? (
+            <>
+              <p>
+                Keep documents, products, warranties, reminders and important life information organized in one place.
+              </p>
+
+              <label htmlFor="displayName">
+                What should we call you?
+              </label>
+
+              <input
+                id="displayName"
+                value={displayName}
+                maxLength={50}
+                onChange={(event) =>
+                  setDisplayName(
+                    event.target.value,
+                  )
+                }
+                placeholder="Your name"
+                autoFocus
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && acceptedTerms) {
+                    void handleCreateProfile();
+                  }
+                }}
+              />
+
+              <div style={{ marginTop: "16px", marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "10px", textAlign: "left", padding: "12px", background: "rgba(255, 0, 0, 0.05)", border: "1px solid rgba(255, 100, 100, 0.2)", borderRadius: "8px" }}>
+                <input 
+                  type="checkbox" 
+                  id="termsCheckbox" 
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  style={{ marginTop: "4px", cursor: "pointer", width: "16px", height: "16px", flexShrink: 0 }}
+                />
+                <label htmlFor="termsCheckbox" style={{ fontSize: "12.5px", color: "#e2e8f0", lineHeight: "1.4", cursor: "pointer" }}>
+                  I agree to the <a href="#" style={{ color: "#38bdf8" }}>Terms of Service</a> & <a href="#" style={{ color: "#38bdf8" }}>Privacy Policy</a>. 
+                  <br/><br/>
+                  <strong style={{ color: "#f87171" }}>CRITICAL RISK ACKNOWLEDGEMENT:</strong> I understand that MyLifeDock uses a Zero-Knowledge architecture. <strong>If I lose my Master Passphrase and Recovery Key, my data is permanently unrecoverable.</strong> The developer cannot reset my password or access my data under any circumstances. I accept full responsibility for securely backing up my keys.
+                </label>
+              </div>
+
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() =>
+                  void handleCreateProfile()
+                }
+                disabled={!displayName.trim() || !acceptedTerms}
+              >
+                Create my local vault
+                <span>→</span>
+              </button>
+
+              <div className="onboarding-security">
+                <span>●</span>
+                <div>
+                  <strong>
+                    Private by default
+                  </strong>
+                  <small>
+                    Your first vault lives only on this device.
+                  </small>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <p style={{ color: "#94a3b8", fontSize: "13.5px", lineHeight: "1.5", margin: 0 }}>
+                Reinstalling the app or switching devices? Restore your encrypted vault from your personal Google Drive or an exported <strong>.mldv</strong> backup file.
+              </p>
+
+              <div style={{ display: "grid", gap: "10px", marginTop: "4px" }}>
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => handleGoogleDriveRestore()}
+                  disabled={isRestoring}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", background: "linear-gradient(135deg, #4285F4, #34A853)" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L4 16h6l2-4 2 4h6L12 2z" fill="#fff"/>
+                  </svg>
+                  {isRestoring ? "Connecting to Cloud..." : "Restore from Google Drive"}
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => restoreFileInputRef.current?.click()}
+                  disabled={isRestoring}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
+                >
+                  📁 Restore from Backup File (.mldv)
+                </button>
+                <input
+                  type="file"
+                  accept=".mldv"
+                  ref={restoreFileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleFileRestoreSelected}
+                />
+              </div>
+
+              <div className="onboarding-security" style={{ marginTop: "4px" }}>
+                <span>●</span>
+                <div>
+                  <strong>Zero-Knowledge Restoration</strong>
+                  <small>
+                    Your Master Passphrase decrypts your vault directly on this device. No unencrypted data is ever sent to any developer server.
+                  </small>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Master Passphrase Modal for Restoration */}
+          {showRestoreModal && (
+            <div className="product-detail-overlay">
+              <div className="card" style={{ maxWidth: "440px", width: "100%", margin: "auto", padding: "24px", background: "#111827", border: "1px solid rgba(56, 189, 248, 0.3)" }}>
+                <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  🔐 Enter Vault Passphrase
+                </h3>
+                <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+                  Restoring from <strong>{restoreSource}</strong>. Enter the Master Passphrase (or 64-character Recovery Key) used for this vault.
+                </p>
+
+                <form onSubmit={handleExecuteRestore}>
+                  <div className="form-field" style={{ marginBottom: "16px" }}>
+                    <label htmlFor="restorePass">Master Passphrase or Recovery Key</label>
+                    <input
+                      id="restorePass"
+                      type="password"
+                      required
+                      value={restorePassphrase}
+                      onChange={(e) => setRestorePassphrase(e.target.value)}
+                      placeholder="Enter passphrase or recovery key"
+                      autoFocus
+                    />
+                  </div>
+
+                  {restoreError && (
+                    <div className="vault-error" style={{ marginBottom: "16px", color: "#f87171", fontSize: "13px" }}>
+                      {restoreError}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => {
+                        setShowRestoreModal(false);
+                        setPendingRestoreBlob(null);
+                        setRestorePassphrase("");
+                        setRestoreError("");
+                      }}
+                      disabled={isRestoring}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="primary-button"
+                      disabled={!restorePassphrase.trim() || isRestoring}
+                    >
+                      {isRestoring ? "Decrypting..." : "Unlock & Restore Vault →"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     );
@@ -437,8 +702,9 @@ function App() {
               .toUpperCase()}
           </button>
         </div>
-
-        {renderPage()}
+        <ErrorBoundary onReset={() => setActivePage('dashboard')}>
+          {renderPage()}
+        </ErrorBoundary>
       </main>
 
       <nav className="mobile-bottom-nav">

@@ -119,7 +119,7 @@ export function FinancePage() {
               </div>
               <div className="form-field">
                 <label>Identifier (Last 4 Digits Only)</label>
-                <input type="text" maxLength={4} pattern="\d{1,4}" value={formData.identifier} onChange={e => setFormData({ ...formData, identifier: e.target.value })} placeholder="1234" />
+                <input type="text" inputMode="numeric" maxLength={4} pattern="\d{1,4}" value={formData.identifier} onChange={e => setFormData({ ...formData, identifier: e.target.value })} placeholder="1234" />
               </div>
               <div style={{ display: "flex", gap: "16px" }}>
                 <div className="form-field" style={{ flex: 1 }}>

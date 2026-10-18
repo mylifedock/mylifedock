@@ -16,6 +16,8 @@ import {
   type CreateProductInput,
 } from "../../application/productService";
 
+import { formatCurrency } from "../../application/currencyService";
+
 import {
   createCoverage,
   coverageStatus,
@@ -595,19 +597,48 @@ function ProductForm({
               Invoice attachment
             </label>
 
-            <input
-              id="productInvoice"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp"
-              onChange={(event) =>
-                setInvoiceFile(
-                  event.target.files?.[0],
-                )
-              }
-            />
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "4px", flexWrap: "wrap" }}>
+              <label 
+                className="secondary-button" 
+                style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)", padding: "6px 12px" }}
+              >
+                <span>📷</span>
+                <span>Snap Invoice</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(event) =>
+                    setInvoiceFile(
+                      event.target.files?.[0],
+                    )
+                  }
+                  style={{ display: "none" }}
+                />
+              </label>
+
+              <label 
+                className="secondary-button" 
+                style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12.5px", padding: "6px 12px" }}
+              >
+                <span>📁</span>
+                <span>Choose File</span>
+                <input
+                  id="productInvoice"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={(event) =>
+                    setInvoiceFile(
+                      event.target.files?.[0],
+                    )
+                  }
+                  style={{ display: "none" }}
+                />
+              </label>
+            </div>
 
             {invoiceFile && (
-              <small className="file-selection">
+              <small className="file-selection" style={{ display: "block", marginTop: "6px", color: "#38bdf8" }}>
                 Selected: {invoiceFile.name}
               </small>
             )}
@@ -621,13 +652,24 @@ function ProductForm({
           </div>
 
           <div className="form-field product-form-full">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px", flexWrap: "wrap", gap: "8px" }}>
               <label htmlFor="productNotes" style={{ margin: 0 }}>
                 Notes
               </label>
-              <div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <label className="text-button" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px", color: "#38bdf8" }}>
+                  <span>{isScanning ? `Scanning... ${scanProgress}%` : "📷 Snap & Auto-Fill"}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleScan}
+                    disabled={isScanning}
+                    style={{ display: "none" }}
+                  />
+                </label>
                 <label className="text-button" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  <span>{isScanning ? `Scanning... ${scanProgress}%` : "📸 Auto-Fill via Scan"}</span>
+                  <span>🖼️ Upload to Auto-Fill</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -1225,9 +1267,7 @@ function ProductDetails({
   const formattedPrice =
     product.purchasePrice !==
     undefined
-      ? `₹ ${product.purchasePrice.toLocaleString(
-          "en-IN",
-        )}`
+      ? formatCurrency(product.purchasePrice)
       : undefined;
 
   const coverages = useLiveQuery(
@@ -1766,10 +1806,7 @@ function ProductCard({
           <div>
             <small>Price</small>
             <strong>
-              ₹{" "}
-              {product.purchasePrice.toLocaleString(
-                "en-IN",
-              )}
+              {formatCurrency(product.purchasePrice)}
             </strong>
           </div>
         )}

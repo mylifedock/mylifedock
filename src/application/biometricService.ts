@@ -2,9 +2,11 @@ import { BiometricAuth, BiometryType } from "@aparajita/capacitor-biometric-auth
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
 import { isTauri, desktopStorageSet, desktopStorageGet, desktopStorageDelete } from "../platform/desktopBridge";
+import { arrayBufferToBase64, base64ToArrayBuffer } from "./backupService";
 
 const BIOMETRIC_ENABLED_KEY = "mylifedock_biometric_enabled";
 const BIOMETRIC_CRED_KEY = "mylifedock_bio_vault_sec";
+const BIOMETRIC_WRAP_KEY = "mylifedock_bio_wrap_key";
 
 export interface BiometricStatus {
   isAvailable: boolean;
@@ -108,22 +110,42 @@ export async function enableBiometricUnlock(passphrase: string): Promise<boolean
     // 1. Prompt biometric sensor to authorize
     await promptBiometricAuth("Confirm biometric setup for MyLifeDock");
 
+    const wrapKey = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+    const wrapKeyRaw = await crypto.subtle.exportKey("raw", wrapKey);
+    const wrapKeyStr = arrayBufferToBase64(wrapKeyRaw);
+
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encodedPass = new TextEncoder().encode(passphrase);
+    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, wrapKey, encodedPass);
+
+    const encryptedPassStr = JSON.stringify({
+      ct: arrayBufferToBase64(ciphertext),
+      iv: arrayBufferToBase64(iv.buffer)
+    });
+
     // 2. Desktop storage if on Tauri
     if (isTauri()) {
-      await desktopStorageSet(BIOMETRIC_CRED_KEY, passphrase);
+      await desktopStorageSet(BIOMETRIC_CRED_KEY, encryptedPassStr);
+      await desktopStorageSet(BIOMETRIC_WRAP_KEY, wrapKeyStr);
       await desktopStorageSet(BIOMETRIC_ENABLED_KEY, "true");
     }
 
     // 3. Persist in Preferences and LocalStorage fallback
     try {
-      await Preferences.set({ key: BIOMETRIC_CRED_KEY, value: passphrase });
+      await Preferences.set({ key: BIOMETRIC_CRED_KEY, value: encryptedPassStr });
+      await Preferences.set({ key: BIOMETRIC_WRAP_KEY, value: wrapKeyStr });
       await Preferences.set({ key: BIOMETRIC_ENABLED_KEY, value: "true" });
     } catch (prefErr) {
       console.warn("Preferences.set error:", prefErr);
     }
 
     try {
-      localStorage.setItem(BIOMETRIC_CRED_KEY, passphrase);
+      localStorage.setItem(BIOMETRIC_CRED_KEY, encryptedPassStr);
+      localStorage.setItem(BIOMETRIC_WRAP_KEY, wrapKeyStr);
       localStorage.setItem(BIOMETRIC_ENABLED_KEY, "true");
     } catch (lsErr) {
       console.warn("localStorage.setItem error:", lsErr);
@@ -170,21 +192,28 @@ export async function getPassphraseViaBiometrics(): Promise<string | null> {
   }
 
   let storedPass: string | null = null;
+  let storedWrapKey: string | null = null;
+  
   if (isTauri()) {
     storedPass = await desktopStorageGet<string>(BIOMETRIC_CRED_KEY);
+    storedWrapKey = await desktopStorageGet<string>(BIOMETRIC_WRAP_KEY);
   }
 
-  if (!storedPass) {
+  if (!storedPass || !storedWrapKey) {
     try {
       const res = await Preferences.get({ key: BIOMETRIC_CRED_KEY });
       if (res && res.value) storedPass = res.value;
+      
+      const resWrap = await Preferences.get({ key: BIOMETRIC_WRAP_KEY });
+      if (resWrap && resWrap.value) storedWrapKey = resWrap.value;
     } catch (e) {
       console.warn("Preferences.get error:", e);
     }
   }
 
-  if (!storedPass) {
-    storedPass = localStorage.getItem(BIOMETRIC_CRED_KEY);
+  if (!storedPass || !storedWrapKey) {
+    storedPass = storedPass || localStorage.getItem(BIOMETRIC_CRED_KEY);
+    storedWrapKey = storedWrapKey || localStorage.getItem(BIOMETRIC_WRAP_KEY);
   }
 
   if (!storedPass) {
@@ -193,6 +222,28 @@ export async function getPassphraseViaBiometrics(): Promise<string | null> {
 
   // Trigger Biometric Sensor Prompt
   await promptBiometricAuth("Unlock your MyLifeDock vault");
+
+  try {
+    const parsed = JSON.parse(storedPass);
+    if (parsed.ct && parsed.iv && storedWrapKey) {
+      const wrapKeyRaw = base64ToArrayBuffer(storedWrapKey);
+      const wrapKey = await crypto.subtle.importKey(
+        "raw",
+        wrapKeyRaw,
+        { name: "AES-GCM" },
+        false,
+        ["decrypt"]
+      );
+      
+      const iv = base64ToArrayBuffer(parsed.iv);
+      const ct = base64ToArrayBuffer(parsed.ct);
+      
+      const plainBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, wrapKey, ct);
+      return new TextDecoder().decode(plainBuffer);
+    }
+  } catch {
+    // If it's old unencrypted format, just return storedPass (fallback)
+  }
 
   return storedPass;
 }

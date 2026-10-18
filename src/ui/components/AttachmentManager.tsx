@@ -155,7 +155,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
         <label style={{ fontSize: "12px", fontWeight: "bold", color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.5px" }}>
           Attachments ({attachments?.length || 0})
         </label>
-        <div>
+        <div style={{ display: "flex", gap: "8px" }}>
           <input
             type="file"
             multiple
@@ -164,6 +164,26 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
             style={{ display: "none" }}
             onChange={handleFileSelect}
           />
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            id={`camera-input-${entityId}`}
+            style={{ display: "none" }}
+            onChange={handleFileSelect}
+          />
+          <button
+            type="button"
+            className="secondary-button"
+            style={{ padding: "5px 10px", fontSize: "12px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
+            onClick={() => {
+              const el = document.getElementById(`camera-input-${entityId}`);
+              if (el) el.click();
+            }}
+            disabled={isUploading}
+          >
+            📷 Snap Photo
+          </button>
           <button
             type="button"
             className="secondary-button"

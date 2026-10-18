@@ -4,4 +4,5 @@
     <string name="title_activity_main">MyLifeDock</string>
     <string name="package_name">com.mylifedock.app</string>
     <string name="custom_url_scheme">com.mylifedock.app</string>
+    <string name="server_client_id">350340206913-cka41qrr5efnqbi2i353c7mnb68so1hk.apps.googleusercontent.com</string>
 </resources>

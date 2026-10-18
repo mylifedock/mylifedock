@@ -26,7 +26,12 @@ export async function listBackups(accessToken: string): Promise<DriveFile[]> {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to list backups: ${response.statusText}`);
+    let detail = response.statusText;
+    try {
+      const errBody = await response.json();
+      detail = errBody?.error?.message || errBody?.error || detail;
+    } catch { /* ignore parse failure */ }
+    throw new Error(`Failed to list backups: ${detail}`);
   }
 
   const data = await response.json();
@@ -55,7 +60,12 @@ export async function uploadBackup(accessToken: string, fileBlob: Blob, filename
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to upload backup: ${response.statusText}`);
+    let detail = response.statusText;
+    try {
+      const errBody = await response.json();
+      detail = errBody?.error?.message || errBody?.error || detail;
+    } catch { /* ignore parse failure */ }
+    throw new Error(`Failed to upload backup: ${detail}`);
   }
 }
 
@@ -70,7 +80,12 @@ export async function downloadBackup(accessToken: string, fileId: string): Promi
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to download backup: ${response.statusText}`);
+    let detail = response.statusText;
+    try {
+      const errBody = await response.json();
+      detail = errBody?.error?.message || errBody?.error || detail;
+    } catch { /* ignore parse failure */ }
+    throw new Error(`Failed to download backup: ${detail}`);
   }
 
   return response.blob();
