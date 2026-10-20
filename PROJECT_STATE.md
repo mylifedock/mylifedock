@@ -2,7 +2,7 @@
 
 > **Single source of truth for continuing MyLifeDock development.**
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-10-20
 > **Current Release Branch:** `release/v1.0.0`
 
 ---
@@ -10,19 +10,21 @@
 ## 0. Current Resume Snapshot
 
 **Product:** MyLifeDock  
-**Current milestone:** **v1.0.0 Production Release & Global Commercial Ready**  
+**Current milestone:** **v1.0.0 Production Release & Mobile UI/UX Overhaul**  
 **Desktop Target:** Tauri v2 Windows Setup (`MyLifeDock_1.0.0_x64-setup.exe` & `.msi`)  
-**Mobile Target:** Capacitor v8 Android (Signed `.aab` ready) & iOS  
+**Mobile Target:** Capacitor v8 Android (Signed `.aab` / Debug `.apk` ready) & iOS  
 **Web / PWA Target:** Vite production dist / PWA Service Worker / Cloudflare Pages (`wrangler.toml`)  
 **Marketing Target:** Standalone Production Landing Page (`public/landing.html`)  
-**Security Milestone:** **CERTIFIED ZERO-KNOWLEDGE** (AES-256-GCM, PBKDF2 100k rounds, 30-min Auto-Lock, SAST/OSA/DAST passed)  
+**Security Milestone:** **CERTIFIED ZERO-KNOWLEDGE** (AES-256-GCM, PBKDF2 key derivation, 30-min Auto-Lock, SAST/OSA/DAST passed)  
+**Mobile UI/UX Architecture:** **COMPLETE** (Deduplicated 5-item Home Dock, Category Directory Drawer, Dynamic Topbar with `[← Home]` back navigation, Keyboard Viewport Detection, 16px font-scale eliminating iOS zoom, Full-width Action CTA buttons)  
 **Legal & Licensing:** **COMPLETE** (Dual-Engine: LemonSqueezy/Paddle Global + Razorpay India UPI, T&C Onboarding Gate, Patent Blueprint)  
 **Currency Engine:** **COMPLETE** (`currencyService.ts` supporting INR ₹ with Lakh/Crore, USD $, EUR €, GBP £, etc.)  
 **Hardware & Media:** **COMPLETE** (Native Camera capture, Persistent WebWorker OCR, Continuous Voice Search)  
 **Documentation Suite:** **COMPLETE** (7 HTML + 7 MD guides with Mermaid flowcharts in `docs/`)  
+**Playwright Test Suite:** **PASS (3/3 Suites: Desktop E2E, Mobile UI/UX, 360px Compact Android)**  
 **Lint (ESLint Security):** **PASS (0 errors)**  
 **Type Check (tsc):** **PASS (0 errors)**  
-**Build:** **PASS (Web dist + Isolated OCR Async Chunks + Windows NSIS .exe)**  
+**Build:** **PASS (Web dist + Isolated OCR Async Chunks + Android Gradle assembleDebug)**  
 
 ### How to Run & Verify:
 1. **Launch Web App & Landing Page:**
@@ -31,13 +33,19 @@
    # App: http://localhost:5173
    # Landing Page: http://localhost:5173/landing.html
    ```
-2. **Build Desktop Installer (.exe):**
+2. **Run Playwright Test Suites (Desktop & Mobile):**
+   ```powershell
+   npx playwright test
+   ```
+3. **Build Desktop Installer (.exe):**
    ```powershell
    npm run tauri:build:win
    ```
-3. **Build Android App Bundle (.aab):**
-   Follow `docs/Android_PlayStore_Guide.html`.
-4. **View Complete HTML Documentation:**
+4. **Build Android App (.apk / .aab):**
+   ```powershell
+   $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; cd android; ./gradlew assembleDebug
+   ```
+5. **View Complete HTML Documentation:**
    Double-click any HTML file in `docs/` (`MyLifeDock_User_Handbook.html`, `MyLifeDock_Security_Audit_2026.html`, `Legal_Patent_Application_Guide.html`, etc.).
 
 ---

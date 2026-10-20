@@ -5,72 +5,44 @@ type SidebarProps = {
   onClose?: () => void;
 };
 
-const navigation = [
+type NavItem = {
+  id: string;
+  label: string;
+  icon: string;
+  badge?: string;
+};
+
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+const navigationGroups: NavGroup[] = [
   {
-    id: "dashboard",
-    label: "Overview",
-    icon: "🏠",
-    enabled: true,
+    title: "VAULT ESSENTIALS",
+    items: [
+      { id: "dashboard", label: "Overview", icon: "🏠" },
+      { id: "documents", label: "Documents", icon: "📄" },
+      { id: "products", label: "Products & Warranties", icon: "📦" },
+      { id: "reminders", label: "Reminders & Expiries", icon: "⏰" },
+      { id: "search", label: "Universal Search", icon: "🔍" },
+    ],
   },
   {
-    id: "documents",
-    label: "Documents",
-    icon: "📄",
-    enabled: true,
+    title: "FINANCIAL & ASSETS",
+    items: [
+      { id: "insurance", label: "Insurance Policies", icon: "🛡️" },
+      { id: "finance", label: "Financial Accounts", icon: "💰" },
+      { id: "subscriptions", label: "Subscriptions", icon: "💳" },
+      { id: "assets", label: "Vehicles & Properties", icon: "📊" },
+    ],
   },
   {
-    id: "products",
-    label: "Products",
-    icon: "📦",
-    enabled: true,
-  },
-  {
-    id: "search",
-    label: "Search",
-    icon: "🔍",
-    enabled: true,
-  },
-  {
-    id: "reminders",
-    label: "Reminders",
-    icon: "⏰",
-    enabled: true,
-  },
-  {
-    id: "secrets",
-    label: "Secrets",
-    icon: "🔐",
-    enabled: true,
-  },
-  {
-    id: "insurance",
-    label: "Insurance",
-    icon: "🛡️",
-    enabled: true,
-  },
-  {
-    id: "finance",
-    label: "Finance",
-    icon: "💰",
-    enabled: true,
-  },
-  {
-    id: "subscriptions",
-    label: "Subscriptions",
-    icon: "💳",
-    enabled: true,
-  },
-  {
-    id: "assets",
-    label: "Assets (Vehicles & Properties)",
-    icon: "📊",
-    enabled: true,
-  },
-  {
-    id: "emergency",
-    label: "Emergency Kit",
-    icon: "🆘",
-    enabled: true,
+    title: "SECURITY & RECOVERY",
+    items: [
+      { id: "secrets", label: "Secrets Vault", icon: "🔐" },
+      { id: "emergency", label: "Emergency Life Kit", icon: "🆘", badge: "SOS" },
+    ],
   },
 ];
 
@@ -89,12 +61,11 @@ function Sidebar({
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+      <div className="sidebar-header-wrapper">
         <button
           className="sidebar-header"
           type="button"
           onClick={() => handleNav("dashboard")}
-          style={{ cursor: "pointer", border: "none", background: "transparent", flex: 1, textAlign: "left", display: "flex", alignItems: "center", gap: "10px" }}
           aria-label="Go to home"
         >
           <div className="brand-logo">
@@ -121,43 +92,32 @@ function Sidebar({
       </div>
 
       <nav className="sidebar-nav">
-        {navigation.map((item) => (
-          <button
-            key={item.id}
-            className={`nav-item ${
-              activePage === item.id
-                ? "nav-item-active"
-                : ""
-            } ${
-              !item.enabled
-                ? "nav-item-disabled"
-                : ""
-            }`}
-            onClick={() => {
-              if (item.enabled) {
-                handleNav(item.id);
-              }
-            }}
-            type="button"
-            disabled={!item.enabled}
-            title={
-              !item.enabled
-                ? "Coming soon"
-                : undefined
-            }
-          >
-            <span className="nav-icon" aria-hidden="true">
-              {item.icon}
-            </span>
+        {navigationGroups.map((group) => (
+          <div key={group.title} className="sidebar-nav-group">
+            <div className="sidebar-group-title">{group.title}</div>
+            {group.items.map((item) => (
+              <button
+                key={item.id}
+                className={`nav-item ${
+                  activePage === item.id ? "nav-item-active" : ""
+                }`}
+                onClick={() => handleNav(item.id)}
+                type="button"
+              >
+                <span className="nav-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
 
-            <span>{item.label}</span>
+                <span className="nav-label">{item.label}</span>
 
-            {!item.enabled && (
-              <span className="nav-coming-soon">
-                Soon
-              </span>
-            )}
-          </button>
+                {item.badge && (
+                  <span className="nav-item-badge">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         ))}
       </nav>
 
@@ -170,7 +130,7 @@ function Sidebar({
           <span className="nav-icon" aria-hidden="true">
             ℹ️
           </span>
-          <span>About & Support</span>
+          <span className="nav-label">About & Support</span>
         </button>
         <button
           className={`nav-item ${activePage === "settings" ? "nav-item-active" : ""}`}
@@ -180,11 +140,10 @@ function Sidebar({
           <span className="nav-icon" aria-hidden="true">
             ⚙️
           </span>
-          <span>Settings</span>
+          <span className="nav-label">Settings & Backup</span>
         </button>
         <button
-          className="nav-item"
-          style={{ color: "var(--color-danger)" }}
+          className="nav-item nav-item-danger"
           type="button"
           onClick={() => {
             if (onClose) onClose();
@@ -192,16 +151,14 @@ function Sidebar({
           }}
         >
           <span className="nav-icon" aria-hidden="true">🔒</span>
-          <span>Lock / Logout</span>
+          <span className="nav-label">Lock Vault</span>
         </button>
 
         <div className="privacy-badge">
           <span>🛡️</span>
           <div>
-            <strong>Local first</strong>
-            <small>
-              Your data stays with you
-            </small>
+            <strong>Zero-Knowledge Active</strong>
+            <small>Local AES-256-GCM Vault</small>
           </div>
         </div>
       </div>

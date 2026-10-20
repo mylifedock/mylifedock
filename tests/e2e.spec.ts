@@ -3,10 +3,11 @@ import { test, expect } from '@playwright/test';
 test('End-to-End Vault Flow', async ({ page }) => {
   // 1. Navigate to local app
   await page.goto('http://localhost:5173');
+  await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
   
   // 1b. Handle Initial Profile & Legal Terms Onboarding if present
   const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
-  if (await onboardingHeader.isVisible({ timeout: 5000 }).catch(() => false)) {
+  if (await onboardingHeader.isVisible()) {
     console.log('Detected fresh onboarding, entering name & accepting terms...');
     await page.fill('input#displayName', 'Test Founder');
     await page.check('input#termsCheckbox');
@@ -54,7 +55,7 @@ test('End-to-End Vault Flow', async ({ page }) => {
   await expect(page.locator('text="Playwright Test Laptop"').first()).toBeVisible({ timeout: 10000 });
 
   // 5. Test Lock / Logout
-  await page.click('button:has-text("Lock / Logout")');
+  await page.click('button:has-text("Lock")');
   await expect(page.locator('input#vaultPassphrase')).toBeVisible({ timeout: 10000 });
 
   console.log('✅ Deep UI and Cryptographic persistence tests passed.');

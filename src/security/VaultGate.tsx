@@ -289,8 +289,8 @@ function VaultGate({
               void copyRecoveryKey()
             }
           >
-            Copy recovery key
-            <span>↗</span>
+            <span>Copy recovery key</span>
+            <span className="btn-arrow" aria-hidden="true">↗</span>
           </button>
 
           <label>
@@ -322,8 +322,8 @@ function VaultGate({
               onUnlocked();
             }}
           >
-            Continue to MyLifeDock
-            <span>→</span>
+            <span>Continue to MyLifeDock</span>
+            <span className="btn-arrow" aria-hidden="true">→</span>
           </button>
 
           <div className="onboarding-security">
@@ -447,11 +447,11 @@ function VaultGate({
                 !confirmPassphrase
               }
             >
-              {busy
+              <span>{busy
                 ? "Recovering..."
-                : "Recover vault"}
+                : "Recover vault"}</span>
 
-              <span>→</span>
+              <span className="btn-arrow" aria-hidden="true">→</span>
             </button>
           </form>
 
@@ -605,13 +605,13 @@ function VaultGate({
                 !confirmPassphrase)
             }
           >
-            {busy
+            <span>{busy
               ? "Securing..."
               : isSetup
                 ? "Create private vault"
-                : "Unlock MyLifeDock"}
+                : "Unlock MyLifeDock"}</span>
 
-            <span>→</span>
+            <span className="btn-arrow" aria-hidden="true">→</span>
           </button>
         </form>
 
@@ -626,8 +626,8 @@ function VaultGate({
                   setMode("recovery");
                 }}
               >
-                Use recovery key
-                <span>↗</span>
+                <span>Use recovery key</span>
+                <span className="btn-arrow" aria-hidden="true">↗</span>
               </button>
             </div>
 
