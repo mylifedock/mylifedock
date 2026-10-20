@@ -155,3 +155,21 @@ stateDiagram-v2
 | **OCR Processing** | Tesseract.js (WebAssembly on-device) | 100% Offline, Zero Cloud Telemetry |
 | **Desktop Shell** | Tauri v2 (Rust 2021, Webview2 / WKWebView) | Memory-safe, ~3.4 MB bundle footprint |
 | **Mobile Shell** | Capacitor v8 (Android / iOS) | Android Keystore / Apple Keychain isolation |
+
+---
+
+## 📱 6. Version 1.1.0 Mobile & Multi-Device Precision Architecture
+
+In release **v1.1.0**, the interaction and responsive presentation model was upgraded to provide an authentic, mobile-first experience without altering the underlying zero-knowledge cryptographic invariants:
+
+1. **Context-Aware Dynamic Navigation:**
+   - **Root Home Dock:** When viewing the Overview dashboard, a 5-item quick-dock is mounted (`Home`, `Search`, `Directory`, `Emergency`, `Settings`).
+   - **Inner Page Decoupling:** On all sub-pages (Documents, Products, Finance, Add forms), the bottom bar is cleanly unmounted, replaced by an inner header with `[← Home]` back navigation.
+2. **Virtual Keyboard & Soft-Input Adaptation:**
+   - Dual-layered listeners (`window.visualViewport` + `focusin`/`focusout`) toggle `body.keyboard-open`.
+   - Bottom navigation automatically unmounts; sticky bottom action bars switch to `position: static`, ensuring active inputs and buttons remain unobscured.
+3. **Multi-Density Fluid Responsive Grid:**
+   - Fluid clamps and responsive CSS grid adapt smoothly from 320px compact Android phones to 440px+ flagships, foldables, and desktop layouts with zero horizontal scroll overflow.
+4. **Touch Targets & Typography Standards:**
+   - Full-width CTA buttons feature balanced left-aligned text and right-docked action arrows (`margin-left: auto`), eliminating dead space.
+   - Mobile inputs and selects enforce a 16px minimum font size, preventing iOS Safari auto-zoom and guaranteeing high readability on Android.

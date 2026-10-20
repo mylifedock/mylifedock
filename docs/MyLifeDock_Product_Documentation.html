@@ -289,6 +289,15 @@
 </tr>
 </tbody></table>
 
+<h2 id="6-version-110-mobile-multi-device-architecture">📱 6. Version 1.1.0 Mobile &amp; Multi-Device Precision Architecture</h2>
+<p>In release <strong>v1.1.0</strong>, the interaction and responsive presentation model was upgraded to provide an authentic, mobile-first experience without altering the underlying zero-knowledge cryptographic invariants:</p>
+<ol>
+    <li><strong>Context-Aware Dynamic Navigation:</strong> When viewing the Overview dashboard, a 5-item quick-dock is mounted (Home, Search, Directory, Emergency, Settings). On all sub-pages (Documents, Products, Finance, Add forms), the bottom bar is cleanly unmounted, replaced by an inner header with <code>[← Home]</code> back navigation.</li>
+    <li><strong>Virtual Keyboard &amp; Soft-Input Adaptation:</strong> Dual-layered listeners (<code>window.visualViewport</code> + <code>focusin</code>/<code>focusout</code>) toggle <code>body.keyboard-open</code>. Bottom navigation automatically unmounts; sticky bottom action bars switch to <code>position: static</code>, ensuring active inputs and buttons remain unobscured.</li>
+    <li><strong>Multi-Density Fluid Responsive Grid:</strong> Fluid clamps and responsive CSS grid adapt smoothly from 320px compact Android phones to 440px+ flagships, foldables, and desktop layouts with zero horizontal scroll overflow.</li>
+    <li><strong>Touch Targets &amp; Typography Standards:</strong> Full-width CTA buttons feature balanced left-aligned text and right-docked action arrows (<code>margin-left: auto</code>), eliminating dead space. Mobile inputs and selects enforce a 16px minimum font size, preventing iOS Safari auto-zoom and guaranteeing high readability on Android.</li>
+</ol>
+
         </div>
     </div>
 
