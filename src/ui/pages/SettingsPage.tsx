@@ -26,6 +26,13 @@ export function SettingsPage() {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentCurrency, setCurrentCurrency] = useState<SupportedCurrency>(() => getPreferredCurrency());
 
+  const [autoLockTimeout, setAutoLockTimeout] = useState<string>(() => {
+    return localStorage.getItem("mld_autolock_timeout_min") || "30";
+  });
+  const [lockOnBackground, setLockOnBackground] = useState<boolean>(() => {
+    return localStorage.getItem("mld_lock_on_background") !== "false";
+  });
+
   useState(() => {
     void (async () => {
       const status = await checkBiometrics();
@@ -257,6 +264,94 @@ export function SettingsPage() {
         </div>
       </div>
 
+      {/* Vault Security & Auto-Lock Card */}
+      <div className="card fade-in" style={{ marginBottom: "24px" }}>
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h3>🛡️ Privacy Shield & Auto-Lock Protection</h3>
+          <span style={{ fontSize: "12.5px", color: "#4ade80", fontWeight: 600 }}>
+            ● ACTIVE PROTECTION
+          </span>
+        </div>
+        <div className="card-body">
+          <p>
+            Configure automatic locking triggers to ensure your confidential documents and financial records remain completely invisible to shoulder-surfers and unauthorized users.
+          </p>
+
+          <div style={{ marginTop: "16px", display: "grid", gap: "16px" }}>
+            {/* Auto-Lock Inactivity Timeout */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", padding: "12px 14px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "8px" }}>
+              <div>
+                <strong style={{ fontSize: "14.5px", color: "#f8fafc", display: "block" }}>Inactivity Auto-Lock</strong>
+                <small style={{ color: "#94a3b8", fontSize: "13px" }}>Automatically locks your vault when no clicks or touches are detected.</small>
+              </div>
+              <select
+                value={autoLockTimeout}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setAutoLockTimeout(val);
+                  localStorage.setItem("mld_autolock_timeout_min", val);
+                  showToast(`Auto-lock timeout updated to ${val} minutes`, "success");
+                }}
+                style={{
+                  padding: "8px 12px",
+                  background: "#1e293b",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  borderRadius: "6px",
+                  color: "#f8fafc",
+                  fontSize: "14px",
+                  cursor: "pointer"
+                }}
+              >
+                <option value="1">1 Minute</option>
+                <option value="5">5 Minutes</option>
+                <option value="15">15 Minutes</option>
+                <option value="30">30 Minutes (Recommended)</option>
+                <option value="60">60 Minutes</option>
+              </select>
+            </div>
+
+            {/* Lock on Recent Apps / Background */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", padding: "12px 14px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "8px" }}>
+              <div style={{ maxWidth: "480px" }}>
+                <strong style={{ fontSize: "14.5px", color: "#f8fafc", display: "block" }}>Lock on App Switch / Recent Apps</strong>
+                <small style={{ color: "#94a3b8", fontSize: "13px" }}>
+                  Instantly locks the vault whenever you press Home, switch apps, open the Recent Apps carousel, or minimize the window.
+                </small>
+              </div>
+              <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer", gap: "8px", margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={lockOnBackground}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setLockOnBackground(checked);
+                    localStorage.setItem("mld_lock_on_background", checked ? "true" : "false");
+                    showToast(checked ? "Instant background locking enabled" : "Background locking disabled", "info");
+                  }}
+                  style={{ width: "20px", height: "20px", accentColor: "#a78bfa", cursor: "pointer" }}
+                />
+                <span style={{ fontSize: "13.5px", fontWeight: 600, color: lockOnBackground ? "#4ade80" : "#94a3b8" }}>
+                  {lockOnBackground ? "Enabled" : "Disabled"}
+                </span>
+              </label>
+            </div>
+
+            {/* Built-in Security Badges */}
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "4px" }}>
+              <span style={{ background: "rgba(34, 197, 94, 0.12)", color: "#4ade80", border: "1px solid rgba(34, 197, 94, 0.25)", padding: "5px 12px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600 }}>
+                ✓ Android FLAG_SECURE Active (Screen capture & carousel thumbnail blocked)
+              </span>
+              <span style={{ background: "rgba(56, 189, 248, 0.12)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.25)", padding: "5px 12px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600 }}>
+                ✓ Brute-Force Rate Limiting Active (Exponential cooldown after failed attempts)
+              </span>
+              <span style={{ background: "rgba(168, 85, 247, 0.12)", color: "#c084fc", border: "1px solid rgba(168, 85, 247, 0.25)", padding: "5px 12px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600 }}>
+                ✓ Zero-Knowledge Client Memory Isolation
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {showBioModal && (
         <div className="product-detail-overlay">
           <div className="card" style={{ maxWidth: "420px", width: "100%", margin: "auto", padding: "24px", background: "#111827" }}>
@@ -311,9 +406,9 @@ export function SettingsPage() {
       <div className="card fade-in" style={{ marginBottom: "24px", border: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "1px solid #eab308" : "1px solid rgba(255, 255, 255, 0.1)", background: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "linear-gradient(to right, rgba(234, 179, 8, 0.05), transparent)" : undefined }}>
         <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            MyLifeDock <span style={{ padding: "2px 6px", background: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "#eab308" : "#94a3b8", color: "#111827", borderRadius: "4px", fontSize: "12px", fontWeight: "bold" }}>PRO</span>
+            MyLifeDock <span style={{ padding: "3px 8px", background: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "#eab308" : "#94a3b8", color: "#111827", borderRadius: "4px", fontSize: "12.5px", fontWeight: "bold" }}>PRO</span>
           </h3>
-          <span style={{ fontSize: "12px", color: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "#eab308" : "#94a3b8", fontWeight: 600 }}>
+          <span style={{ fontSize: "12.5px", color: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "#eab308" : "#94a3b8", fontWeight: 600 }}>
             {licenseStatus.tier !== "free_core" && licenseStatus.isValid ? `● ${licenseStatus.tier.toUpperCase()} ACTIVE` : "○ FREE CORE VERSION"}
           </span>
         </div>
@@ -330,7 +425,7 @@ export function SettingsPage() {
                 <button 
                   type="button" 
                   className="secondary-button" 
-                  style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)", fontSize: "12.5px" }}
+                  style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)", fontSize: "13px" }}
                   onClick={() => {
                     if (window.confirm("Remove this license key and downgrade to Free Core?")) {
                       removeLicense();
@@ -386,7 +481,7 @@ export function SettingsPage() {
                 <button
                   type="button"
                   className="text-button"
-                  style={{ color: "#a78bfa", padding: 0, fontSize: "12px" }}
+                  style={{ color: "#a78bfa", padding: 0, fontSize: "13px" }}
                   onClick={() => {
                     const sampleKey = __generateDevLicense("founder@mylifedock.com", "pro_yearly");
                     setLicenseKeyInput(sampleKey);
@@ -417,7 +512,7 @@ export function SettingsPage() {
               <div style={{ padding: "16px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <strong>6 Months Pass</strong>
-                  <small style={{ display: "block", color: "#94a3b8" }}>Billed semi-annually</small>
+                  <small style={{ display: "block", color: "#94a3b8", fontSize: "13px" }}>Billed semi-annually</small>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: "18px", fontWeight: "bold" }}>₹999 / $14</div>
@@ -426,9 +521,9 @@ export function SettingsPage() {
 
               <div style={{ padding: "16px", background: "rgba(234, 179, 8, 0.06)", border: "1px solid #eab308", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <span style={{ fontSize: "10px", background: "#eab308", color: "#000", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold", textTransform: "uppercase" }}>Most Popular</span>
+                  <span style={{ fontSize: "11px", background: "#eab308", color: "#000", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold", textTransform: "uppercase" }}>Most Popular</span>
                   <strong style={{ display: "block", marginTop: "4px" }}>1 Year Subscription</strong>
-                  <small style={{ color: "#94a3b8" }}>Full access for 12 months</small>
+                  <small style={{ color: "#94a3b8", fontSize: "13px" }}>Full access for 12 months</small>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: "18px", fontWeight: "bold", color: "#eab308" }}>₹1,499 / $29</div>
@@ -438,7 +533,7 @@ export function SettingsPage() {
               <div style={{ padding: "16px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <strong>Lifetime Founder License</strong>
-                  <small style={{ display: "block", color: "#94a3b8" }}>One-time payment, forever access</small>
+                  <small style={{ display: "block", color: "#94a3b8", fontSize: "13px" }}>One-time payment, forever access</small>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: "18px", fontWeight: "bold" }}>₹3,999 / $79</div>
@@ -446,7 +541,7 @@ export function SettingsPage() {
               </div>
             </div>
 
-            <p style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "20px" }}>
+            <p style={{ fontSize: "13.5px", color: "#94a3b8", marginBottom: "20px" }}>
               💡 <em>Coupon codes and discounts can be applied directly at the checkout page. Once payment completes, your license key is emailed to you instantly.</em>
             </p>
 

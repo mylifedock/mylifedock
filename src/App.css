@@ -67,8 +67,8 @@
 
 .brand-caption {
   margin-top: 3px;
-  color: #747c8d;
-  font-size: 11px;
+  color: #94a3b8;
+  font-size: 13px;
 }
 
 .sidebar-nav {
@@ -91,7 +91,8 @@
 
   color: #8d95a6;
   text-align: left;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
 
   transition:
     background 180ms ease,
@@ -135,8 +136,8 @@
 
 .privacy-badge > span {
   color: #6ed9a0;
-  font-size: 9px;
-  padding-top: 3px;
+  font-size: 14px;
+  padding-top: 2px;
 }
 
 .privacy-badge strong,
@@ -145,13 +146,14 @@
 }
 
 .privacy-badge strong {
-  font-size: 11px;
+  font-size: 13.5px;
+  color: #f1f5f9;
 }
 
 .privacy-badge small {
   margin-top: 3px;
-  color: #6e7788;
-  font-size: 10px;
+  color: #94a3b8;
+  font-size: 12.5px;
 }
 
 .main-content {
@@ -191,10 +193,10 @@
   display: block;
   margin-bottom: 9px;
 
-  color: #727b8f;
-  font-size: 10px;
+  color: #94a3b8;
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
 }
 
 .page-header h1 {
@@ -219,7 +221,7 @@
   margin: 12px 0 0;
   max-width: 580px;
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
 }
 
@@ -230,7 +232,7 @@
   border: 1px solid rgba(110, 217, 160, 0.25);
   background: rgba(110, 217, 160, 0.08);
   color: #a7f3d0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -305,14 +307,14 @@
 
 .stat-label {
   margin-top: 17px;
-  font-size: 12px;
+  font-size: 13.5px;
   color: #d4d8e1;
 }
 
 .stat-description {
   margin-top: 4px;
-  color: #666f80;
-  font-size: 10px;
+  color: #94a3b8;
+  font-size: 12.5px;
 }
 
 .dashboard-grid {
@@ -365,15 +367,15 @@
 
 .empty-state h3 {
   margin: 14px 0 5px;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .empty-state p {
-  max-width: 320px;
+  max-width: 360px;
   margin: 0;
-  color: #687183;
-  font-size: 11px;
-  line-height: 1.55;
+  color: #94a3b8;
+  font-size: 13.5px;
+  line-height: 1.6;
 }
 
 .text-button {
@@ -381,7 +383,8 @@
   border: 0;
   background: transparent;
   color: #9ca9ff;
-  font-size: 11px;
+  font-size: 13.5px;
+  cursor: pointer;
 }
 
 .quick-actions {
@@ -443,13 +446,14 @@
 }
 
 .quick-action-content strong {
-  font-size: 11px;
+  font-size: 13.5px;
+  color: #f1f5f9;
 }
 
 .quick-action-content small {
   margin-top: 3px;
-  color: #697283;
-  font-size: 9px;
+  color: #94a3b8;
+  font-size: 12.5px;
 }
 
 .quick-action-arrow {
@@ -484,13 +488,14 @@
 }
 
 .privacy-card strong {
-  font-size: 11px;
+  font-size: 13.5px;
+  color: #f1f5f9;
 }
 
 .privacy-card p {
   margin: 4px 0 0;
-  color: #6f7888;
-  font-size: 10px;
+  color: #94a3b8;
+  font-size: 12.5px;
 }
 
 /* Documents */
@@ -534,8 +539,9 @@
 
 .document-form label,
 .onboarding-card label {
-  color: #9098a8;
-  font-size: 11px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .document-form textarea {
@@ -559,7 +565,7 @@
   background: rgba(113, 131, 255, 0.07);
   color: #aeb8ff;
 
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
 
@@ -631,7 +637,7 @@
   background: linear-gradient(135deg, #7183ff, #8f7aff);
   color: white;
 
-  font-size: 12px;
+  font-size: 14.5px;
   font-weight: 650;
 
   box-shadow: 0 10px 30px rgba(113, 131, 255, 0.2);
@@ -728,8 +734,8 @@
 .onboarding-card > p {
   margin: 17px 0 28px;
 
-  color: #7d8697;
-  font-size: 13px;
+  color: #94a3b8;
+  font-size: 15px;
   line-height: 1.7;
 }
 
@@ -755,8 +761,8 @@
 
 .onboarding-security > span {
   color: #6ed9a0;
-  font-size: 9px;
-  padding-top: 3px;
+  font-size: 14px;
+  padding-top: 2px;
 }
 
 .onboarding-security strong,
@@ -765,13 +771,14 @@
 }
 
 .onboarding-security strong {
-  font-size: 10px;
+  font-size: 13.5px;
+  color: #f1f5f9;
 }
 
 .onboarding-security small {
   margin-top: 3px;
-  color: #697383;
-  font-size: 9px;
+  color: #94a3b8;
+  font-size: 12.5px;
 }
 
 /* Loading */
@@ -787,9 +794,9 @@
   gap: 14px;
 
   background: #090b10;
-  color: #687183;
+  color: #94a3b8;
 
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .loading-mark {
@@ -992,10 +999,10 @@
 }
 
 .form-field label {
-  color: #aab2c0;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .form-field input,
@@ -1015,7 +1022,7 @@
   color: #e9edf5;
 
   font: inherit;
-  font-size: 12px;
+  font-size: 14.5px;
 
   transition:
     border-color 180ms ease,
@@ -1090,7 +1097,7 @@
   color: #9ca5b5;
 
   font: inherit;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
 
   cursor: pointer;
@@ -1213,11 +1220,11 @@
 .sensitivity-badge {
   flex: 0 0 auto;
 
-  padding: 5px 7px;
+  padding: 4px 8px;
 
   border-radius: 6px;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1267,17 +1274,17 @@
 .product-details small {
   margin-bottom: 3px;
 
-  color: #626d7e;
+  color: #94a3b8;
 
-  font-size: 9px;
+  font-size: 12.5px;
 }
 
 .product-details strong {
   overflow: hidden;
 
-  color: #c4cad5;
+  color: #f1f5f9;
 
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
 
   text-overflow: ellipsis;
@@ -1292,9 +1299,9 @@
   border-top: 1px solid
     rgba(255, 255, 255, 0.05);
 
-  color: #737d8e;
+  color: #94a3b8;
 
-  font-size: 10px;
+  font-size: 13.5px;
   line-height: 1.6;
 }
 
@@ -1389,9 +1396,9 @@
 .product-detail-header p {
   margin: 6px 0 0;
 
-  color: #7e8798;
+  color: #94a3b8;
 
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .icon-button {
@@ -1451,9 +1458,9 @@
 
   border-radius: 6px;
 
-  color: #747e90;
+  color: #94a3b8;
 
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -1486,17 +1493,17 @@
 
   margin-bottom: 5px;
 
-  color: #626d7e;
+  color: #94a3b8;
 
-  font-size: 9px;
+  font-size: 12.5px;
 }
 
 .product-detail-item strong {
   display: block;
 
-  color: #cbd1dc;
+  color: #f1f5f9;
 
-  font-size: 11px;
+  font-size: 14.5px;
   font-weight: 600;
 
   overflow-wrap: anywhere;
@@ -1505,9 +1512,9 @@
 .product-detail-notes {
   margin: 12px 0 0;
 
-  color: #8b94a4;
+  color: #94a3b8;
 
-  font-size: 11px;
+  font-size: 13.5px;
   line-height: 1.7;
 
   white-space: pre-wrap;
@@ -1536,7 +1543,7 @@
 
   color: #cbd2df;
 
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .product-coverage-placeholder p {
@@ -1544,16 +1551,16 @@
 
   max-width: 500px;
 
-  color: #747e90;
+  color: #94a3b8;
 
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.6;
 }
 
 .product-coming-soon {
   flex: 0 0 auto;
 
-  padding: 5px 7px;
+  padding: 4px 8px;
 
   border-radius: 6px;
 
@@ -1562,9 +1569,9 @@
 
   color: #aab4ff;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 .product-detail-actions {
@@ -1702,15 +1709,15 @@
 }
 
 .coverage-card-details small {
-  color: #7a8ba8;
-  font-size: 11px;
+  color: #94a3b8;
+  font-size: 12.5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .coverage-card-details strong {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 14.5px;
+  font-weight: 600;
 }
 
 .coverage-card-actions {
@@ -1724,9 +1731,9 @@
 
 .coverage-status-badge {
   display: inline-block;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1768,9 +1775,9 @@
 
 .coverage-badge {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 12px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -1882,8 +1889,8 @@
 }
 
 .reminder-due-label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 550;
 }
 
 .reminder-due-overdue {
@@ -1900,9 +1907,9 @@
 
 .reminder-status-badge {
   display: inline-block;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1927,8 +1934,8 @@
 .reminder-card-meta {
   display: flex;
   gap: 16px;
-  color: #7a8ba8;
-  font-size: 12px;
+  color: #94a3b8;
+  font-size: 13.5px;
 }
 
 .reminder-card-actions {
@@ -1945,7 +1952,7 @@
   border: 1px solid rgba(76, 175, 80, 0.2);
   border-radius: 8px;
   padding: 10px 16px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: #81c784;
   margin-bottom: 16px;
   animation: fadeIn 0.3s ease;
@@ -1989,13 +1996,13 @@
 }
 
 .dashboard-reminder-item strong {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 550;
 }
 
 .dashboard-reminder-item small {
-  font-size: 12px;
-  color: #7a8ba8;
+  font-size: 13px;
+  color: #94a3b8;
 }
 
 /* ──────────────────────────────────────────
@@ -2078,8 +2085,8 @@
   background: rgba(92, 110, 255, 0.15);
   border: 1px solid rgba(92, 110, 255, 0.25);
   border-radius: 14px;
-  padding: 2px 8px;
-  font-size: 12px;
+  padding: 3px 9px;
+  font-size: 13px;
   color: #a0b0ff;
 }
 
@@ -2108,8 +2115,8 @@
   display: inline-block;
   background: rgba(92, 110, 255, 0.1);
   border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 11px;
+  padding: 3px 9px;
+  font-size: 12.5px;
   color: #a0b0ff;
 }
 
@@ -2126,7 +2133,7 @@
 }
 
 .document-expiry-badge {
-  font-size: 12px;
+  font-size: 13px;
   color: #ffb74d;
 }
 
@@ -2134,15 +2141,10 @@
   margin-bottom: 16px;
 }
 
-.product-invoice-status {
-  font-size: 12px;
-  color: #7a8ba8;
-}
-
 .file-selection {
   display: block;
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 13px;
   color: #81c784;
 }
 
@@ -2161,13 +2163,13 @@
 
 .nav-coming-soon {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #7a8ba8;
   background: rgba(255, 255, 255, 0.05);
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 4px;
 }
 
@@ -2519,7 +2521,7 @@ button, a, input, select, textarea {
 }
 
 .sidebar-group-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.08em;
   color: #64748b;
@@ -2531,14 +2533,14 @@ button, a, input, select, textarea {
 .nav-label {
   flex: 1;
   text-align: left;
-  font-size: 14px;
+  font-size: 14.5px;
 }
 
 .nav-item-badge {
   margin-left: auto;
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 750;
   padding: 2px 7px;
   border-radius: 999px;
@@ -2878,8 +2880,8 @@ button, a, input, select, textarea {
     align-items: center;
     justify-content: center;
     gap: 3px;
-    font-size: 11.5px;
-    font-weight: 550;
+    font-size: 12.5px;
+    font-weight: 600;
     padding: 6px 4px;
     cursor: pointer;
     flex: 1;

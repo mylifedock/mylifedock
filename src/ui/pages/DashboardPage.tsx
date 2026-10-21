@@ -276,7 +276,7 @@ function DashboardPage({
         <button
           type="button"
           className="secondary-button"
-          style={{ fontSize: "12.5px", padding: "6px 14px", border: "1px solid rgba(56, 189, 248, 0.3)", color: "#38bdf8" }}
+          style={{ fontSize: "13.5px", padding: "8px 16px", border: "1px solid rgba(56, 189, 248, 0.3)", color: "#38bdf8" }}
           onClick={() => onNavigate("settings")}
         >
           Vault Backups &rarr;

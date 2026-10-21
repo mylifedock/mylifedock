@@ -52,6 +52,31 @@ function VaultGate({
   const [hasBiometrics, setHasBiometrics] =
     useState(false);
 
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("mld_failed_passphrase_attempts");
+      return saved ? parseInt(saved, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return;
+    const interval = setInterval(() => {
+      setCooldownRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownRemaining]);
+
   const isSetup =
     !configured &&
     mode === "unlock";
@@ -158,12 +183,40 @@ function VaultGate({
       }
 
       onUnlocked();
+      try {
+        sessionStorage.removeItem("mld_failed_passphrase_attempts");
+      } catch {
+        // ignore storage errors
+      }
+      setFailedAttempts(0);
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to unlock the vault.",
-      );
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      try {
+        sessionStorage.setItem("mld_failed_passphrase_attempts", newAttempts.toString());
+      } catch {
+        // ignore storage errors
+      }
+
+      let cooldown = 0;
+      if (newAttempts >= 6) {
+        cooldown = 30;
+      } else if (newAttempts >= 5) {
+        cooldown = 15;
+      } else if (newAttempts >= 3) {
+        cooldown = 5;
+      }
+
+      if (cooldown > 0) {
+        setCooldownRemaining(cooldown);
+        setError(`Incorrect passphrase. Rate-limit active: please wait ${cooldown}s before trying again.`);
+      } else {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unable to unlock the vault. Please verify your passphrase.",
+        );
+      }
     } finally {
       setBusy(false);
     }
@@ -216,13 +269,29 @@ function VaultGate({
       setNewPassphrase("");
       setConfirmPassphrase("");
 
+      try {
+        sessionStorage.removeItem("mld_failed_passphrase_attempts");
+      } catch {
+        // ignore
+      }
+      setFailedAttempts(0);
       onUnlocked();
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to recover the vault.",
-      );
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      let cooldown = 0;
+      if (newAttempts >= 5) cooldown = 30;
+      else if (newAttempts >= 3) cooldown = 10;
+      if (cooldown > 0) {
+        setCooldownRemaining(cooldown);
+        setError(`Recovery verification failed. Rate-limit active: wait ${cooldown}s.`);
+      } else {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unable to recover the vault.",
+        );
+      }
     } finally {
       setBusy(false);
     }
@@ -410,8 +479,9 @@ function VaultGate({
                   event.target.value,
                 )
               }
-              placeholder="At least 12 characters"
+              placeholder={cooldownRemaining > 0 ? `Locked for ${cooldownRemaining}s...` : "At least 12 characters"}
               autoComplete="new-password"
+              disabled={busy || cooldownRemaining > 0}
             />
 
             <label htmlFor="confirmNewVaultPassphrase">
@@ -427,13 +497,15 @@ function VaultGate({
                   event.target.value,
                 )
               }
-              placeholder="Enter it again"
+              placeholder={cooldownRemaining > 0 ? `Locked for ${cooldownRemaining}s...` : "Enter it again"}
               autoComplete="new-password"
+              disabled={busy || cooldownRemaining > 0}
             />
 
-            {error && (
-              <div className="vault-error">
-                {error}
+            {(error || cooldownRemaining > 0) && (
+              <div className="vault-error" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "16px" }}>🔒</span>
+                <span>{cooldownRemaining > 0 ? `Rate-limit active: please wait ${cooldownRemaining}s before trying again.` : error}</span>
               </div>
             )}
 
@@ -442,14 +514,17 @@ function VaultGate({
               type="submit"
               disabled={
                 busy ||
+                cooldownRemaining > 0 ||
                 !recoveryKey.trim() ||
                 !newPassphrase ||
                 !confirmPassphrase
               }
             >
-              <span>{busy
-                ? "Recovering..."
-                : "Recover vault"}</span>
+              <span>{cooldownRemaining > 0
+                ? `Wait ${cooldownRemaining}s`
+                : busy
+                  ? "Recovering..."
+                  : "Recover vault"}</span>
 
               <span className="btn-arrow" aria-hidden="true">→</span>
             </button>
@@ -518,7 +593,7 @@ function VaultGate({
             type="button"
             className="secondary-button"
             onClick={handleBiometricUnlock}
-            disabled={busy}
+            disabled={busy || cooldownRemaining > 0}
             style={{
               marginBottom: "16px",
               width: "100%",
@@ -559,8 +634,9 @@ function VaultGate({
                 event.target.value,
               )
             }
-            placeholder="At least 12 characters"
+            placeholder={cooldownRemaining > 0 ? `Locked: wait ${cooldownRemaining}s...` : "At least 12 characters"}
             autoFocus
+            disabled={busy || cooldownRemaining > 0}
             autoComplete={
               isSetup
                 ? "new-password"
@@ -585,13 +661,15 @@ function VaultGate({
                 }
                 placeholder="Enter it again"
                 autoComplete="new-password"
+                disabled={busy || cooldownRemaining > 0}
               />
             </>
           )}
 
-          {error && (
-            <div className="vault-error">
-              {error}
+          {(error || cooldownRemaining > 0) && (
+            <div className="vault-error" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "16px" }}>🔒</span>
+              <span>{cooldownRemaining > 0 ? `Rate-limit active: please wait ${cooldownRemaining}s before trying again.` : error}</span>
             </div>
           )}
 
@@ -600,16 +678,19 @@ function VaultGate({
             type="submit"
             disabled={
               busy ||
+              cooldownRemaining > 0 ||
               !passphrase ||
               (isSetup &&
                 !confirmPassphrase)
             }
           >
-            <span>{busy
-              ? "Securing..."
-              : isSetup
-                ? "Create private vault"
-                : "Unlock MyLifeDock"}</span>
+            <span>{cooldownRemaining > 0
+              ? `Wait ${cooldownRemaining}s`
+              : busy
+                ? "Securing..."
+                : isSetup
+                  ? "Create private vault"
+                  : "Unlock MyLifeDock"}</span>
 
             <span className="btn-arrow" aria-hidden="true">→</span>
           </button>

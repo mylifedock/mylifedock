@@ -1,4 +1,38 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function ensureOnboardedAndSetup(page: Page, secret: string = 'AuditSecretPassword2026!') {
+  await page.goto('http://localhost:5173');
+  await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
+
+  const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
+  if (await onboardingHeader.isVisible()) {
+    await page.fill('input#displayName', 'Security Audit Subject');
+    await page.check('input#termsCheckbox');
+    await page.click('button.primary-button');
+    await onboardingHeader.waitFor({ state: 'detached', timeout: 10000 });
+  }
+
+  const confirmInput = page.locator('input#confirmVaultPassphrase');
+  const isSetup = await confirmInput.isVisible({ timeout: 4000 }).catch(() => false);
+  if (isSetup) {
+    await page.fill('input#vaultPassphrase', secret);
+    await page.fill('input#confirmVaultPassphrase', secret);
+    await page.click('button[type="submit"]');
+
+    const continueBtn = page.locator('button:has-text("Continue to MyLifeDock")');
+    await continueBtn.waitFor({ state: 'visible', timeout: 15000 });
+    await page.check('input[type="checkbox"]');
+    await continueBtn.click();
+  }
+
+  const isLocked = await page.locator('input#vaultPassphrase').isVisible({ timeout: 2000 }).catch(() => false);
+  if (isLocked) {
+    await page.fill('input#vaultPassphrase', secret);
+    await page.click('button[type="submit"]');
+  }
+
+  await expect(page.locator('text="Overview"').first()).toBeVisible({ timeout: 10000 });
+}
 
 test.describe('Security Audit & Zero-Knowledge Verification Suite', () => {
   test('Zero-Knowledge Storage Inspection: No Plaintext Passphrases Stored', async ({ page }) => {
@@ -103,5 +137,48 @@ test.describe('Security Audit & Zero-Knowledge Verification Suite', () => {
     }
 
     expect(alertTriggered).toBe(false);
+  });
+
+  test('Privacy Shield: Background/Minimized Visibility Change Triggers Immediate Vault Lock', async ({ page }) => {
+    await ensureOnboardedAndSetup(page);
+
+    // Simulate user switching away / minimizing window / opening Recent Apps carousel
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // Vault must lock immediately to prevent shoulder-surfing and data exposure
+    await expect(page.locator('input#vaultPassphrase')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text="MYLIFEDOCK IS LOCKED"')).toBeVisible();
+  });
+
+  test('Brute-Force Rate Limiting & Lockout Cooldown Enforcement', async ({ page }) => {
+    await ensureOnboardedAndSetup(page);
+
+    // Trigger lock via visibility change
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(page.locator('input#vaultPassphrase')).toBeVisible({ timeout: 5000 });
+
+    // Attempt invalid passphrases 3 times
+    const passphraseInput = page.locator('input#vaultPassphrase');
+    const submitBtn = page.locator('button[type="submit"]');
+
+    for (let i = 0; i < 3; i++) {
+      await passphraseInput.fill(`WrongPassphraseAttempt${i}!123`);
+      await submitBtn.click();
+      await page.waitForTimeout(400);
+    }
+
+    // After 3 failed attempts, rate-limiting lockout must activate
+    const rateLimitBadge = page.locator('.vault-error:has-text("Rate-limit")');
+    await expect(rateLimitBadge).toBeVisible({ timeout: 4000 });
+
+    // Input and button must be disabled during cooldown
+    await expect(passphraseInput).toBeDisabled();
+    await expect(submitBtn).toBeDisabled();
   });
 });

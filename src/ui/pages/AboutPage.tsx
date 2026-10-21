@@ -7,8 +7,8 @@ export function AboutPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const platform = getPlatform();
-  const appVersion = "1.0.0";
-  const buildDate = "August 2026";
+  const appVersion = "1.2.0";
+  const buildDate = "October 2026";
   const supportEmail = "mylifedock@gmail.com";
 
   const faqs = [
@@ -29,8 +29,8 @@ export function AboutPage() {
       a: "No! MyLifeDock is 100% offline-first. All features, document storage, optical character recognition (OCR), and search function completely without an internet connection."
     },
     {
-      q: "How does the Auto-Lock timer protect my data?",
-      a: "If your app is left unattended for 30 minutes, MyLifeDock purges the encryption key from device memory. You will need to re-enter your passphrase or touch your biometric sensor to continue."
+      q: "How does the Auto-Lock and Privacy Shield protect my data?",
+      a: "MyLifeDock includes military-grade security locking: it locks immediately when you press Home, switch apps, or open Recent Apps (where Android FLAG_SECURE blocks preview thumbnails and screenshots), plus customizable inactivity timeouts (1m to 60m) and brute-force rate-limiting lockout penalties."
     }
   ];
 
@@ -105,13 +105,13 @@ export function AboutPage() {
           Version {appVersion} (Production Release) • {buildDate}
         </p>
         <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-          <span style={{ background: "rgba(34, 197, 94, 0.15)", color: "#4ade80", padding: "4px 12px", borderRadius: "16px", fontSize: "12px", fontWeight: 600 }}>
+          <span style={{ background: "rgba(34, 197, 94, 0.15)", color: "#4ade80", padding: "5px 14px", borderRadius: "16px", fontSize: "13px", fontWeight: 600 }}>
             🔒 AES-256-GCM Zero-Knowledge
           </span>
-          <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", padding: "4px 12px", borderRadius: "16px", fontSize: "12px", fontWeight: 600 }}>
+          <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", padding: "5px 14px", borderRadius: "16px", fontSize: "13px", fontWeight: 600 }}>
             🛡️ 100% Offline-First
           </span>
-          <span style={{ background: "rgba(168, 85, 247, 0.15)", color: "#c084fc", padding: "4px 12px", borderRadius: "16px", fontSize: "12px", fontWeight: 600 }}>
+          <span style={{ background: "rgba(168, 85, 247, 0.15)", color: "#c084fc", padding: "5px 14px", borderRadius: "16px", fontSize: "13px", fontWeight: 600 }}>
             🚫 Zero Telemetry
           </span>
         </div>
@@ -211,14 +211,14 @@ export function AboutPage() {
             gap: "10px"
           }}>
             <div>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: "#f8fafc" }}>Platform Environment:</div>
-              <div style={{ fontSize: "12px", color: "#38bdf8" }}>{platform.toUpperCase()} • MyLifeDock v{appVersion}</div>
+              <div style={{ fontSize: "14px", fontWeight: 600, color: "#f8fafc" }}>Platform Environment:</div>
+              <div style={{ fontSize: "13.5px", color: "#38bdf8", marginTop: "2px" }}>{platform.toUpperCase()} • MyLifeDock v{appVersion}</div>
             </div>
             <button 
               type="button" 
               className="secondary-button"
               onClick={copyDiagnostics}
-              style={{ fontSize: "12px", padding: "6px 12px" }}
+              style={{ fontSize: "13.5px", padding: "6px 14px" }}
             >
               📋 Copy Diagnostic Report
             </button>
@@ -237,7 +237,7 @@ export function AboutPage() {
       </div>
 
       {/* Legal & Security Footer */}
-      <div style={{ textAlign: "center", color: "#64748b", fontSize: "12px", padding: "16px 0" }}>
+      <div style={{ textAlign: "center", color: "#64748b", fontSize: "13px", padding: "16px 0" }}>
         <p>Cryptographic standards: FIPS 197 AES-GCM (256-bit) • NIST SP 800-132 PBKDF2</p>
         <p style={{ marginTop: "4px" }}>© 2026 MyLifeDock. All rights reserved. Privacy-First Life Vault.</p>
       </div>

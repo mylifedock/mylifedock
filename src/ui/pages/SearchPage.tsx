@@ -188,7 +188,7 @@ export function SearchPage({ onNavigate }: { onNavigate?: (page: string) => void
             </div>
             <div className="card-body">
               <p>{r.subtitle}</p>
-              <div style={{ marginTop: "12px", fontSize: "12px", color: "var(--color-primary)" }}>
+              <div style={{ marginTop: "12px", fontSize: "13.5px", fontWeight: 600, color: "var(--color-primary)" }}>
                 Click to view in {r.type}s →
               </div>
             </div>

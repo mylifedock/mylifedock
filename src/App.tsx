@@ -48,8 +48,16 @@ import { SubscriptionsPage } from "./ui/pages/SubscriptionsPage";
 import { EmergencyKitPage } from "./ui/pages/EmergencyKitPage";
 import AboutPage from "./ui/pages/AboutPage";
 
-const AUTO_LOCK_TIMEOUT_MS =
-  30 * 60 * 1000;
+function getAutoLockTimeoutMs(): number {
+  try {
+    const saved = localStorage.getItem("mld_autolock_timeout_min");
+    if (!saved) return 30 * 60 * 1000;
+    const mins = parseInt(saved, 10);
+    return isNaN(mins) || mins <= 0 ? 30 * 60 * 1000 : mins * 60 * 1000;
+  } catch {
+    return 30 * 60 * 1000;
+  }
+}
 
 function getPageTitle(page: string): string {
   switch (page) {
@@ -252,6 +260,32 @@ function App() {
     setVaultUnlocked(false);
   }
 
+  // Security: Auto-lock when app moves to background, Recent Apps overview, or window is minimized/hidden
+  useEffect(() => {
+    // 1. Mobile background / Recent Apps (Capacitor)
+    const appStateListener = CapacitorApp.addListener('appStateChange', (state) => {
+      const lockOnBg = localStorage.getItem("mld_lock_on_background") !== "false";
+      if (!state.isActive && lockOnBg) {
+        lockApplication();
+      }
+    });
+
+    // 2. Web / Desktop minimized or tab switch
+    function handleVisibilityChange() {
+      const lockOnBg = localStorage.getItem("mld_lock_on_background") !== "false";
+      if (document.hidden && lockOnBg) {
+        lockApplication();
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      appStateListener.then(listener => listener.remove());
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     async function loadApplicationState() {
       try {
@@ -299,7 +333,7 @@ function App() {
           autoLockTimerRef.current =
             null;
           setVaultUnlocked(false);
-        }, AUTO_LOCK_TIMEOUT_MS);
+        }, getAutoLockTimeoutMs());
     }
 
     scheduleAutoLock();

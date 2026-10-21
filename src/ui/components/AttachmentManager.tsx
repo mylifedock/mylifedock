@@ -152,7 +152,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
   return (
     <div className="attachment-manager">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-        <label style={{ fontSize: "12px", fontWeight: "bold", color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        <label style={{ fontSize: "13px", fontWeight: "bold", color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.5px" }}>
           Attachments ({attachments?.length || 0})
         </label>
         <div style={{ display: "flex", gap: "8px" }}>
@@ -175,7 +175,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
           <button
             type="button"
             className="secondary-button"
-            style={{ padding: "5px 10px", fontSize: "12px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
+            style={{ padding: "6px 12px", fontSize: "13px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
             onClick={() => {
               const el = document.getElementById(`camera-input-${entityId}`);
               if (el) el.click();
@@ -187,7 +187,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
           <button
             type="button"
             className="secondary-button"
-            style={{ padding: "5px 10px", fontSize: "12px" }}
+            style={{ padding: "6px 12px", fontSize: "13px" }}
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
           >
@@ -224,7 +224,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
                 <button 
                   type="button" 
                   className="text-button" 
-                  style={{ fontSize: "12px", color: "#a78bfa", fontWeight: 600, padding: "2px 6px" }} 
+                  style={{ fontSize: "13px", color: "#a78bfa", fontWeight: 600, padding: "2px 6px" }} 
                   onClick={() => handlePreview(att.id, att.fileName, att.mimeType)}
                 >
                   👁️ Preview
@@ -232,7 +232,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
                 <button 
                   type="button" 
                   className="text-button" 
-                  style={{ fontSize: "12px", color: "#38bdf8", fontWeight: 500, padding: "2px 6px" }} 
+                  style={{ fontSize: "13px", color: "#38bdf8", fontWeight: 500, padding: "2px 6px" }} 
                   onClick={() => handleShare(att.id, att.fileName, att.mimeType)}
                 >
                   Share
@@ -240,7 +240,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
                 <button 
                   type="button" 
                   className="text-button" 
-                  style={{ fontSize: "12px", padding: "2px 6px" }} 
+                  style={{ fontSize: "13px", padding: "2px 6px" }} 
                   onClick={() => handleDownload(att.id, att.fileName)}
                 >
                   Download
@@ -248,7 +248,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
                 <button 
                   type="button" 
                   className="text-button" 
-                  style={{ fontSize: "12px", padding: "2px 6px", color: "var(--color-danger)" }} 
+                  style={{ fontSize: "13px", padding: "2px 6px", color: "var(--color-danger)" }} 
                   onClick={() => handleDelete(att.id)}
                 >
                   Remove
@@ -283,14 +283,14 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", flexWrap: "wrap", gap: "10px" }}>
-              <strong style={{ fontSize: "14px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "300px" }}>
+              <strong style={{ fontSize: "15px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "300px" }}>
                 {previewData.fileName}
               </strong>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                 <button
                   type="button"
                   className="secondary-button"
-                  style={{ padding: "4px 10px", fontSize: "12px", color: "#38bdf8" }}
+                  style={{ padding: "5px 12px", fontSize: "13px", color: "#38bdf8" }}
                   onClick={() => handleShare(previewData.id, previewData.fileName, previewData.mimeType)}
                 >
                   Share
@@ -299,7 +299,7 @@ export function AttachmentManager({ entityId }: { entityId: string }) {
                   href={previewData.url} 
                   download={previewData.fileName}
                   className="secondary-button" 
-                  style={{ padding: "4px 10px", fontSize: "12px", textDecoration: "none" }}
+                  style={{ padding: "5px 12px", fontSize: "13px", textDecoration: "none" }}
                 >
                   Download
                 </a>

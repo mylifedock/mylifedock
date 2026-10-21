@@ -2,26 +2,27 @@
 
 > **Single source of truth for continuing MyLifeDock development.**
 >
-> **Last updated:** 2026-10-20
+> **Last updated:** 2026-10-22
 > **Current Release Branch:** `release/v1.0.0`
+> **Current Application Version:** `v1.2.0`
 
 ---
 
 ## 0. Current Resume Snapshot
 
 **Product:** MyLifeDock  
-**Current milestone:** **v1.0.0 Production Release & Mobile UI/UX Overhaul**  
-**Desktop Target:** Tauri v2 Windows Setup (`MyLifeDock_1.0.0_x64-setup.exe` & `.msi`)  
-**Mobile Target:** Capacitor v8 Android (Signed `.aab` / Debug `.apk` ready) & iOS  
+**Current milestone:** **v1.2.0 Privacy Shield Security Overhaul & Typography Architecture**  
+**Desktop Target:** Tauri v2 Windows Setup (`MyLifeDock_1.2.0_x64-setup.exe` & `.msi`)  
+**Mobile Target:** Capacitor v8 Android (Signed `.aab` / Debug `.apk` ready with `FLAG_SECURE`) & iOS  
 **Web / PWA Target:** Vite production dist / PWA Service Worker / Cloudflare Pages (`wrangler.toml`)  
-**Marketing Target:** Standalone Production Landing Page (`public/landing.html`)  
-**Security Milestone:** **CERTIFIED ZERO-KNOWLEDGE** (AES-256-GCM, PBKDF2 key derivation, 30-min Auto-Lock, SAST/OSA/DAST passed)  
-**Mobile UI/UX Architecture:** **COMPLETE** (Deduplicated 5-item Home Dock, Category Directory Drawer, Dynamic Topbar with `[← Home]` back navigation, Keyboard Viewport Detection, 16px font-scale eliminating iOS zoom, Full-width Action CTA buttons)  
+**Marketing Target:** Standalone Production Landing Page (`docs/landing.html` & `public/landing.html`)  
+**Security Milestone:** **CERTIFIED ZERO-KNOWLEDGE & PRIVACY SHIELD** (AES-256-GCM, PBKDF2 key derivation, Background / Recent Apps Auto-Lock, Android `FLAG_SECURE` carousel blur, Brute-Force Rate Limiting lockout, Configurable Inactivity Auto-Lock, SAST/OSA/DAST passed)  
+**Typography & UI/UX Architecture:** **COMPLETE & UPGRADED** (Eliminated all micro-fonts <13px, 14.5px-16px buttons with full-width tap targets, 15px-16px form inputs preventing iOS zoom, 13.5px metadata/descriptions, Deduplicated 5-item Home Dock, Category Directory Drawer, Dynamic Topbar with `[← Home]` back navigation, Keyboard Viewport Detection)  
 **Legal & Licensing:** **COMPLETE** (Dual-Engine: LemonSqueezy/Paddle Global + Razorpay India UPI, T&C Onboarding Gate, Patent Blueprint)  
 **Currency Engine:** **COMPLETE** (`currencyService.ts` supporting INR ₹ with Lakh/Crore, USD $, EUR €, GBP £, etc.)  
 **Hardware & Media:** **COMPLETE** (Native Camera capture, Persistent WebWorker OCR, Continuous Voice Search)  
-**Documentation Suite:** **COMPLETE** (7 HTML + 7 MD guides with Mermaid flowcharts in `docs/`)  
-**Playwright Test Suite:** **PASS (3/3 Suites: Desktop E2E, Mobile UI/UX, 360px Compact Android)**  
+**Documentation Suite:** **COMPLETE** (HTML + MD guides with Mermaid flowcharts in `docs/`)  
+**Playwright Test Suite:** **PASS (12/12 Tests across 4 Suites: Desktop E2E, Mobile UI/UX, 360px Compact Android, Privacy Shield & Crypto Unit)**  
 **Lint (ESLint Security):** **PASS (0 errors)**  
 **Type Check (tsc):** **PASS (0 errors)**  
 **Build:** **PASS (Web dist + Isolated OCR Async Chunks + Android Gradle assembleDebug)**  
@@ -33,7 +34,7 @@
    # App: http://localhost:5173
    # Landing Page: http://localhost:5173/landing.html
    ```
-2. **Run Playwright Test Suites (Desktop & Mobile):**
+2. **Run Playwright Test Suites (Desktop & Mobile & Security):**
    ```powershell
    npx playwright test
    ```
@@ -46,7 +47,7 @@
    $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; cd android; ./gradlew assembleDebug
    ```
 5. **View Complete HTML Documentation:**
-   Double-click any HTML file in `docs/` (`MyLifeDock_User_Handbook.html`, `MyLifeDock_Security_Audit_2026.html`, `Legal_Patent_Application_Guide.html`, etc.).
+   Double-click any HTML file in `docs/` (`MyLifeDock_v1.2.0_Privacy_Shield_Typography_Release_Report.html`, `MyLifeDock_User_Handbook.html`, `MyLifeDock_Security_Audit_2026.html`, `Legal_Patent_Application_Guide.html`, etc.).
 
 ---
 

@@ -67,7 +67,7 @@ function DocumentCard({
             <strong style={{ fontSize: "15px", color: "#f8fafc", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {document.title}
             </strong>
-            <small style={{ color: "#94a3b8", fontSize: "12px" }}>
+            <small style={{ color: "#94a3b8", fontSize: "13px" }}>
               {document.category.toUpperCase()} {document.issuer ? `• ${document.issuer}` : ""}
             </small>
           </div>
@@ -75,7 +75,7 @@ function DocumentCard({
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
           {document.expiryDate && (
-            <span style={{ fontSize: "11px", color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)", padding: "2px 8px", borderRadius: "6px", fontWeight: 500 }}>
+            <span style={{ fontSize: "12.5px", color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)", padding: "2px 8px", borderRadius: "6px", fontWeight: 500 }}>
               Expires: {document.expiryDate}
             </span>
           )}
@@ -90,7 +90,7 @@ function DocumentCard({
           {attachments && attachments.length > 0 && (
             <span 
               style={{
-                fontSize: "12px",
+                fontSize: "13px",
                 color: "#c084fc",
                 background: "rgba(192, 132, 252, 0.12)",
                 border: "1px solid rgba(192, 132, 252, 0.25)",
@@ -112,7 +112,7 @@ function DocumentCard({
             </span>
           ))}
           {document.tags && document.tags.length > 3 && (
-            <span style={{ fontSize: "11px", color: "#64748b" }}>+{document.tags.length - 3}</span>
+            <span style={{ fontSize: "12px", color: "#94a3b8" }}>+{document.tags.length - 3}</span>
           )}
         </div>
 

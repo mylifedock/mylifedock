@@ -261,7 +261,7 @@ function DocumentForm({
             className="secondary-button"
             onClick={() => ocrCameraRef.current?.click()}
             disabled={isOcrScanning || isSaving}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
           >
             <span>📷</span>
             {isOcrScanning ? `Scanning (${ocrProgress}%)...` : "Snap Invoice"}
@@ -271,7 +271,7 @@ function DocumentForm({
             className="secondary-button"
             onClick={() => ocrInputRef.current?.click()}
             disabled={isOcrScanning || isSaving}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13.5px" }}
           >
             <span>🖼️</span>
             Upload to Scan
