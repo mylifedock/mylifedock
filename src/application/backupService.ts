@@ -103,6 +103,7 @@ export async function createBackupBlob(): Promise<{ blob: Blob; filename: string
     vehicles: await db.vehicles.toArray(),
     properties: await db.properties.toArray(),
     secrets: await db.secrets.toArray(),
+    medicalRecords: await db.medicalRecords.toArray(),
   };
 
   const attachments = await db.attachments.toArray();
@@ -328,6 +329,7 @@ export async function restoreVaultFromBackup(
     "vehicles",
     "properties",
     "secrets",
+    "medicalRecords",
     "attachments",
   ] as const;
 
@@ -444,6 +446,7 @@ export async function importVault(file: File | Blob, optionalPassphrase?: string
       "vehicles",
       "properties",
       "secrets",
+      "medicalRecords",
       "attachments",
     ] as const;
 
@@ -532,6 +535,7 @@ export async function importVault(file: File | Blob, optionalPassphrase?: string
     "vehicles",
     "properties",
     "secrets",
+    "medicalRecords",
     "attachments",
   ] as const;
 

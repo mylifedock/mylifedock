@@ -109,6 +109,7 @@ export function SearchPage({ onNavigate }: { onNavigate?: (page: string) => void
       case "coverage": targetPage = "products"; break;
       case "reminder": targetPage = "reminders"; break;
       case "secret": targetPage = "secrets"; break;
+      case "medical": targetPage = "medical"; break;
       default: targetPage = undefined;
     }
 

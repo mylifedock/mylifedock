@@ -173,3 +173,26 @@ In release **v1.1.0**, the interaction and responsive presentation model was upg
 4. **Touch Targets & Typography Standards:**
    - Full-width CTA buttons feature balanced left-aligned text and right-docked action arrows (`margin-left: auto`), eliminating dead space.
    - Mobile inputs and selects enforce a 16px minimum font size, preventing iOS Safari auto-zoom and guaranteeing high readability on Android.
+
+---
+
+## 🩺 7. Version 1.3.0 Medical Profile & Health Records Architecture
+
+In release **v1.3.0**, MyLifeDock introduced a sovereign health record management system featuring dedicated sub-modules, date-wise timeline tracking, and on-device intelligent OCR:
+
+1. **Sub-Module Separation & Data Model:**
+   - `MedicalRecordType`: `"prescription" | "lab_report"`.
+   - Dexie Schema v6: `medicalRecords: "id, ownerId, type, department, date, createdAt"`.
+   - Strict backward-compatible migrations preserving all existing user documents, warranties, and secrets.
+2. **Department Classification & Fallbacks:**
+   - Supported specialties include `General`, `Cardiology`, `Pediatrics`, `Dermatology`, `Orthopedics`, `Ophthalmology`, `Dental`, `Pathology`, `Radiology`, and more.
+   - Any untagged or blank department is enforced to `"General"` across both database insertion and update routines.
+3. **Beta Smart Auto-Fill & Local OCR Heuristics:**
+   - Powered by on-device Tesseract WebAssembly worker (`ocrService.ts`).
+   - Heuristics engine (`parseMedicalOcrText`) scans image text for Rx keywords (`Rx`, `tab`, `mg`, `daily`) and Diagnostic keywords (`CBC`, `Hemoglobin`, `Reference Range`).
+   - Automatically detects date formats (ISO, DD/MM/YYYY, DD-Mon-YYYY) and matches biological terms to departments.
+4. **Bi-Directional Follow-up Reminders:**
+   - Setting a follow-up appointment date automatically creates or synchronizes a linked reminder in `db.reminders` (`relatedEntityType: "medical"`).
+   - Deleting a medical record cascades to clean up its linked reminders and encrypted binary attachments.
+5. **Universal Search Integration:**
+   - Indexed in `universalSearch()`: matches doctor names, diagnoses, medication names, departments, and dates with immediate navigation to `/medical`.

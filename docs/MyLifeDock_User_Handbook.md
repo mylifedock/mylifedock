@@ -84,7 +84,29 @@ flowchart TD
 
 ---
 
-### 🚗 3.3. Products, Vehicles & Property Management
+### 🩺 3.3. Medical Profile & Health Records (Prescriptions & Lab Reports)
+
+```mermaid
+flowchart LR
+    A["🩺 Click '+ Add Prescription' / '+ Add Lab Report'"] --> B["Upload File or Snap Camera"]
+    B --> C["✨ Smart Auto-Fill (Beta)<br/>Local OCR Engine"]
+    C --> D["Auto-Detects Date, Dept & Meds"]
+    D --> E["Tag Department (Defaults to 'General')"]
+    E --> F["Set Follow-Up Reminder (Optional)"]
+    F --> G["🔒 Save Encrypted to Timeline"]
+```
+
+- **Sub-Modules**:
+  - **💊 Prescriptions & Consultations:** Store doctor advice, diagnosed conditions, prescribed dosages, and follow-up consultation dates.
+  - **🔬 Lab Reports & Diagnostics:** Track blood panels (CBC, Lipid, HbA1c), radiology reports (MRI, X-Ray, CT), and pathology tests.
+- **Date-Wise Timeline & Sorting:** View all medical events sorted chronologically (newest first or oldest first).
+- **Department Tagging & Filtering:** Categorize visits by specialty (`General`, `Cardiology`, `Pediatrics`, `Dermatology`, `Orthopedics`, `Dental`, `Ophthalmology`, etc.). If left blank, automatically defaults to `General`.
+- **✨ Smart Auto-Fill (Beta):** Snap a photo of a doctor's prescription or lab sheet. The on-device OCR engine automatically extracts consultation dates, clinic/doctor names, medical departments, and drug regimens directly into the form.
+- **Automated Vault Reminders:** Setting a follow-up appointment date automatically syncs with the Vault Reminders engine.
+
+---
+
+### 🚗 3.4. Products, Vehicles & Property Management
 - **Products & Warranties:** Track gadgets and appliances with automatic warranty status indicators (*Active*, *Expiring Soon*, *Expired*).
 - **Vehicles:** Log registration numbers, VINs, insurance policy details, road tax due dates, and maintenance records.
 - **Properties:** Store title deeds, mortgage details, annual property tax schedules, and maintenance records.

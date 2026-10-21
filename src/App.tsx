@@ -46,6 +46,7 @@ import InsurancePage from "./ui/pages/InsurancePage";
 import { VehiclesPage } from "./ui/pages/VehiclesPage";
 import { SubscriptionsPage } from "./ui/pages/SubscriptionsPage";
 import { EmergencyKitPage } from "./ui/pages/EmergencyKitPage";
+import { MedicalPage } from "./ui/pages/MedicalPage";
 import AboutPage from "./ui/pages/AboutPage";
 
 function getAutoLockTimeoutMs(): number {
@@ -73,6 +74,7 @@ function getPageTitle(page: string): string {
     case "vehicles": return "Vehicles & Properties";
     case "subscriptions": return "Subscriptions";
     case "emergency": return "Emergency Life Kit";
+    case "medical": return "Medical & Health Records";
     case "about": return "About & Support";
     case "settings": return "Settings & Backup";
     default: return "MyLifeDock";
@@ -237,7 +239,7 @@ function App() {
     };
   }, []);
 
-  // Subscribe to Tauri tray "Lock Vault" event (desktop only — no-op on mobile/web)
+  // Subscribe to Tauri tray "Lock Vault" event (desktop only â€” no-op on mobile/web)
   useEffect(() => {
     if (!isTauri()) return;
     let unlisten: (() => void) | undefined;
@@ -506,7 +508,7 @@ function App() {
                 transition: "all 0.2s ease",
               }}
             >
-              ✨ Create New Vault
+              âœ¨ Create New Vault
             </button>
             <button
               type="button"
@@ -524,7 +526,7 @@ function App() {
                 transition: "all 0.2s ease",
               }}
             >
-              🔄 Restore Existing Vault
+              ðŸ”„ Restore Existing Vault
             </button>
           </div>
 
@@ -580,11 +582,11 @@ function App() {
                 disabled={!displayName.trim() || !acceptedTerms}
               >
                 <span>Create my local vault</span>
-                <span className="btn-arrow" aria-hidden="true">→</span>
+                <span className="btn-arrow" aria-hidden="true">â†’</span>
               </button>
 
               <div className="onboarding-security">
-                <span>●</span>
+                <span>â—</span>
                 <div>
                   <strong>
                     Private by default
@@ -622,7 +624,7 @@ function App() {
                   disabled={isRestoring}
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
                 >
-                  📁 Restore from Backup File (.mldv)
+                  ðŸ“ Restore from Backup File (.mldv)
                 </button>
                 <input
                   type="file"
@@ -634,7 +636,7 @@ function App() {
               </div>
 
               <div className="onboarding-security" style={{ marginTop: "4px" }}>
-                <span>●</span>
+                <span>â—</span>
                 <div>
                   <strong>Zero-Knowledge Restoration</strong>
                   <small>
@@ -650,7 +652,7 @@ function App() {
             <div className="product-detail-overlay">
               <div className="card" style={{ maxWidth: "440px", width: "100%", margin: "auto", padding: "24px", background: "#111827", border: "1px solid rgba(56, 189, 248, 0.3)" }}>
                 <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  🔐 Enter Vault Passphrase
+                  ðŸ” Enter Vault Passphrase
                 </h3>
                 <p style={{ fontSize: "13px", color: "#94a3b8" }}>
                   Restoring from <strong>{restoreSource}</strong>. Enter the Master Passphrase (or 64-character Recovery Key) used for this vault.
@@ -695,7 +697,7 @@ function App() {
                       className="primary-button"
                       disabled={!restorePassphrase.trim() || isRestoring}
                     >
-                      {isRestoring ? "Decrypting..." : "Unlock & Restore Vault →"}
+                      {isRestoring ? "Decrypting..." : "Unlock & Restore Vault â†’"}
                     </button>
                   </div>
                 </form>
@@ -745,6 +747,8 @@ function App() {
       return <SubscriptionsPage />;
     case "emergency":
       return <EmergencyKitPage />;
+    case "medical":
+      return <MedicalPage />;
     case "about":
       return <AboutPage />;
     case "settings":

@@ -29,6 +29,12 @@ const navigationGroups: NavGroup[] = [
     ],
   },
   {
+    title: "HEALTH & WELLNESS",
+    items: [
+      { id: "medical", label: "Medical & Health Records", icon: "🩺" },
+    ],
+  },
+  {
     title: "FINANCIAL & ASSETS",
     items: [
       { id: "insurance", label: "Insurance Policies", icon: "🛡️" },

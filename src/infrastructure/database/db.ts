@@ -188,6 +188,24 @@ export interface SecretRecord {
   updatedAt: string;
 }
 
+export type MedicalRecordType = "prescription" | "lab_report";
+
+export interface MedicalRecord {
+  id: string;
+  ownerId: string;
+  type: MedicalRecordType;
+  title: string;
+  date: string;
+  department: string;
+  doctorOrClinic?: string;
+  diagnosis?: string;
+  medicationsOrSummary?: string;
+  followUpDate?: string;
+  attachmentIds?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * Security metadata for the local vault.
  *
@@ -199,18 +217,18 @@ export interface SecretRecord {
  * Current recovery architecture:
  *
  * 1. wrappedVaultKey
- *    → passphrase-derived AES-KW key
+ *    â†’ passphrase-derived AES-KW key
  *
  * 2. wrappedRecoveryVaultKey
- *    → random recovery-key AES-KW key
+ *    â†’ random recovery-key AES-KW key
  *
  * Future:
  *
  * 3. wrappedTrustedDeviceVaultKey
- *    → trusted-device credential/key
+ *    â†’ trusted-device credential/key
  *
  * 4. wrappedAccountVaultKey
- *    → authenticated account/device credential
+ *    â†’ authenticated account/device credential
  */
 export interface VaultSecurityRecord {
   id: string;
@@ -296,6 +314,11 @@ export class MyLifeDockDatabase
     "id"
   >;
 
+  medicalRecords!: EntityTable<
+    MedicalRecord,
+    "id"
+  >;
+
   constructor() {
     super("MyLifeDock");
 
@@ -341,6 +364,10 @@ export class MyLifeDockDatabase
       vehicles: "id, ownerId, createdAt",
       properties: "id, ownerId, type, createdAt",
       secrets: "id, ownerId, category, createdAt",
+    });
+
+    this.version(6).stores({
+      medicalRecords: "id, ownerId, type, department, date, createdAt",
     });
   }
 }

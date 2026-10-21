@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { getDocuments } from "../../application/documentService";
 import { getProducts } from "../../application/productService";
 import { getUpcomingReminders } from "../../application/reminderService";
+import { getMedicalRecords } from "../../application/medicalService";
 
 import StatCard from "../components/StatCard";
 import QuickAction from "../components/QuickAction";
@@ -30,6 +31,12 @@ function DashboardPage({
 
   const upcomingReminders = useLiveQuery(
     () => getUpcomingReminders(90),
+    [],
+    [],
+  );
+
+  const medicalRecords = useLiveQuery(
+    () => getMedicalRecords(),
     [],
     [],
   );
@@ -146,7 +153,7 @@ function DashboardPage({
 
           {upcomingReminders.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">◷</div>
+              <div className="empty-icon">â—·</div>
 
               <h3>No upcoming reminders</h3>
 
@@ -160,7 +167,7 @@ function DashboardPage({
                 type="button"
                 onClick={() => onNavigate("reminders")}
               >
-                Explore reminders →
+                Explore reminders â†’
               </button>
             </div>
           ) : (
@@ -198,7 +205,7 @@ function DashboardPage({
                 >
                   View all{" "}
                   {upcomingReminders.length}{" "}
-                  reminders →
+                  reminders â†’
                 </button>
               )}
             </div>
@@ -259,13 +266,28 @@ function DashboardPage({
               accentBg="rgba(236, 72, 153, 0.15)"
               accentColor="#f472b6"
             />
+
+            <QuickAction
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+              }
+              title="Medical Records"
+              description={`Prescriptions, lab reports (${medicalRecords.length} saved)`}
+              onClick={() => onNavigate("medical")}
+              accentBg="rgba(16, 185, 129, 0.15)"
+              accentColor="#34d399"
+            />
           </div>
         </div>
       </section>
 
       <section className="privacy-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <div className="privacy-card-icon">🛡️</div>
+          <div className="privacy-card-icon">ðŸ›¡ï¸</div>
           <div>
             <strong>Zero-Knowledge Security Active</strong>
             <p>

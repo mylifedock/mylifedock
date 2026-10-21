@@ -190,7 +190,23 @@
 <li><strong>Offline Reliability:</strong> Accessible even during network outages or cellular downtime.</li>
 </ul>
 <hr>
-<h3>🚗 3.3. Products, Vehicles &amp; Property Management</h3>
+<h3>🩺 3.3. Medical Profile &amp; Health Records (Prescriptions &amp; Lab Reports)</h3>
+<pre class="mermaid">flowchart LR
+    A["🩺 Click '+ Add Prescription' / '+ Add Lab Report'"] --> B["Upload File or Snap Camera"]
+    B --> C["✨ Smart Auto-Fill (Beta)<br/>Local OCR Engine"]
+    C --> D["Auto-Detects Date, Dept & Meds"]
+    D --> E["Tag Department (Defaults to 'General')"]
+    E --> F["Set Follow-Up Reminder (Optional)"]
+    F --> G["🔒 Save Encrypted to Timeline"]</pre>
+<ul>
+<li><strong>Sub-Modules:</strong> <strong>💊 Prescriptions &amp; Consultations</strong> and <strong>🔬 Lab Reports &amp; Diagnostics</strong>.</li>
+<li><strong>Date-Wise Timeline &amp; Sorting:</strong> View all medical visits sorted chronologically with newest-first and oldest-first toggles.</li>
+<li><strong>Department Tagging &amp; Filtering:</strong> Filter by medical specialty (<em>General</em>, <em>Cardiology</em>, <em>Pediatrics</em>, <em>Dermatology</em>, <em>Orthopedics</em>, etc.). Untagged records default to <em>General</em> automatically.</li>
+<li><strong>✨ Smart Auto-Fill (Beta):</strong> Snap a photo of a prescription or lab test; on-device OCR extracts dates, clinics, departments, and medication lines.</li>
+<li><strong>Automated Vault Reminders:</strong> Follow-up appointments automatically synchronize with the vault reminder calendar.</li>
+</ul>
+<hr>
+<h3>🚗 3.4. Products, Vehicles &amp; Property Management</h3>
 <ul>
 <li><strong>Products &amp; Warranties:</strong> Track gadgets and appliances with automatic warranty status indicators (<em>Active</em>, <em>Expiring Soon</em>, <em>Expired</em>).</li>
 <li><strong>Vehicles:</strong> Log registration numbers, VINs, insurance policy details, road tax due dates, and maintenance records.</li>

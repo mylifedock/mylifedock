@@ -3,7 +3,7 @@ import { LOCAL_PROFILE_ID } from "./profileService";
 
 export interface SearchResult {
   id: string;
-  type: "document" | "product" | "finance" | "vehicle" | "property" | "coverage" | "reminder" | "secret";
+  type: "document" | "product" | "finance" | "vehicle" | "property" | "coverage" | "reminder" | "secret" | "medical";
   title: string;
   subtitle: string;
 }
@@ -75,6 +75,26 @@ export async function universalSearch(query: string): Promise<SearchResult[]> {
   reminders.forEach(r => {
     if (r.title.toLowerCase().includes(q)) {
       results.push({ id: r.id, type: "reminder", title: r.title, subtitle: `Reminder • Due: ${r.dueDate}` });
+    }
+  });
+
+  // Medical Records (Prescriptions & Lab Reports)
+  const medicals = await db.medicalRecords.where("ownerId").equals(LOCAL_PROFILE_ID).toArray();
+  medicals.forEach(m => {
+    if (
+      m.title.toLowerCase().includes(q) ||
+      m.department.toLowerCase().includes(q) ||
+      (m.doctorOrClinic && m.doctorOrClinic.toLowerCase().includes(q)) ||
+      (m.diagnosis && m.diagnosis.toLowerCase().includes(q)) ||
+      (m.medicationsOrSummary && m.medicationsOrSummary.toLowerCase().includes(q))
+    ) {
+      const typeLabel = m.type === "prescription" ? "Prescription" : "Lab Report";
+      results.push({
+        id: m.id,
+        type: "medical",
+        title: m.title,
+        subtitle: `Medical • ${typeLabel} (${m.department}) • ${m.date}`
+      });
     }
   });
 
