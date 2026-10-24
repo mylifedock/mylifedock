@@ -139,7 +139,7 @@ export function AboutPage() {
             <span>👨‍💻</span> Built by Founder & Architect
           </h3>
           <a
-            href="https://www.linkedin.com/in/bssdinesh"
+            href="https://in.linkedin.com/in/srisaidineshbollupalli"
             target="_blank"
             rel="noopener noreferrer"
             className="secondary-button"

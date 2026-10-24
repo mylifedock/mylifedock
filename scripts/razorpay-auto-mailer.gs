@@ -91,18 +91,23 @@ function doPost(e) {
     }
 
     // Determine license tier based on amount paid:
-    // < ₹100 (e.g. ₹25 or test payment)  -> Monthly Pro (30 Days)
-    // ₹100 to < ₹500 (e.g. ₹250 or ₹116)  -> Yearly Pro (365 Days - Save 2 Months Free!)
-    // >= ₹500 (e.g. ₹999)                 -> Lifetime Founder License (Never Expires)
-    var tier = "pro_yearly";
-    var durationDays = 365;
-    var planTitle = "MyLifeDock Pro (1-Year - Save 2 Months Free)";
+    // < ₹25 (e.g. ₹1 to ₹10)              -> 3-Day Test / Underpayment Trial
+    // ₹25 to < ₹200 (e.g. ₹25 monthly)    -> Monthly Pro (30 Days)
+    // ₹200 to < ₹800 (e.g. ₹250 yearly)   -> Yearly Pro (365 Days - Save 2 Months Free!)
+    // >= ₹800 (e.g. ₹999)                 -> Lifetime Founder License (Never Expires)
+    var tier = "pro_monthly";
+    var durationDays = 30;
+    var planTitle = "MyLifeDock Pro (Monthly - 30 Days)";
     
-    if (amountInRupees < 100) {
+    if (amountInRupees < 25) {
       tier = "pro_monthly";
-      durationDays = 30;
-      planTitle = "MyLifeDock Pro (Monthly - 30 Days)";
-    } else if (amountInRupees >= 500) {
+      durationDays = 3;
+      planTitle = "MyLifeDock Pro (3-Day Test Pass - Standard Monthly is ₹25)";
+    } else if (amountInRupees >= 200 && amountInRupees < 800) {
+      tier = "pro_yearly";
+      durationDays = 365;
+      planTitle = "MyLifeDock Pro (1-Year - Save 2 Months Free)";
+    } else if (amountInRupees >= 800) {
       tier = "pro_lifetime";
       durationDays = null;
       planTitle = "MyLifeDock Lifetime Founder License";

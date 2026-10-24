@@ -2,7 +2,7 @@
 **Document ID:** `DOC-PV-2026-v1.0-ENTERPRISE-MASTER`  
 **Classification:** Product Specification Baseline, Architecture Blueprint & Operational Manual  
 **Target Release:** Version 1.0.0 Global Production Release  
-**Founder & System Architect:** B.S.S. Dinesh  
+**Founder & System Architect:** [B.S.S. Dinesh](https://in.linkedin.com/in/srisaidineshbollupalli)  
 **Release Date:** October 25, 2026  
 **Auditor Engine:** Antigravity Advanced Security Scanner & Protocol Inspector  
 **Status:** **APPROVED & CERTIFIED PRODUCTION READY**  
