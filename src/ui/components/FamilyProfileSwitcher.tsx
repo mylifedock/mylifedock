@@ -11,7 +11,7 @@ import {
 } from "../../application/profileService";
 import type { ProfileRecord, ProfileRole } from "../../infrastructure/database/db";
 
-const AVATAR_OPTIONS = ["👶", "👧", "🧒", "🎒", "👶🏻", "👧🏻", "🧒🏻", "👵", "👴", "👤"];
+const AVATAR_OPTIONS = ["��", "��", "��", "��", "����", "����", "����", "��", "��", "��"];
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
 interface FamilyProfileSwitcherProps {
@@ -48,10 +48,10 @@ export function FamilyProfileSwitcher({ onProfileSelect }: FamilyProfileSwitcher
 
   // Label to show in pill
   let displayLabel = "All Family";
-  let displayIcon = "👨‍👩‍👧‍👦";
+  let displayIcon = "��‍��‍��‍��";
   if (activeId !== "all" && activeProfile) {
     displayLabel = activeProfile.displayName;
-    displayIcon = activeProfile.avatarIcon || (activeProfile.role === "dependent_child" ? "👶" : "👤");
+    displayIcon = activeProfile.avatarIcon || (activeProfile.role === "dependent_child" ? "��" : "��");
   }
 
   return (
@@ -88,7 +88,7 @@ export function FamilyProfileSwitcher({ onProfileSelect }: FamilyProfileSwitcher
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 998,
+              zIndex: 2990,
             }}
             onClick={() => setIsDropdownOpen(false)}
           />
@@ -99,12 +99,14 @@ export function FamilyProfileSwitcher({ onProfileSelect }: FamilyProfileSwitcher
               left: 0,
               marginTop: "8px",
               minWidth: "220px",
+              maxWidth: "calc(100vw - 32px)",
+              boxSizing: "border-box",
               background: "#0f172a",
               border: "1px solid rgba(56, 189, 248, 0.3)",
               borderRadius: "10px",
               boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
               padding: "6px",
-              zIndex: 999,
+              zIndex: 3000,
             }}
           >
             <div style={{ padding: "6px 10px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.05em" }}>
@@ -130,7 +132,7 @@ export function FamilyProfileSwitcher({ onProfileSelect }: FamilyProfileSwitcher
                 textAlign: "left",
               }}
             >
-              <span>👨‍👩‍👧‍👦</span>
+              <span>��‍��‍��‍��</span>
               <div style={{ flex: 1 }}>
                 <div>All Family Records</div>
                 <small style={{ color: "#94a3b8", fontSize: "11px" }}>Combined overview</small>
@@ -162,7 +164,7 @@ export function FamilyProfileSwitcher({ onProfileSelect }: FamilyProfileSwitcher
                   }}
                 >
                   <span style={{ fontSize: "16px" }}>
-                    {p.avatarIcon || (isChild ? "👶" : "👤")}
+                    {p.avatarIcon || (isChild ? "��" : "��")}
                   </span>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -237,7 +239,7 @@ interface AddDependentModalProps {
 export function AddDependentModal({ onClose, onCreated }: AddDependentModalProps) {
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<ProfileRole>("dependent_child");
-  const [avatarIcon, setAvatarIcon] = useState("👶");
+  const [avatarIcon, setAvatarIcon] = useState("��");
   const [birthDate, setBirthDate] = useState("");
   const [bloodGroup, setBloodGroup] = useState("");
   const [allergies, setAllergies] = useState("");
@@ -308,7 +310,7 @@ export function AddDependentModal({ onClose, onCreated }: AddDependentModalProps
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <h3 style={{ margin: 0, fontSize: "18px", color: "#f8fafc", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span>👶</span> Add Child / Dependent Profile
+            <span>��</span> Add Child / Dependent Profile
           </h3>
           <button
             type="button"
@@ -321,7 +323,7 @@ export function AddDependentModal({ onClose, onCreated }: AddDependentModalProps
         </div>
 
         <p style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "18px" }}>
-          Manage your child’s pediatric records, vaccinations, school documents, and emergency details under your secure vault.
+          Manage your child�s pediatric records, vaccinations, school documents, and emergency details under your secure vault.
         </p>
 
         {error && (
@@ -361,7 +363,7 @@ export function AddDependentModal({ onClose, onCreated }: AddDependentModalProps
                 type="button"
                 onClick={() => {
                   setRole("dependent_child");
-                  setAvatarIcon("👶");
+                  setAvatarIcon("��");
                 }}
                 style={{
                   flex: 1,
@@ -375,13 +377,13 @@ export function AddDependentModal({ onClose, onCreated }: AddDependentModalProps
                   cursor: "pointer",
                 }}
               >
-                👶 Child
+                �� Child
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setRole("dependent_elder");
-                  setAvatarIcon("👵");
+                  setAvatarIcon("��");
                 }}
                 style={{
                   flex: 1,
@@ -395,13 +397,13 @@ export function AddDependentModal({ onClose, onCreated }: AddDependentModalProps
                   cursor: "pointer",
                 }}
               >
-                👵 Parent / Elder
+                �� Parent / Elder
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setRole("spouse");
-                  setAvatarIcon("💍");
+                  setAvatarIcon("��");
                 }}
                 style={{
                   flex: 1,
@@ -415,7 +417,7 @@ export function AddDependentModal({ onClose, onCreated }: AddDependentModalProps
                   cursor: "pointer",
                 }}
               >
-                💍 Spouse
+                �� Spouse
               </button>
             </div>
           </div>

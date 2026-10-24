@@ -130,7 +130,7 @@
     .plan-price small { font-size: 14px; color: var(--text-muted); font-weight: 400; }
     .plan-features { list-style: none; margin: 24px 0 32px; }
     .plan-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 12px; color: #e2e8f0; }
-    .plan-features li::before { content: "✓"; color: #4ade80; font-weight: bold; }
+    .plan-features li::before { content: "\2713\0020"; color: #4ade80; font-weight: bold; }
     
     /* Footer */
     footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 60px 0 30px; text-align: center; font-size: 13px; color: var(--text-muted); }
@@ -241,7 +241,7 @@
       <p style="color: #cbd5e1; max-width: 680px; margin: 0 auto 30px; font-size: 17px; line-height: 1.6;">
         Unlike cloud services that claim to encrypt data "in transit" but hold master keys on corporate servers, MyLifeDock mathematically wraps your vault using keys derived solely from your master passphrase.
       </p>
-      <a href="/docs/MyLifeDock_Security_Audit_2026.html" target="_blank" class="btn-secondary" style="border-color: rgba(74, 222, 128, 0.4); color: #4ade80 !important;">
+      <a href="MyLifeDock_Security_Audit_2026.html" target="_blank" class="btn-secondary" style="border-color: rgba(74, 222, 128, 0.4); color: #4ade80 !important;">
         Read Full 2026 Security Audit Report &rarr;
       </a>
     </div>
@@ -288,7 +288,7 @@
         <div class="pricing-card">
           <h3>Free Core Vault</h3>
           <p style="color: var(--text-muted); font-size: 14px;">Everything you need to experience sovereign vault security.</p>
-          <div class="plan-price"><span id="price-free">₹0</span><small>/ forever</small></div>
+          <div class="plan-price"><span id="price-free">&#8377;0</span><small>/ forever</small></div>
           <ul class="plan-features">
             <li>Store up to 10 Items across all modules</li>
             <li>100% Zero-Knowledge AES-256 Encryption</li>
@@ -305,7 +305,7 @@
           <div class="popular-badge">BEST VALUE</div>
           <h3>MyLifeDock PRO</h3>
           <p style="color: var(--text-muted); font-size: 14px;">For individuals and families wanting unlimited lifetime peace of mind.</p>
-          <div class="plan-price"><span id="price-pro">₹499</span><small id="pro-interval">/ 1-Year (or ₹999 Lifetime)</small></div>
+          <div class="plan-price"><span id="price-pro">&#8377;499</span><small id="pro-interval">/ 1-Year (or &#8377;999 Lifetime)</small></div>
           <ul class="plan-features">
             <li>Unlimited Encrypted Documents & Files</li>
             <li>Unlimited Prescriptions & Lab Reports</li>
@@ -328,7 +328,7 @@
     <div class="container">
       <div class="footer-links">
         <a href="/docs/MyLifeDock_User_Handbook.html" target="_blank">User Handbook</a>
-        <a href="/docs/MyLifeDock_Security_Audit_2026.html" target="_blank">Security Audit</a>
+        <a href="MyLifeDock_Security_Audit_2026.html" target="_blank">Security Audit</a>
         <a href="#security">Privacy Policy</a>
         <a href="#pricing">Refund Policy (7-Day Money-Back)</a>
         <a href="mailto:support@mylifedock.com">Contact Support (support@mylifedock.com)</a>
@@ -345,9 +345,9 @@
       document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
       event.target.classList.add('active');
       if (curr === 'INR') {
-        document.getElementById('price-free').innerText = '₹0';
-        document.getElementById('price-pro').innerText = '₹499';
-        document.getElementById('pro-interval').innerText = '/ 1-Year (or ₹999 Lifetime)';
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('price-pro').innerHTML = '&#8377;499';
+        document.getElementById('pro-interval').innerHTML = '/ 1-Year (or &#8377;999 Lifetime)';
         document.getElementById('pro-buy-btn').href = 'https://razorpay.me/@bssdinesh';
       } else {
         document.getElementById('price-free').innerText = '$0';

@@ -1326,7 +1326,7 @@
   position: fixed;
   inset: 0;
 
-  z-index: 100;
+  z-index: 4000;
 
   display: flex;
   align-items: center;
@@ -1335,9 +1335,10 @@
   padding: 24px;
 
   background:
-    rgba(4, 6, 10, 0.72);
+    rgba(4, 6, 10, 0.78);
 
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 
   animation:
     product-detail-fade 180ms ease;
@@ -3056,6 +3057,21 @@ button, a, input, select, textarea {
 
   .quick-action small {
     font-size: 13px;
+  }
+
+  /* Mobile Modal & Sheet Viewport Adaptations */
+  .product-detail-overlay {
+    z-index: 4000 !important;
+    padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)) !important;
+    align-items: center !important;
+  }
+
+  .product-detail-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - 32px) !important;
+    padding: 20px 16px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
   }
 }
 

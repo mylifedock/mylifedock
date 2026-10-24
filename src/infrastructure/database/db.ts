@@ -130,7 +130,7 @@ export interface ProfileRecord {
   id: string;
   displayName: string;
   role?: ProfileRole;
-  avatarIcon?: string; // e.g. "👤", "👶", "👧", "🧒", "🎒", "👵"
+  avatarIcon?: string; // e.g. "��", "��", "��", "��", "��", "��"
   birthDate?: string;
   bloodGroup?: string;
   allergies?: string;
@@ -226,18 +226,18 @@ export interface MedicalRecord {
  * Current recovery architecture:
  *
  * 1. wrappedVaultKey
- *    â†’ passphrase-derived AES-KW key
+ *    → passphrase-derived AES-KW key
  *
  * 2. wrappedRecoveryVaultKey
- *    â†’ random recovery-key AES-KW key
+ *    → random recovery-key AES-KW key
  *
  * Future:
  *
  * 3. wrappedTrustedDeviceVaultKey
- *    â†’ trusted-device credential/key
+ *    → trusted-device credential/key
  *
  * 4. wrappedAccountVaultKey
- *    â†’ authenticated account/device credential
+ *    → authenticated account/device credential
  */
 export interface VaultSecurityRecord {
   id: string;

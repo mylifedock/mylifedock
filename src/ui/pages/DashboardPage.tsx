@@ -226,7 +226,7 @@ function DashboardPage({
 
           {upcomingReminders.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">â—·</div>
+              <div className="empty-icon">◷</div>
 
               <h3>No upcoming reminders</h3>
 
@@ -240,7 +240,7 @@ function DashboardPage({
                 type="button"
                 onClick={() => onNavigate("reminders")}
               >
-                Explore reminders â†’
+                Explore reminders →
               </button>
             </div>
           ) : (
@@ -278,7 +278,7 @@ function DashboardPage({
                 >
                   View all{" "}
                   {upcomingReminders.length}{" "}
-                  reminders â†’
+                  reminders →
                 </button>
               )}
             </div>
@@ -360,7 +360,7 @@ function DashboardPage({
 
       <section className="privacy-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <div className="privacy-card-icon">ðŸ›¡ï¸</div>
+          <div className="privacy-card-icon">🛡️</div>
           <div>
             <strong>Zero-Knowledge Security Active</strong>
             <p>

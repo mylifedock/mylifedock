@@ -42,9 +42,9 @@ const CATEGORIES: {
   { value: "other", label: "Other" },
 ];
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ──────────────────────────────────────────
  * Document Form (Create + Edit)
- * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+ * ────────────────────────────────────────── */
 
 type DocumentFormProps = {
   initialDocument?: DocumentRecord;
@@ -265,7 +265,7 @@ function DocumentForm({
             disabled={isOcrScanning || isSaving}
             style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
           >
-            <span>ðŸ“·</span>
+            <span>📷</span>
             {isOcrScanning ? `Scanning (${ocrProgress}%)...` : "Snap Invoice"}
           </button>
           <button
@@ -275,7 +275,7 @@ function DocumentForm({
             disabled={isOcrScanning || isSaving}
             style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13.5px" }}
           >
-            <span>ðŸ–¼ï¸</span>
+            <span>🖼️</span>
             Upload to Scan
           </button>
         </div>
@@ -468,7 +468,7 @@ function DocumentForm({
                       removeTag(tag)
                     }
                   >
-                    Ã—
+                    ×
                   </button>
                 </span>
               ))}
@@ -533,7 +533,7 @@ function DocumentForm({
                   style={{ padding: "6px 12px", fontSize: "12.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)", display: "flex", alignItems: "center", gap: "6px" }}
                   onClick={() => cameraAttachmentRef.current?.click()}
                 >
-                  <span>ðŸ“·</span>
+                  <span>📷</span>
                   Snap Photo
                 </button>
                 <button
@@ -542,7 +542,7 @@ function DocumentForm({
                   style={{ padding: "6px 12px", fontSize: "12.5px", display: "flex", alignItems: "center", gap: "6px" }}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <span>ðŸ“</span>
+                  <span>📁</span>
                   Choose File
                 </button>
               </div>
@@ -601,7 +601,7 @@ function DocumentForm({
                 ? "Save changes"
                 : "Add document"}
 
-            <span>â†’</span>
+            <span>→</span>
           </button>
         </div>
       </form>
@@ -609,9 +609,9 @@ function DocumentForm({
   );
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ──────────────────────────────────────────
  * Document Detail Modal
- * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+ * ────────────────────────────────────────── */
 
 function DocumentDetailModal({
   document,
@@ -657,7 +657,7 @@ function DocumentDetailModal({
             onClick={onClose}
             aria-label="Close"
           >
-            Ã—
+            ×
           </button>
         </div>
 
@@ -779,7 +779,7 @@ function DocumentDetailModal({
             onClick={onEdit}
           >
             Edit document
-            <span>â†’</span>
+            <span>→</span>
           </button>
         </div>
       </section>
@@ -787,9 +787,9 @@ function DocumentDetailModal({
   );
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ──────────────────────────────────────────
  * Documents Page
- * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+ * ────────────────────────────────────────── */
 
 function DocumentsPage() {
   const documents = useLiveQuery(
@@ -1042,7 +1042,7 @@ function DocumentsPage() {
             {filteredDocuments.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">
-                  â–£
+                  ▣
                 </div>
 
                 <h3>
@@ -1070,7 +1070,7 @@ function DocumentsPage() {
                       }
                     >
                       Add your first
-                      document â†’
+                      document →
                     </button>
                   )}
               </div>

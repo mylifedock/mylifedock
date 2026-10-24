@@ -241,7 +241,7 @@ function App() {
     };
   }, []);
 
-  // Subscribe to Tauri tray "Lock Vault" event (desktop only â€” no-op on mobile/web)
+  // Subscribe to Tauri tray "Lock Vault" event (desktop only — no-op on mobile/web)
   useEffect(() => {
     if (!isTauri()) return;
     let unlisten: (() => void) | undefined;
@@ -516,7 +516,7 @@ function App() {
                 transition: "all 0.2s ease",
               }}
             >
-              âœ¨ Create New Vault
+              ✨ Create New Vault
             </button>
             <button
               type="button"
@@ -534,7 +534,7 @@ function App() {
                 transition: "all 0.2s ease",
               }}
             >
-              ðŸ”„ Restore Existing Vault
+              🔄 Restore Existing Vault
             </button>
           </div>
 
@@ -590,11 +590,11 @@ function App() {
                 disabled={!displayName.trim() || !acceptedTerms}
               >
                 <span>Create my local vault</span>
-                <span className="btn-arrow" aria-hidden="true">â†’</span>
+                <span className="btn-arrow" aria-hidden="true">→</span>
               </button>
 
               <div className="onboarding-security">
-                <span>â—</span>
+                <span>●</span>
                 <div>
                   <strong>
                     Private by default
@@ -632,7 +632,7 @@ function App() {
                   disabled={isRestoring}
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
                 >
-                  ðŸ“ Restore from Backup File (.mldv)
+                  📁 Restore from Backup File (.mldv)
                 </button>
                 <input
                   type="file"
@@ -644,7 +644,7 @@ function App() {
               </div>
 
               <div className="onboarding-security" style={{ marginTop: "4px" }}>
-                <span>â—</span>
+                <span>●</span>
                 <div>
                   <strong>Zero-Knowledge Restoration</strong>
                   <small>
@@ -660,7 +660,7 @@ function App() {
             <div className="product-detail-overlay">
               <div className="card" style={{ maxWidth: "440px", width: "100%", margin: "auto", padding: "24px", background: "#111827", border: "1px solid rgba(56, 189, 248, 0.3)" }}>
                 <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  ðŸ” Enter Vault Passphrase
+                  🔐 Enter Vault Passphrase
                 </h3>
                 <p style={{ fontSize: "13px", color: "#94a3b8" }}>
                   Restoring from <strong>{restoreSource}</strong>. Enter the Master Passphrase (or 64-character Recovery Key) used for this vault.
@@ -705,7 +705,7 @@ function App() {
                       className="primary-button"
                       disabled={!restorePassphrase.trim() || isRestoring}
                     >
-                      {isRestoring ? "Decrypting..." : "Unlock & Restore Vault â†’"}
+                      {isRestoring ? "Decrypting..." : "Unlock & Restore Vault →"}
                     </button>
                   </div>
                 </form>
