@@ -165,13 +165,18 @@ export function AboutPage() {
               }}
             >
               <img
-                src="/founder.jpg"
+                src="founder.jpg"
                 alt="B.S.S. Dinesh - Founder"
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 onError={(e) => {
-                  (e.target as HTMLElement).style.display = "none";
-                  const fallback = (e.target as HTMLElement).nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = "grid";
+                  const img = e.target as HTMLImageElement;
+                  if (!img.src.endsWith("/founder.jpg")) {
+                    img.src = "/founder.jpg";
+                  } else {
+                    img.style.display = "none";
+                    const fallback = img.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = "grid";
+                  }
                 }}
               />
               <span style={{ display: "none", color: "#ffffff", fontWeight: 700, fontSize: "18px" }}>
