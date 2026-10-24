@@ -227,6 +227,10 @@ function Sidebar({
             <small>Local AES-256-GCM Vault</small>
           </div>
         </div>
+
+        <div style={{ textAlign: "center", fontSize: "11px", color: "#475569", marginTop: "12px", paddingBottom: "4px" }}>
+          © 2026 MyLifeDock Technologies<br />All rights reserved.
+        </div>
       </div>
     </aside>
   );

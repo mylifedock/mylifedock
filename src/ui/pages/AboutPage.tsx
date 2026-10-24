@@ -311,7 +311,7 @@ export function AboutPage() {
       {/* Legal & Security Footer */}
       <div style={{ textAlign: "center", color: "#64748b", fontSize: "13px", padding: "16px 0" }}>
         <p>Cryptographic standards: FIPS 197 AES-GCM (256-bit) • NIST SP 800-132 PBKDF2</p>
-        <p style={{ marginTop: "4px" }}>© 2026 MyLifeDock. All rights reserved. Privacy-First Life Vault.</p>
+        <p style={{ marginTop: "4px" }}>© 2026 MyLifeDock Technologies. All rights reserved. Privacy-First Life Vault.</p>
       </div>
     </div>
   );

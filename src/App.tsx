@@ -912,6 +912,22 @@ function App() {
         <ErrorBoundary onReset={() => setActivePage('dashboard')}>
           {renderPage()}
         </ErrorBoundary>
+
+        <footer className="app-global-footer">
+          <div className="footer-copyright-inner">
+            <span className="footer-brand">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle", marginRight: "6px" }}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+              <strong>MyLifeDock</strong>
+            </span>
+            <span className="footer-sep">•</span>
+            <span>© 2026 MyLifeDock Technologies. All rights reserved.</span>
+            <span className="footer-sep">•</span>
+            <span className="footer-badge">🔒 Zero-Knowledge Sovereign Vault</span>
+          </div>
+        </footer>
       </main>
 
       {activePage === "dashboard" && !isKeyboardOpen && (
