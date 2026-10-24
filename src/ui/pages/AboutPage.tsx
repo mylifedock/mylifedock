@@ -152,19 +152,31 @@ export function AboutPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "12px", flexWrap: "wrap" }}>
             <div
               style={{
-                width: "48px",
-                height: "48px",
+                width: "56px",
+                height: "56px",
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)",
+                overflow: "hidden",
+                border: "2px solid #38bdf8",
+                boxShadow: "0 0 16px rgba(14, 165, 233, 0.4)",
                 display: "grid",
                 placeItems: "center",
-                color: "#ffffff",
-                fontWeight: 700,
-                fontSize: "18px",
-                boxShadow: "0 4px 12px rgba(14, 165, 233, 0.4)",
+                background: "linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)",
+                flexShrink: 0,
               }}
             >
-              BD
+              <img
+                src="/founder.jpg"
+                alt="B.S.S. Dinesh - Founder"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                  const fallback = (e.target as HTMLElement).nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = "grid";
+                }}
+              />
+              <span style={{ display: "none", color: "#ffffff", fontWeight: 700, fontSize: "18px" }}>
+                BD
+              </span>
             </div>
             <div>
               <strong style={{ fontSize: "16px", color: "#f8fafc" }}>B.S.S. Dinesh</strong>
