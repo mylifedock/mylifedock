@@ -40,7 +40,7 @@ export const PRICING_CONFIG: {
         "Encrypted Google Drive Cloud Backup",
         "30 Days of Unlimited Protection",
       ],
-      razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
+      razorpayPaymentLink: "https://rzp.io/rzp/RzGKEOuM",
     },
     {
       id: "pro_yearly",
@@ -57,7 +57,7 @@ export const PRICING_CONFIG: {
         "Encrypted Google Drive Cloud Backup",
         "Full 365 Days of Unlimited Protection",
       ],
-      razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
+      razorpayPaymentLink: "https://rzp.io/rzp/aPFk0yOg",
     },
     {
       id: "pro_lifetime",
@@ -66,6 +66,7 @@ export const PRICING_CONFIG: {
       priceUSD: "$19.99",
       billingPeriod: "one-time payment",
       badge: "BEST VALUE",
+      savingsBadge: "Price doubles after every 15 spots! (First 15 only)",
       features: [
         "Everything in Pro, FOREVER",
         "Unlimited Lifetime Vault Capacity",
@@ -73,7 +74,7 @@ export const PRICING_CONFIG: {
         "Priority Customer Support",
         "Zero Recurring Subscriptions",
       ],
-      razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
+      razorpayPaymentLink: "https://rzp.io/rzp/9OJ0xeJS",
     },
   ],
 };

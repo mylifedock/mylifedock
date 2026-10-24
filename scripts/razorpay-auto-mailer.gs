@@ -242,6 +242,7 @@ function sendLicenseEmail(email, name, planTitle, licenseKey, tier) {
 
 /**
  * Appends the order row to the active Google Sheet
+ * Also tracks Founder license count and alerts founder when every 15 spots are sold to double price
  */
 function logOrderToSheet(email, name, amount, plan, key) {
   try {
@@ -250,6 +251,37 @@ function logOrderToSheet(email, name, amount, plan, key) {
       sheet.appendRow(["Timestamp", "Customer Name", "Customer Email", "Amount (INR)", "Plan", "License Key"]);
     }
     sheet.appendRow([new Date().toISOString(), name, email, amount, plan, key]);
+
+    // Check if this is a Lifetime Founder sale
+    if (plan.indexOf("Lifetime") !== -1 || amount >= 800) {
+      var data = sheet.getDataRange().getValues();
+      var lifetimeCount = 0;
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][4] && data[i][4].toString().indexOf("Lifetime") !== -1) {
+          lifetimeCount++;
+        }
+      }
+
+      // Check if we hit a 15-order milestone
+      if (lifetimeCount > 0 && lifetimeCount % 15 === 0) {
+        var currentBatch = lifetimeCount / 15;
+        var nextBatch = currentBatch + 1;
+        var nextPrice = 999 * Math.pow(2, currentBatch);
+
+        GmailApp.sendEmail("mylifedock@gmail.com",
+          "🔥 MILESTONE ALERT: " + lifetimeCount + " Founder Licenses Sold! Update Price to ₹" + nextPrice,
+          "Congratulations Dinesh!\n\n" +
+          "You have officially reached " + lifetimeCount + " Lifetime Founder License sales!\n\n" +
+          "As per your planned scarcity pricing model, Batch " + currentBatch + " is completely sold out. " +
+          "It is time to double the Founder Plan price to ₹" + nextPrice + " for Batch " + nextBatch + ".\n\n" +
+          "STEPS TO UPDATE:\n" +
+          "1. Open Razorpay Dashboard -> Payment Links -> create new link for ₹" + nextPrice + ".\n" +
+          "2. Update the link in your MyLifeDock repository.\n\n" +
+          "Keep rocking!\n" +
+          "- MyLifeDock Founder Sales Bot"
+        );
+      }
+    }
   } catch (e) {
     // Silent fail if no sheet attached
   }

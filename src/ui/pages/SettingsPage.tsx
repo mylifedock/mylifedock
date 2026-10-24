@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
+import { isCapacitor } from "../../platform/desktopBridge";
 import { useToast } from "../components/Toast";
 import { exportVault, importVault, createBackupBlob } from "../../application/backupService";
 import { listBackups, uploadBackup, downloadBackup } from "../../application/googleDriveService";
@@ -92,82 +94,104 @@ export function SettingsPage() {
   }
 
   // --- CLOUD SYNC HANDLERS ---
-  const handleCloudSync = useGoogleLogin({
-    scope: "https://www.googleapis.com/auth/drive.appdata",
-    onSuccess: async (tokenResponse) => {
-      try {
-        setIsSyncing(true);
-        showToast("Authenticating with Google Drive...", "info");
-        const token = tokenResponse.access_token;
-        
-        // 1. Generate encrypted backup blob locally
-        const { blob, filename } = await createBackupBlob();
-        
-        // 2. Check if a backup already exists (to optionally handle overwrites, but for now we'll just upload a new one)
-        showToast("Uploading encrypted vault to Drive...", "info");
-        await uploadBackup(token, blob, filename);
-        
-        showToast("Cloud Sync Complete!", "success");
-      } catch (err) {
-        showToast("Cloud sync failed. Check console.", "error");
-        console.error(err);
-      } finally {
-        setIsSyncing(false);
-      }
-    },
-    onError: () => {
-      showToast("Google Auth Failed", "error");
+  async function performDriveBackupWithToken(token: string) {
+    try {
+      setIsSyncing(true);
+      showToast("Generating local encrypted backup...", "info");
+      const { blob, filename } = await createBackupBlob();
+      showToast("Uploading encrypted vault to Google Drive...", "info");
+      await uploadBackup(token, blob, filename);
+      showToast("🎉 Google Drive Cloud Sync Complete!", "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Cloud backup failed.", "error");
+    } finally {
+      setIsSyncing(false);
     }
-  });
+  }
 
-  const handleCloudRestore = useGoogleLogin({
-    scope: "https://www.googleapis.com/auth/drive.appdata",
-    onSuccess: async (tokenResponse) => {
+  async function performDriveRestoreWithToken(token: string) {
+    try {
+      setIsSyncing(true);
+      showToast("Connecting to Google Drive...", "info");
+      const files = await listBackups(token);
+      if (files.length === 0) {
+        showToast("No backups found in Google Drive.", "error");
+        return;
+      }
+      const latestBackup = files[0];
+      if (!window.confirm(`Found backup from ${new Date(latestBackup.createdTime || "").toLocaleString()}. Restoring this will overwrite your current vault. Proceed?`)) {
+        return;
+      }
+      showToast("Downloading encrypted backup...", "info");
+      const blob = await downloadBackup(token, latestBackup.id);
+      showToast("Decrypting and Restoring...", "info");
       try {
-        setIsSyncing(true);
-        showToast("Connecting to Google Drive...", "info");
-        const token = tokenResponse.access_token;
-        
-        const files = await listBackups(token);
-        if (files.length === 0) {
-          showToast("No backups found in Google Drive.", "error");
+        await importVault(blob);
+      } catch {
+        const pass = window.prompt("Enter your Master Passphrase or Recovery Key to decrypt this backup:");
+        if (!pass) {
+          showToast("Restore cancelled.", "info");
           return;
         }
+        await importVault(blob, pass);
+      }
+      showToast("Vault restored successfully from Cloud!", "success");
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Restore failed", "error");
+    } finally {
+      setIsSyncing(false);
+    }
+  }
 
-        // Take the most recent one (listBackups orders by createdTime desc)
-        const latestBackup = files[0];
-        
-        if (!window.confirm(`Found backup from ${new Date(latestBackup.createdTime || "").toLocaleString()}. Restoring this will overwrite your current vault. Proceed?`)) {
-          return;
-        }
+  // Web OAuth Hooks
+  const triggerWebSync = useGoogleLogin({
+    scope: "https://www.googleapis.com/auth/drive.appdata",
+    onSuccess: (tokenResponse) => performDriveBackupWithToken(tokenResponse.access_token),
+    onError: () => showToast("Google Auth Failed on Web", "error"),
+  });
 
-        showToast("Downloading encrypted backup...", "info");
-        const blob = await downloadBackup(token, latestBackup.id);
+  const triggerWebRestore = useGoogleLogin({
+    scope: "https://www.googleapis.com/auth/drive.appdata",
+    onSuccess: (tokenResponse) => performDriveRestoreWithToken(tokenResponse.access_token),
+    onError: () => showToast("Google Auth Failed on Web", "error"),
+  });
 
-        showToast("Decrypting and Restoring...", "info");
-        try {
-          await importVault(blob);
-        } catch {
-          const pass = window.prompt("Enter your Master Passphrase or Recovery Key to decrypt this backup:");
-          if (!pass) {
-            showToast("Restore cancelled.", "info");
-            return;
-          }
-          await importVault(blob, pass);
-        }
-        showToast("Vault restored successfully from Cloud!", "success");
-        setTimeout(() => window.location.reload(), 1500);
-
+  async function handleCloudSync() {
+    if (isCapacitor()) {
+      try {
+        setIsSyncing(true);
+        showToast("Connecting with Google Account...", "info");
+        await GoogleAuth.initialize();
+        const user = await GoogleAuth.signIn();
+        const token = user.authentication.accessToken;
+        await performDriveBackupWithToken(token);
       } catch (err) {
-        showToast(err instanceof Error ? err.message : "Restore failed", "error");
-      } finally {
+        showToast(err instanceof Error ? err.message : "Android Google Sign-In failed", "error");
         setIsSyncing(false);
       }
-    },
-    onError: () => {
-      showToast("Google Auth Failed", "error");
+    } else {
+      triggerWebSync();
     }
-  });
+  }
+
+  async function handleCloudRestore() {
+    if (isCapacitor()) {
+      try {
+        setIsSyncing(true);
+        showToast("Connecting with Google Account...", "info");
+        await GoogleAuth.initialize();
+        const user = await GoogleAuth.signIn();
+        const token = user.authentication.accessToken;
+        await performDriveRestoreWithToken(token);
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Android Google Sign-In failed", "error");
+        setIsSyncing(false);
+      }
+    } else {
+      triggerWebRestore();
+    }
+  }
 
 
   return (
