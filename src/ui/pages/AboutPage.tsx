@@ -132,6 +132,53 @@ export function AboutPage() {
         </div>
       </div>
 
+      {/* Founder & Architect Card */}
+      <div className="card fade-in" style={{ marginBottom: "24px", border: "1px solid rgba(56, 189, 248, 0.25)", background: "linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%)" }}>
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>👨‍💻</span> Built by Founder & Architect
+          </h3>
+          <a
+            href="https://www.linkedin.com/in/bssdinesh"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="secondary-button"
+            style={{ fontSize: "12.5px", padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: "6px", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.4)" }}
+          >
+            <span>🔗</span> Connect on LinkedIn &rarr;
+          </a>
+        </div>
+        <div className="card-body">
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "12px", flexWrap: "wrap" }}>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)",
+                display: "grid",
+                placeItems: "center",
+                color: "#ffffff",
+                fontWeight: 700,
+                fontSize: "18px",
+                boxShadow: "0 4px 12px rgba(14, 165, 233, 0.4)",
+              }}
+            >
+              BD
+            </div>
+            <div>
+              <strong style={{ fontSize: "16px", color: "#f8fafc" }}>B.S.S. Dinesh</strong>
+              <div style={{ color: "#38bdf8", fontSize: "13px", fontWeight: 500 }}>
+                Creator & Privacy Engineer, MyLifeDock
+              </div>
+            </div>
+          </div>
+          <p style={{ color: "#cbd5e1", fontSize: "13.5px", lineHeight: "1.6" }}>
+            &ldquo;I designed MyLifeDock on a non-negotiable principle: your most sensitive life records, health prescriptions, and financial documents should belong exclusively to you. In an era where big tech clouds analyze personal files, MyLifeDock guarantees mathematical zero-knowledge privacy with 100% on-device encryption.&rdquo;
+          </p>
+        </div>
+      </div>
+
       {/* Self-Service Support & FAQ */}
       <div className="card fade-in" style={{ marginBottom: "24px" }}>
         <div className="card-header">
