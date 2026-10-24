@@ -164,7 +164,7 @@ export function ProUpgradeModal({
           </div>
 
           {/* Pricing Plans Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px", marginBottom: "20px" }}>
             {PRICING_CONFIG.plans.map((plan) => {
               const isSelected = selectedPlan.id === plan.id;
               return (
@@ -172,7 +172,7 @@ export function ProUpgradeModal({
                   key={plan.id}
                   onClick={() => setSelectedPlan(plan)}
                   style={{
-                    padding: "16px 14px",
+                    padding: "16px 12px",
                     borderRadius: "10px",
                     border: isSelected
                       ? "2px solid #eab308"
@@ -190,28 +190,33 @@ export function ProUpgradeModal({
                       style={{
                         position: "absolute",
                         top: "-9px",
-                        right: "12px",
-                        background: "#eab308",
-                        color: "#0f172a",
-                        fontSize: "9.5px",
+                        right: "8px",
+                        background: plan.id === "pro_yearly" ? "#10b981" : "#eab308",
+                        color: plan.id === "pro_yearly" ? "#ffffff" : "#0f172a",
+                        fontSize: "9px",
                         fontWeight: 800,
-                        padding: "2px 8px",
+                        padding: "2px 7px",
                         borderRadius: "999px",
-                        letterSpacing: "0.05em",
+                        letterSpacing: "0.04em",
                       }}
                     >
                       {plan.badge}
                     </span>
                   )}
-                  <h4 style={{ margin: "0 0 6px 0", fontSize: "14.5px", color: "#fff" }}>
+                  <h4 style={{ margin: "0 0 6px 0", fontSize: "14px", color: "#fff" }}>
                     {plan.title}
                   </h4>
-                  <div style={{ fontSize: "20px", fontWeight: 800, color: isSelected ? "#eab308" : "#fff" }}>
-                    {plan.priceINR} <small style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 400 }}>({plan.priceUSD})</small>
+                  <div style={{ fontSize: "19px", fontWeight: 800, color: isSelected ? "#eab308" : "#fff" }}>
+                    {plan.priceINR} <small style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 400 }}>({plan.priceUSD})</small>
                   </div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>
                     {plan.billingPeriod}
                   </div>
+                  {plan.savingsBadge && (
+                    <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 700, lineHeight: "1.2" }}>
+                      ★ {plan.savingsBadge}
+                    </div>
+                  )}
                 </div>
               );
             })}

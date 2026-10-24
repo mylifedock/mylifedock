@@ -14,7 +14,16 @@ const crypto = require("crypto");
 const SIGNING_SALT = "mld_vault_sovereign_signature_2026_secure";
 
 function generateLicenseKey({ email, tier, durationDays }) {
-  const normalizedTier = tier === "lifetime" || tier === "pro_lifetime" ? "pro_lifetime" : "pro_yearly";
+  let normalizedTier = "pro_yearly";
+  let defaultDays = 365;
+
+  if (tier === "monthly" || tier === "pro_monthly") {
+    normalizedTier = "pro_monthly";
+    defaultDays = 30;
+  } else if (tier === "lifetime" || tier === "pro_lifetime") {
+    normalizedTier = "pro_lifetime";
+    defaultDays = null;
+  }
   
   const payload = {
     tier: normalizedTier,
@@ -22,8 +31,8 @@ function generateLicenseKey({ email, tier, durationDays }) {
     issuedAt: new Date().toISOString(),
   };
 
-  if (normalizedTier === "pro_yearly") {
-    const days = durationDays || 365;
+  if (normalizedTier !== "pro_lifetime") {
+    const days = durationDays || defaultDays;
     const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
     payload.expiresAt = expiresAt.toISOString();
   }
@@ -48,7 +57,7 @@ function generateLicenseKey({ email, tier, durationDays }) {
 const args = process.argv.slice(2);
 let email = "";
 let tier = "lifetime";
-let days = 365;
+let days = null;
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--email" && args[i + 1]) {

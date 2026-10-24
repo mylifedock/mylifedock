@@ -44,20 +44,26 @@ function doPost(e) {
 
     var customerEmail = paymentEntity.email;
     var customerName = paymentEntity.notes && paymentEntity.notes.name ? paymentEntity.notes.name : "Valued Customer";
-    var amountInRupees = paymentEntity.amount ? (paymentEntity.amount / 100) : 499;
+    var amountInRupees = paymentEntity.amount ? (paymentEntity.amount / 100) : 25;
 
     if (!customerEmail) {
       return ContentService.createTextOutput(JSON.stringify({ status: "ignored", reason: "no email in payment" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Determine license tier based on amount paid
-    // ₹499 = 1-Year Pro, ₹999 = Lifetime Founder
+    // Determine license tier based on amount paid:
+    // < ₹100 (e.g. ₹25 or test payment)  -> Monthly Pro (30 Days)
+    // ₹100 to < ₹500 (e.g. ₹250 or ₹116)  -> Yearly Pro (365 Days - Save 2 Months Free!)
+    // >= ₹500 (e.g. ₹999)                 -> Lifetime Founder License (Never Expires)
     var tier = "pro_yearly";
     var durationDays = 365;
-    var planTitle = "MyLifeDock Pro (1-Year)";
+    var planTitle = "MyLifeDock Pro (1-Year - Save 2 Months Free)";
     
-    if (amountInRupees >= 800) {
+    if (amountInRupees < 100) {
+      tier = "pro_monthly";
+      durationDays = 30;
+      planTitle = "MyLifeDock Pro (Monthly - 30 Days)";
+    } else if (amountInRupees >= 500) {
       tier = "pro_lifetime";
       durationDays = null;
       planTitle = "MyLifeDock Lifetime Founder License";
@@ -93,7 +99,7 @@ function generateMLDLicense(email, tier, durationDays) {
     issuedAt: new Date().toISOString()
   };
 
-  if (tier === "pro_yearly" && durationDays) {
+  if ((tier === "pro_yearly" || tier === "pro_monthly") && durationDays) {
     var expiry = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
     payload.expiresAt = expiry.toISOString();
   }
@@ -126,7 +132,12 @@ function generateMLDLicense(email, tier, durationDays) {
 function sendLicenseEmail(email, name, planTitle, licenseKey, tier) {
   var subject = "Your MyLifeDock PRO License Key & Activation Instructions";
   
-  var validityText = tier === "pro_lifetime" ? "Lifetime Unlimited (Never Expires)" : "1 Year (Full Access)";
+  var validityText = "30 Days (Full Access)";
+  if (tier === "pro_yearly") {
+    validityText = "1 Year / 365 Days (Full Access - Includes 2 Months Free)";
+  } else if (tier === "pro_lifetime") {
+    validityText = "Lifetime Unlimited (Never Expires)";
+  }
 
   var htmlBody = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0b0f19; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;">

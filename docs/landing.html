@@ -122,14 +122,16 @@
     .currency-toggle { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 40px; }
     .toggle-btn { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; padding: 8px 20px; border-radius: 9999px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .toggle-btn.active { background: #38bdf8; color: #07090e; border-color: #38bdf8; font-weight: 700; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; max-width: 900px; margin: 0 auto; }
-    .pricing-card { background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 40px 32px; position: relative; }
-    .pricing-card.featured { border-color: #eab308; box-shadow: 0 0 30px rgba(234, 179, 8, 0.2); }
-    .popular-badge { position: absolute; top: -14px; right: 30px; background: #eab308; color: #000; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .plan-price { font-size: 42px; font-weight: 800; margin: 20px 0; display: flex; align-items: baseline; gap: 6px; color: #fff; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+    .pricing-card { background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 32px 24px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+    .pricing-card.featured { border-color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); }
+    .pricing-card.lifetime { border-color: #eab308; box-shadow: 0 0 30px rgba(234, 179, 8, 0.2); }
+    .popular-badge { position: absolute; top: -14px; right: 20px; background: #10b981; color: #fff; font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .popular-badge.gold { background: #eab308; color: #000; }
+    .plan-price { font-size: 38px; font-weight: 800; margin: 16px 0; display: flex; align-items: baseline; gap: 6px; color: #fff; }
     .plan-price small { font-size: 14px; color: var(--text-muted); font-weight: 400; }
-    .plan-features { list-style: none; margin: 24px 0 32px; }
-    .plan-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 12px; color: #e2e8f0; }
+    .plan-features { list-style: none; margin: 20px 0 24px; padding: 0; }
+    .plan-features li { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 10px; color: #e2e8f0; }
     .plan-features li::before { content: "\2713\0020"; color: #4ade80; font-weight: bold; }
     
     /* Footer */
@@ -286,39 +288,82 @@
       </div>
 
       <div class="pricing-grid">
-        <!-- Free Tier -->
+        <!-- Free Core Vault -->
         <div class="pricing-card">
-          <h3>Free Core Vault</h3>
-          <p style="color: var(--text-muted); font-size: 14px;">Everything you need to experience sovereign vault security.</p>
-          <div class="plan-price"><span id="price-free">&#8377;0</span><small>/ forever</small></div>
-          <ul class="plan-features">
-            <li>Store up to 10 Items across all modules</li>
-            <li>100% Zero-Knowledge AES-256 Encryption</li>
-            <li>Doctor Prescriptions & Lab Reports</li>
-            <li>Local Camera OCR Receipt Scanner</li>
-            <li>Kids & Dependent Multi-Profile Tagging</li>
-            <li>Biometric Fingerprint / Face ID Unlock</li>
-          </ul>
-          <a href="/" class="btn-secondary" style="width: 100%; justify-content: center;">Launch Free Vault</a>
+          <div>
+            <h3>Free Core Vault</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px;">For individuals wanting to experience sovereign vault security.</p>
+            <div class="plan-price"><span id="price-free">&#8377;0</span><small>/ forever</small></div>
+            <ul class="plan-features">
+              <li>Store up to 10 Items free forever</li>
+              <li>100% Zero-Knowledge AES-256</li>
+              <li>Doctor Prescriptions & Lab Reports</li>
+              <li>Local Camera OCR Receipt Scanner</li>
+              <li>Kids & Dependent Multi-Profile Tagging</li>
+              <li>Biometric Fingerprint / PIN Lock</li>
+            </ul>
+          </div>
+          <a href="/" class="btn-secondary" style="width: 100%; justify-content: center; margin-top: 16px;">Launch Free Vault</a>
         </div>
 
-        <!-- Pro Tier -->
+        <!-- Monthly Pro -->
+        <div class="pricing-card">
+          <div>
+            <h3>Monthly Pro</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px;">Flexible month-to-month unlimited sovereign protection.</p>
+            <div class="plan-price"><span id="price-monthly">&#8377;25</span><small id="monthly-interval">/ month</small></div>
+            <ul class="plan-features">
+              <li>Unlimited Encrypted Documents & Files</li>
+              <li>Unlimited Prescriptions & Lab Reports</li>
+              <li>Full On-Device OCR Scanner</li>
+              <li>Encrypted Google Drive Cloud Backup</li>
+              <li>Cancel or renew anytime</li>
+            </ul>
+          </div>
+          <a id="monthly-buy-btn" href="https://razorpay.me/@bssdinesh" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="width: 100%; justify-content: center; margin-top: 16px;">
+            Buy Monthly (&rarr;)
+          </a>
+        </div>
+
+        <!-- Yearly Pro (Best Offer) -->
         <div class="pricing-card featured">
-          <div class="popular-badge">BEST VALUE</div>
-          <h3>MyLifeDock PRO</h3>
-          <p style="color: var(--text-muted); font-size: 14px;">For individuals and families wanting unlimited lifetime peace of mind.</p>
-          <div class="plan-price"><span id="price-pro">&#8377;499</span><small id="pro-interval">/ 1-Year (or &#8377;999 Lifetime)</small></div>
-          <ul class="plan-features">
-            <li>Unlimited Encrypted Documents & Files</li>
-            <li>Unlimited Prescriptions & Lab Reports</li>
-            <li>Unlimited Warranties, Products & Reminders</li>
-            <li>Unlimited Family & Child Profiles</li>
-            <li>Encrypted Google Drive Cloud Backup</li>
-            <li>All Future Desktop & Mobile Updates</li>
-            <li>Offline Cryptographic License Key</li>
-          </ul>
-          <a id="pro-buy-btn" href="https://razorpay.me/@bssdinesh" target="_blank" rel="noopener noreferrer" class="btn-cta" style="width: 100%; justify-content: center; font-size: 15px;">
-            Get Pro License via Razorpay &rarr;
+          <div class="popular-badge">SAVE 2 MONTHS FREE</div>
+          <div>
+            <h3 style="color: #34d399;">Yearly Pro</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px;">Pay for 10 months, get 12 months! Saves &#8377;50 vs monthly.</p>
+            <div class="plan-price"><span id="price-yearly" style="color: #34d399;">&#8377;250</span><small id="yearly-interval">/ year</small></div>
+            <div style="font-size: 11px; color: #34d399; font-weight: 700; margin-top: -10px; margin-bottom: 12px;">★ 12 Months Access for Price of 10</div>
+            <ul class="plan-features">
+              <li><strong>Everything in Monthly Pro</strong></li>
+              <li>Save 2 Months Free (Save &#8377;50/yr)</li>
+              <li>Unlimited Family & Child Profiles</li>
+              <li>Encrypted Google Drive Cloud Backup</li>
+              <li>Full 365 Days of Guaranteed Updates</li>
+            </ul>
+          </div>
+          <a id="yearly-buy-btn" href="https://razorpay.me/@bssdinesh" target="_blank" rel="noopener noreferrer" class="btn-cta" style="width: 100%; justify-content: center; margin-top: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            Get Yearly Pro &rarr;
+          </a>
+        </div>
+
+        <!-- Lifetime Founder -->
+        <div class="pricing-card lifetime">
+          <div class="popular-badge gold">BEST VALUE</div>
+          <div>
+            <h3 style="color: #facc15;">Lifetime Founder</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px;">One single payment. Permanent sovereign vault ownership.</p>
+            <div class="plan-price"><span id="price-lifetime" style="color: #facc15;">&#8377;999</span><small id="lifetime-interval">/ lifetime</small></div>
+            <div style="font-size: 11px; color: #facc15; font-weight: 700; margin-top: -10px; margin-bottom: 12px;">★ Zero Subscriptions Forever</div>
+            <ul class="plan-features">
+              <li>Everything in Pro, FOREVER</li>
+              <li>Unlimited Lifetime Vault Capacity</li>
+              <li>All Future Updates & Releases Included</li>
+              <li>Priority Customer Support</li>
+              <li>Never Pay a Renewal Fee Again</li>
+            </ul>
+          </div>
+          <a id="lifetime-buy-btn" href="https://razorpay.me/@bssdinesh" target="_blank" rel="noopener noreferrer" class="btn-cta" style="width: 100%; justify-content: center; margin-top: 16px;">
+            Get Lifetime &rarr;
           </a>
         </div>
       </div>
@@ -348,14 +393,20 @@
       event.target.classList.add('active');
       if (curr === 'INR') {
         document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('price-pro').innerHTML = '&#8377;499';
-        document.getElementById('pro-interval').innerHTML = '/ 1-Year (or &#8377;999 Lifetime)';
-        document.getElementById('pro-buy-btn').href = 'https://razorpay.me/@bssdinesh';
+        document.getElementById('price-monthly').innerHTML = '&#8377;25';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('price-yearly').innerHTML = '&#8377;250';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('price-lifetime').innerHTML = '&#8377;999';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
       } else {
         document.getElementById('price-free').innerText = '$0';
-        document.getElementById('price-pro').innerText = '$9.99';
-        document.getElementById('pro-interval').innerText = '/ 1-Year (or $19.99 Lifetime)';
-        document.getElementById('pro-buy-btn').href = 'https://razorpay.me/@bssdinesh';
+        document.getElementById('price-monthly').innerText = '$0.49';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('price-yearly').innerText = '$4.99';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('price-lifetime').innerText = '$19.99';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
       }
     }
   </script>

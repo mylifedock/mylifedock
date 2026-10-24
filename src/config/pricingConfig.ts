@@ -6,12 +6,13 @@
  */
 
 export interface PricingPlan {
-  id: "pro_yearly" | "pro_lifetime";
+  id: "pro_monthly" | "pro_yearly" | "pro_lifetime";
   title: string;
   priceINR: string;
   priceUSD: string;
   billingPeriod: string;
   badge?: string;
+  savingsBadge?: string;
   features: string[];
   razorpayPaymentLink: string;
 }
@@ -27,25 +28,40 @@ export const PRICING_CONFIG: {
   supportEmail: "support@mylifedock.com",
   plans: [
     {
-      id: "pro_yearly",
-      title: "MyLifeDock Pro (1 Year)",
-      priceINR: "₹499",
-      priceUSD: "$9.99",
-      billingPeriod: "per year",
+      id: "pro_monthly",
+      title: "Monthly Pro",
+      priceINR: "₹25",
+      priceUSD: "$0.49",
+      billingPeriod: "per month",
       features: [
         "Unlimited Encrypted Documents & Files",
-        "Unlimited Doctor Prescriptions & Lab Reports",
-        "Unlimited Warranties, Products & Reminders",
+        "Unlimited Prescriptions & Lab Reports",
         "Full On-Device OCR Scanner",
-        "Google Drive Encrypted Cloud Backup",
-        "1 Year of Updates & Support",
+        "Encrypted Google Drive Cloud Backup",
+        "30 Days of Unlimited Protection",
       ],
-      // Live Razorpay Payment Link
+      razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
+    },
+    {
+      id: "pro_yearly",
+      title: "Yearly Pro",
+      priceINR: "₹250",
+      priceUSD: "$4.99",
+      billingPeriod: "per year",
+      badge: "SAVE 2 MONTHS FREE",
+      savingsBadge: "12 Months for the Price of 10! (Save ₹50)",
+      features: [
+        "Everything in Monthly Pro",
+        "Save 2 Months Extra (Save ₹50/yr)",
+        "Unlimited Family & Child Profiles",
+        "Encrypted Google Drive Cloud Backup",
+        "Full 365 Days of Unlimited Protection",
+      ],
       razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
     },
     {
       id: "pro_lifetime",
-      title: "Lifetime Founder License",
+      title: "Lifetime Founder",
       priceINR: "₹999",
       priceUSD: "$19.99",
       billingPeriod: "one-time payment",
@@ -57,7 +73,6 @@ export const PRICING_CONFIG: {
         "Priority Customer Support",
         "Zero Recurring Subscriptions",
       ],
-      // Live Razorpay Payment Link
       razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
     },
   ],

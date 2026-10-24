@@ -244,7 +244,7 @@ sequenceDiagram
 
 ### Module 10: Licensing & Monetization Architecture
 1. **Feature 10.1 — 10-Item Free Vault Quota:** Full access to all features up to 10 stored records free forever.
-2. **Feature 10.2 — Pro Upgrade Modal:** Opens automatically upon attempting to save the 11th record, presenting Annual (₹499) and Lifetime (₹999) options.
+2. **Feature 10.2 — Pro Upgrade Modal:** Opens automatically upon attempting to save the 11th record, presenting Monthly (₹25), Annual (₹250 with "Save 2 Months Free"), and Lifetime (₹999) options.
 3. **Feature 10.3 — Offline HMAC-SHA256 Validator:** Verifies license keys in the format `MLD-PRO-<base64>.<signature>` offline with zero network latency.
 4. **Feature 10.4 — Webhook Auto-Mailer:** Captures Razorpay payments and emails authentic license keys via Google Apps Script.
 
@@ -320,8 +320,9 @@ flowchart TD
 2. **Step 2:** Click **Get Pro License** to open the payment link:  
    `https://razorpay.me/@bssdinesh`
 3. **Step 3:** Select your plan:
-   * **Annual Pro License:** `₹499 / 1-Year`
-   * **Lifetime Pro License:** `₹999 / Lifetime Unlimited`
+   * **Monthly Pro License:** `₹25 / Month` (Flexible 30-day access)
+   * **Annual Pro License:** `₹250 / 1-Year` (Save 2 Months Free! 12 months for price of 10)
+   * **Lifetime Pro License:** `₹999 / Lifetime Unlimited` (Permanent Zero-Subscription)
 4. **Step 4:** Complete the payment using UPI, Credit/Debit Card, or NetBanking.
 5. **Step 5:** Within seconds, you will receive an email containing your license key in the format:  
    `MLD-PRO-eyJuYW1lIjoi...`

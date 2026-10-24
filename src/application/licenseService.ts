@@ -11,7 +11,7 @@
 
 const LICENSE_STORAGE_KEY = "mld_pro_license";
 
-export type LicenseTier = "free_core" | "pro_yearly" | "pro_6month" | "pro_lifetime";
+export type LicenseTier = "free_core" | "pro_monthly" | "pro_yearly" | "pro_6month" | "pro_lifetime";
 
 export interface LicenseStatus {
   tier: LicenseTier;
