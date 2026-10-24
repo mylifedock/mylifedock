@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   getMedicalRecords,
@@ -9,7 +9,14 @@ import {
   parseMedicalOcrText,
   type CreateMedicalRecordInput,
 } from "../../application/medicalService";
-import type { MedicalRecord, MedicalRecordType } from "../../infrastructure/database/db";
+import type { MedicalRecord, MedicalRecordType, ProfileRecord } from "../../infrastructure/database/db";
+import {
+  getAllProfiles,
+  getActiveProfileFilter,
+  ACTIVE_PROFILE_CHANGE_EVENT,
+  LOCAL_PROFILE_ID,
+} from "../../application/profileService";
+import { FamilyProfileSwitcher } from "../components/FamilyProfileSwitcher";
 import { useToast } from "../components/Toast";
 import { AttachmentManager } from "../components/AttachmentManager";
 import { addAttachment } from "../../application/attachmentService";
@@ -17,8 +24,21 @@ import { getVaultQuotaStatus } from "../../application/vaultLimitService";
 import { ProUpgradeModal } from "../components/ProUpgradeModal";
 
 export function MedicalPage() {
-  const records = useLiveQuery(() => getMedicalRecords(), [], []);
+  const [selectedProfileId, setSelectedProfileId] = useState<string>(() => getActiveProfileFilter());
+  const profiles = useLiveQuery(() => getAllProfiles(), [], []) as ProfileRecord[];
+  const records = useLiveQuery(() => getMedicalRecords({ ownerId: selectedProfileId }), [selectedProfileId], []);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    function handleProfileChange(e: Event) {
+      const customEvent = e as CustomEvent<{ profileId: string }>;
+      if (customEvent.detail?.profileId) {
+        setSelectedProfileId(customEvent.detail.profileId);
+      }
+    }
+    window.addEventListener(ACTIVE_PROFILE_CHANGE_EVENT, handleProfileChange);
+    return () => window.removeEventListener(ACTIVE_PROFILE_CHANGE_EVENT, handleProfileChange);
+  }, []);
 
   // Sub-module filter: 'all' | 'prescription' | 'lab_report'
   const [activeSubModule, setActiveSubModule] = useState<"all" | MedicalRecordType>("all");
@@ -80,6 +100,7 @@ export function MedicalPage() {
     setIsOcrScanning(false);
     setOcrProgress(0);
     setFormData({
+      ownerId: selectedProfileId !== "all" ? selectedProfileId : LOCAL_PROFILE_ID,
       type: initialType,
       title: "",
       date: new Date().toISOString().slice(0, 10),
@@ -99,6 +120,7 @@ export function MedicalPage() {
     setIsOcrScanning(false);
     setOcrProgress(0);
     setFormData({
+      ownerId: record.ownerId || LOCAL_PROFILE_ID,
       type: record.type,
       title: record.title,
       date: record.date || new Date().toISOString().slice(0, 10),
@@ -255,6 +277,7 @@ export function MedicalPage() {
         </div>
 
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+          <FamilyProfileSwitcher onProfileSelect={(id) => setSelectedProfileId(id)} />
           <button
             type="button"
             className="secondary-button"
@@ -841,6 +864,33 @@ export function MedicalPage() {
                     <span>ðŸ”¬</span> Lab / Diagnostic Report
                   </button>
                 </div>
+              </div>
+
+              {/* Family Member / Patient Assignment */}
+              <div style={{ marginBottom: "16px" }}>
+                <label htmlFor="ownerSelect" style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#94a3b8", marginBottom: "6px" }}>
+                  Patient / Family Member *
+                </label>
+                <select
+                  id="ownerSelect"
+                  value={formData.ownerId || LOCAL_PROFILE_ID}
+                  onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "rgba(15, 23, 42, 0.8)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                    borderRadius: "8px",
+                    color: "#fff",
+                    fontSize: "14px",
+                  }}
+                >
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.avatarIcon || (p.role === "dependent_child" ? "👶" : "👤")} {p.displayName} {p.id === LOCAL_PROFILE_ID ? "(Self / Primary)" : p.role === "dependent_child" ? "(Child)" : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Date & Department Row */}

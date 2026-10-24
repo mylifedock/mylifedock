@@ -124,9 +124,18 @@ export interface ReminderRecord {
   updatedAt: string;
 }
 
+export type ProfileRole = "primary" | "dependent_child" | "dependent_elder" | "spouse";
+
 export interface ProfileRecord {
   id: string;
   displayName: string;
+  role?: ProfileRole;
+  avatarIcon?: string; // e.g. "👤", "👶", "👧", "🧒", "🎒", "👵"
+  birthDate?: string;
+  bloodGroup?: string;
+  allergies?: string;
+  pediatricianOrDoctor?: string;
+  emergencyNotes?: string;
   createdAt: string;
   updatedAt: string;
 }

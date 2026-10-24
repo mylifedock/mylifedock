@@ -104,6 +104,7 @@ export async function createBackupBlob(): Promise<{ blob: Blob; filename: string
     properties: await db.properties.toArray(),
     secrets: await db.secrets.toArray(),
     medicalRecords: await db.medicalRecords.toArray(),
+    profiles: await db.profiles.toArray(),
   };
 
   const attachments = await db.attachments.toArray();
@@ -303,8 +304,12 @@ export async function restoreVaultFromBackup(
 
   await db.vaultSecurity.put(secRecord);
 
-  // Restore profile
-  if (payload.profile) {
+  // Restore profile(s)
+  const backupProfiles = payload.data?.["profiles"];
+  if (Array.isArray(backupProfiles) && backupProfiles.length > 0) {
+    await db.profiles.clear();
+    await db.profiles.bulkPut(backupProfiles as ProfileRecord[]);
+  } else if (payload.profile) {
     await db.profiles.clear();
     await db.profiles.put(payload.profile);
   }
@@ -426,7 +431,11 @@ export async function importVault(file: File | Blob, optionalPassphrase?: string
 
     const payload: VaultBackupPayload = JSON.parse(new TextDecoder().decode(plaintextBuffer));
 
-    if (payload.profile) {
+    const backupProfiles = payload.data?.["profiles"];
+    if (Array.isArray(backupProfiles) && backupProfiles.length > 0) {
+      await db.profiles.clear();
+      await db.profiles.bulkPut(backupProfiles as ProfileRecord[]);
+    } else if (payload.profile) {
       await db.profiles.clear();
       await db.profiles.put(payload.profile);
     }

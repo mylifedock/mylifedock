@@ -40,8 +40,8 @@ export const PRICING_CONFIG: {
         "Google Drive Encrypted Cloud Backup",
         "1 Year of Updates & Support",
       ],
-      // Replace with your real Razorpay Payment Link
-      razorpayPaymentLink: "https://rzp.io/l/mylifedock-pro-annual",
+      // Live Razorpay Payment Link
+      razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
     },
     {
       id: "pro_lifetime",
@@ -57,8 +57,8 @@ export const PRICING_CONFIG: {
         "Priority Customer Support",
         "Zero Recurring Subscriptions",
       ],
-      // Replace with your real Razorpay Payment Link
-      razorpayPaymentLink: "https://rzp.io/l/mylifedock-founder-lifetime",
+      // Live Razorpay Payment Link
+      razorpayPaymentLink: "https://razorpay.me/@bssdinesh",
     },
   ],
 };

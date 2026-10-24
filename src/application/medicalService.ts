@@ -2,6 +2,7 @@ import { db, type MedicalRecord, type MedicalRecordType, type ReminderRecord } f
 import { LOCAL_PROFILE_ID } from "./profileService";
 
 export interface CreateMedicalRecordInput {
+  ownerId?: string; // "local-profile" (self) or child/dependent profile ID
   type: MedicalRecordType;
   title: string;
   date: string; // YYYY-MM-DD
@@ -15,6 +16,7 @@ export interface CreateMedicalRecordInput {
 }
 
 export interface UpdateMedicalRecordInput {
+  ownerId?: string;
   type?: MedicalRecordType;
   title?: string;
   date?: string;
@@ -54,7 +56,7 @@ export async function createMedicalRecord(input: CreateMedicalRecordInput): Prom
 
   const record: MedicalRecord = {
     id,
-    ownerId: LOCAL_PROFILE_ID,
+    ownerId: input.ownerId || LOCAL_PROFILE_ID,
     type: input.type,
     title: input.title.trim() || (input.type === "prescription" ? `Consultation - ${department}` : `Lab Report - ${department}`),
     date: input.date || now.split("T")[0],
@@ -90,8 +92,11 @@ export async function createMedicalRecord(input: CreateMedicalRecordInput): Prom
   return id;
 }
 
-export async function getMedicalRecords(): Promise<MedicalRecord[]> {
-  const records = await db.medicalRecords.toArray();
+export async function getMedicalRecords(filter?: { ownerId?: string }): Promise<MedicalRecord[]> {
+  let records = await db.medicalRecords.toArray();
+  if (filter?.ownerId && filter.ownerId !== "all") {
+    records = records.filter((r) => r.ownerId === filter.ownerId);
+  }
   // Sort date-wise: newest consultation/report date first
   return records.sort((a, b) => {
     const dateA = a.date || a.createdAt;

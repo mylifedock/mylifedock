@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useToast } from "../components/Toast";
 import { exportVault, importVault, createBackupBlob } from "../../application/backupService";
@@ -8,6 +9,8 @@ import { checkBiometrics, isBiometricEnabled, enableBiometricUnlock, disableBiom
 import { unlockVault } from "../../security/vaultKeyService";
 import { getLicenseStatus, activateLicense, removeLicense, __generateDevLicense } from "../../application/licenseService";
 import { getPreferredCurrency, setPreferredCurrency, SUPPORTED_CURRENCIES, type SupportedCurrency } from "../../application/currencyService";
+import { getAllProfiles, deleteDependentProfile, LOCAL_PROFILE_ID } from "../../application/profileService";
+import { AddDependentModal } from "../components/FamilyProfileSwitcher";
 
 export function SettingsPage() {
   const { showToast } = useToast();
@@ -25,6 +28,8 @@ export function SettingsPage() {
   const [licenseKeyInput, setLicenseKeyInput] = useState("");
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentCurrency, setCurrentCurrency] = useState<SupportedCurrency>(() => getPreferredCurrency());
+  const familyProfiles = useLiveQuery(() => getAllProfiles(), [], []);
+  const [showAddDependent, setShowAddDependent] = useState(false);
 
   const [autoLockTimeout, setAutoLockTimeout] = useState<string>(() => {
     return localStorage.getItem("mld_autolock_timeout_min") || "30";
@@ -173,6 +178,97 @@ export function SettingsPage() {
           <p className="page-subtitle">Preferences, security, and backups.</p>
         </div>
       </div>
+
+      {/* Family & Kids Profiles Management */}
+      <div className="card fade-in" style={{ marginBottom: "24px" }}>
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>👨‍👩‍👧‍👦</span> Family & Kids Profiles
+            </h3>
+            <small style={{ color: "#94a3b8" }}>
+              Manage dependents, pediatric records, and emergency health profiles in your vault.
+            </small>
+          </div>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setShowAddDependent(true)}
+            style={{ fontSize: "13px", padding: "6px 14px", display: "flex", alignItems: "center", gap: "6px", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.3)" }}
+          >
+            <span>➕</span> Add Child / Dependent
+          </button>
+        </div>
+        <div className="card-body">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
+            {familyProfiles?.map((p) => {
+              const isPrimary = p.id === LOCAL_PROFILE_ID;
+              const isChild = p.role === "dependent_child";
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    background: "#0b0f19",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontSize: "24px" }}>{p.avatarIcon || (isChild ? "👶" : "👤")}</span>
+                        <div>
+                          <strong style={{ color: "#f8fafc", fontSize: "15px" }}>{p.displayName}</strong>
+                          <div style={{ fontSize: "11px", color: isPrimary ? "#38bdf8" : isChild ? "#f472b6" : "#cbd5e1" }}>
+                            {isPrimary ? "Primary Vault Holder" : isChild ? "Dependent Child" : "Family Dependent"}
+                          </div>
+                        </div>
+                      </div>
+                      {!isPrimary && (
+                        <button
+                          type="button"
+                          className="text-button"
+                          onClick={async () => {
+                            if (window.confirm(`Are you sure you want to remove ${p.displayName}? Records will be preserved under your primary vault.`)) {
+                              await deleteDependentProfile(p.id);
+                              showToast(`Profile ${p.displayName} removed. Records preserved.`, "info");
+                            }
+                          }}
+                          style={{ color: "#f87171", fontSize: "12px", padding: "4px 8px" }}
+                          title="Delete profile"
+                        >
+                          ✕ Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={{ fontSize: "12.5px", color: "#94a3b8", display: "flex", flexDirection: "column", gap: "4px", marginTop: "10px" }}>
+                      {p.birthDate && <div>🎂 Born: {p.birthDate}</div>}
+                      {p.bloodGroup && <div>🩸 Blood Group: <strong style={{ color: "#f8fafc" }}>{p.bloodGroup}</strong></div>}
+                      {p.allergies && <div>⚠️ Allergies: <strong style={{ color: "#fca5a5" }}>{p.allergies}</strong></div>}
+                      {p.pediatricianOrDoctor && <div>🩺 Doctor: {p.pediatricianOrDoctor}</div>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {showAddDependent && (
+        <AddDependentModal
+          onClose={() => setShowAddDependent(false)}
+          onCreated={() => {
+            setShowAddDependent(false);
+            showToast("Child / Dependent profile created successfully!", "success");
+          }}
+        />
+      )}
 
       {/* Regional & Currency Preference */}
       <div className="card fade-in" style={{ marginBottom: "24px" }}>
