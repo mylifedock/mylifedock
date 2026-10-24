@@ -13,6 +13,8 @@ import type { MedicalRecord, MedicalRecordType } from "../../infrastructure/data
 import { useToast } from "../components/Toast";
 import { AttachmentManager } from "../components/AttachmentManager";
 import { addAttachment } from "../../application/attachmentService";
+import { getVaultQuotaStatus } from "../../application/vaultLimitService";
+import { ProUpgradeModal } from "../components/ProUpgradeModal";
 
 export function MedicalPage() {
   const records = useLiveQuery(() => getMedicalRecords(), [], []);
@@ -23,6 +25,10 @@ export function MedicalPage() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+
+  // Pro Upgrade Quota State
+  const [showProUpgrade, setShowProUpgrade] = useState(false);
+  const [vaultItemCount, setVaultItemCount] = useState(0);
 
   // Form State
   const [showForm, setShowForm] = useState(false);
@@ -62,7 +68,13 @@ export function MedicalPage() {
     ])
   ).sort();
 
-  function openCreateForm(initialType: MedicalRecordType = "prescription") {
+  async function openCreateForm(initialType: MedicalRecordType = "prescription") {
+    const quota = await getVaultQuotaStatus();
+    if (quota.isLimitReached) {
+      setVaultItemCount(quota.totalItems);
+      setShowProUpgrade(true);
+      return;
+    }
     setEditingRecord(null);
     setPendingFile(null);
     setIsOcrScanning(false);
@@ -129,7 +141,7 @@ export function MedicalPage() {
           : prev.medicationsOrSummary,
       }));
 
-      showToast("✨ Auto-filled from medical document! Please review fields.", "success");
+      showToast("âœ¨ Auto-filled from medical document! Please review fields.", "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Unable to read text from this image. You can still fill manually.", "error");
     } finally {
@@ -236,7 +248,7 @@ export function MedicalPage() {
       {/* Page Header */}
       <div className="page-header">
         <div className="page-title-group">
-          <h1 className="page-title">🩺 Medical & Health Records</h1>
+          <h1 className="page-title">ðŸ©º Medical & Health Records</h1>
           <p className="page-subtitle">
             Securely preserve doctor prescriptions, diagnostic lab reports, and follow-up schedules date-wise.
           </p>
@@ -249,7 +261,7 @@ export function MedicalPage() {
             onClick={() => openCreateForm("lab_report")}
             style={{ display: "flex", alignItems: "center", gap: "8px" }}
           >
-            <span>🔬</span> + Add Lab Report
+            <span>ðŸ”¬</span> + Add Lab Report
           </button>
           <button
             type="button"
@@ -257,7 +269,7 @@ export function MedicalPage() {
             onClick={() => openCreateForm("prescription")}
             style={{ display: "flex", alignItems: "center", gap: "8px" }}
           >
-            <span>💊</span> + Add Prescription
+            <span>ðŸ’Š</span> + Add Prescription
           </button>
         </div>
       </div>
@@ -266,7 +278,7 @@ export function MedicalPage() {
       <div className="stats-grid" style={{ marginBottom: "20px" }}>
         <div className="stat-card" style={{ cursor: "default" }}>
           <div className="stat-icon" style={{ background: "rgba(99, 102, 241, 0.12)", color: "#818cf8" }}>
-            🩺
+            ðŸ©º
           </div>
           <div>
             <div className="stat-value">{records.length}</div>
@@ -280,7 +292,7 @@ export function MedicalPage() {
           style={{ cursor: "pointer", border: activeSubModule === "prescription" ? "1px solid #818cf8" : undefined }}
         >
           <div className="stat-icon" style={{ background: "rgba(59, 130, 246, 0.12)", color: "#60a5fa" }}>
-            💊
+            ðŸ’Š
           </div>
           <div>
             <div className="stat-value">{prescriptionCount}</div>
@@ -294,7 +306,7 @@ export function MedicalPage() {
           style={{ cursor: "pointer", border: activeSubModule === "lab_report" ? "1px solid #34d399" : undefined }}
         >
           <div className="stat-icon" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#34d399" }}>
-            🔬
+            ðŸ”¬
           </div>
           <div>
             <div className="stat-value">{labReportCount}</div>
@@ -304,7 +316,7 @@ export function MedicalPage() {
 
         <div className="stat-card" style={{ cursor: "default" }}>
           <div className="stat-icon" style={{ background: "rgba(245, 158, 11, 0.12)", color: "#fbbf24" }}>
-            ⏰
+            â°
           </div>
           <div>
             <div className="stat-value">{activeFollowUpsCount}</div>
@@ -327,14 +339,14 @@ export function MedicalPage() {
           className={`tab ${activeSubModule === "prescription" ? "active" : ""}`}
           onClick={() => setActiveSubModule("prescription")}
         >
-          💊 Prescriptions ({prescriptionCount})
+          ðŸ’Š Prescriptions ({prescriptionCount})
         </button>
         <button
           type="button"
           className={`tab ${activeSubModule === "lab_report" ? "active" : ""}`}
           onClick={() => setActiveSubModule("lab_report")}
         >
-          🔬 Lab Reports ({labReportCount})
+          ðŸ”¬ Lab Reports ({labReportCount})
         </button>
       </div>
 
@@ -379,7 +391,7 @@ export function MedicalPage() {
                 fontSize: "14px",
               }}
             >
-              🔍
+              ðŸ”
             </span>
           </div>
 
@@ -399,7 +411,7 @@ export function MedicalPage() {
               }}
               aria-label="Filter by department"
             >
-              <option value="all">🏥 All Departments</option>
+              <option value="all">ðŸ¥ All Departments</option>
               {availableDepartments.map((dept) => (
                 <option key={dept} value={dept}>
                   {dept}
@@ -418,7 +430,7 @@ export function MedicalPage() {
             onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
             style={{ fontSize: "13px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "6px" }}
           >
-            <span>{sortOrder === "newest" ? "📅 Newest First ↓" : "📅 Oldest First ↑"}</span>
+            <span>{sortOrder === "newest" ? "ðŸ“… Newest First â†“" : "ðŸ“… Oldest First â†‘"}</span>
           </button>
         </div>
       </div>
@@ -427,7 +439,7 @@ export function MedicalPage() {
       {filteredRecords.length === 0 ? (
         <div className="card" style={{ padding: "48px 24px", textAlign: "center" }}>
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>
-            {activeSubModule === "prescription" ? "💊" : activeSubModule === "lab_report" ? "🔬" : "🩺"}
+            {activeSubModule === "prescription" ? "ðŸ’Š" : activeSubModule === "lab_report" ? "ðŸ”¬" : "ðŸ©º"}
           </div>
           <h3 style={{ fontSize: "18px", color: "#f1f5f9", marginBottom: "8px" }}>
             {searchQuery || selectedDepartment !== "all"
@@ -465,7 +477,7 @@ export function MedicalPage() {
                   onClick={() => openCreateForm("prescription")}
                   style={{ display: "flex", alignItems: "center", gap: "8px" }}
                 >
-                  <span>💊</span> Add Prescription
+                  <span>ðŸ’Š</span> Add Prescription
                 </button>
                 <button
                   type="button"
@@ -473,7 +485,7 @@ export function MedicalPage() {
                   onClick={() => openCreateForm("lab_report")}
                   style={{ display: "flex", alignItems: "center", gap: "8px" }}
                 >
-                  <span>🔬</span> Add Lab Report
+                  <span>ðŸ”¬</span> Add Lab Report
                 </button>
               </>
             )}
@@ -524,7 +536,7 @@ export function MedicalPage() {
                         letterSpacing: "0.02em",
                       }}
                     >
-                      {isPrescription ? "💊 Prescription" : "🔬 Lab Report"}
+                      {isPrescription ? "ðŸ’Š Prescription" : "ðŸ”¬ Lab Report"}
                     </span>
 
                     {/* Department badge (defaults to General) */}
@@ -538,7 +550,7 @@ export function MedicalPage() {
                         fontWeight: 500,
                       }}
                     >
-                      🏥 {record.department || "General"}
+                      ðŸ¥ {record.department || "General"}
                     </span>
 
                     {/* Date badge */}
@@ -552,7 +564,7 @@ export function MedicalPage() {
                         fontWeight: 500,
                       }}
                     >
-                      📅 {formattedDate}
+                      ðŸ“… {formattedDate}
                     </span>
                   </div>
 
@@ -574,7 +586,7 @@ export function MedicalPage() {
                       style={{ fontSize: "13px", padding: "6px 10px" }}
                       title="Edit Record"
                     >
-                      ✏️
+                      âœï¸
                     </button>
                     <button
                       type="button"
@@ -583,7 +595,7 @@ export function MedicalPage() {
                       style={{ fontSize: "13px", padding: "6px 10px", color: "#f87171" }}
                       title="Delete Record"
                     >
-                      🗑️
+                      ðŸ—‘ï¸
                     </button>
                   </div>
                 </div>
@@ -596,7 +608,7 @@ export function MedicalPage() {
                   {/* Doctor & Clinic */}
                   {record.doctorOrClinic && (
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", color: "#cbd5e1", fontSize: "14px" }}>
-                      <span style={{ opacity: 0.8 }}>👨‍⚕️</span>
+                      <span style={{ opacity: 0.8 }}>ðŸ‘¨â€âš•ï¸</span>
                       <strong>{record.doctorOrClinic}</strong>
                     </div>
                   )}
@@ -647,7 +659,7 @@ export function MedicalPage() {
                         fontWeight: 500,
                       }}
                     >
-                      <span>⏰</span>
+                      <span>â°</span>
                       <span>Follow-up appointment scheduled: {record.followUpDate}</span>
                     </div>
                   )}
@@ -658,9 +670,9 @@ export function MedicalPage() {
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────
+      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Add / Edit Record Form Modal
-         ───────────────────────────────────────────────────────── */}
+         â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showForm && (
         <div
           className="product-detail-overlay"
@@ -691,7 +703,7 @@ export function MedicalPage() {
                 disabled={isOcrScanning}
                 aria-label="Close"
               >
-                ✕
+                âœ•
               </button>
             </div>
 
@@ -709,7 +721,7 @@ export function MedicalPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                   <div>
                     <strong style={{ color: "#fff", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span>✨</span> Smart Auto-Fill (Beta)
+                      <span>âœ¨</span> Smart Auto-Fill (Beta)
                     </strong>
                     <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "#cbd5e1" }}>
                       Snap or select an image of your prescription/report to automatically detect date, department & medications.
@@ -745,7 +757,7 @@ export function MedicalPage() {
                       onClick={() => ocrFileInputRef.current?.click()}
                       style={{ fontSize: "13px", padding: "6px 12px" }}
                     >
-                      📁 Upload Scan
+                      ðŸ“ Upload Scan
                     </button>
                     <button
                       type="button"
@@ -754,7 +766,7 @@ export function MedicalPage() {
                       onClick={() => ocrCameraInputRef.current?.click()}
                       style={{ fontSize: "13px", padding: "6px 12px" }}
                     >
-                      📷 Camera Snap
+                      ðŸ“· Camera Snap
                     </button>
                   </div>
                 </div>
@@ -805,7 +817,7 @@ export function MedicalPage() {
                       cursor: "pointer",
                     }}
                   >
-                    <span>💊</span> Doctor Prescription
+                    <span>ðŸ’Š</span> Doctor Prescription
                   </button>
 
                   <button
@@ -826,7 +838,7 @@ export function MedicalPage() {
                       cursor: "pointer",
                     }}
                   >
-                    <span>🔬</span> Lab / Diagnostic Report
+                    <span>ðŸ”¬</span> Lab / Diagnostic Report
                   </button>
                 </div>
               </div>
@@ -1066,7 +1078,7 @@ export function MedicalPage() {
                 />
 
                 <div style={{ marginBottom: "10px", fontSize: "13px", color: "#94a3b8" }}>
-                  📎 Attach Prescription or Diagnostic Report (PDF or Photo)
+                  ðŸ“Ž Attach Prescription or Diagnostic Report (PDF or Photo)
                 </div>
 
                 <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -1084,7 +1096,7 @@ export function MedicalPage() {
                     onClick={() => cameraInputRef.current?.click()}
                     style={{ fontSize: "13px", padding: "8px 14px" }}
                   >
-                    📷 Snap Document
+                    ðŸ“· Snap Document
                   </button>
                 </div>
 
@@ -1103,13 +1115,13 @@ export function MedicalPage() {
                       justifyContent: "space-between",
                     }}
                   >
-                    <span>✓ Ready to attach: {pendingFile.name} ({(pendingFile.size / 1024).toFixed(1)} KB)</span>
+                    <span>âœ“ Ready to attach: {pendingFile.name} ({(pendingFile.size / 1024).toFixed(1)} KB)</span>
                     <button
                       type="button"
                       onClick={() => setPendingFile(null)}
                       style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "14px" }}
                     >
-                      ✕
+                      âœ•
                     </button>
                   </div>
                 )}
@@ -1138,9 +1150,9 @@ export function MedicalPage() {
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────
+      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Record Detail Modal (with AttachmentManager)
-         ───────────────────────────────────────────────────────── */}
+         â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {selectedRecordForDetail && (
         <div
           className="product-detail-overlay"
@@ -1170,7 +1182,7 @@ export function MedicalPage() {
                 onClick={() => setSelectedRecordForDetail(null)}
                 aria-label="Close"
               >
-                ✕
+                âœ•
               </button>
             </div>
 
@@ -1191,7 +1203,7 @@ export function MedicalPage() {
                 <div>
                   <small style={{ color: "#94a3b8", display: "block" }}>RECORD TYPE</small>
                   <strong style={{ color: "#fff", fontSize: "14px" }}>
-                    {selectedRecordForDetail.type === "prescription" ? "💊 Doctor Prescription" : "🔬 Lab Report"}
+                    {selectedRecordForDetail.type === "prescription" ? "ðŸ’Š Doctor Prescription" : "ðŸ”¬ Lab Report"}
                   </strong>
                 </div>
 
@@ -1268,7 +1280,7 @@ export function MedicalPage() {
                     marginBottom: "20px",
                   }}
                 >
-                  <span>⏰</span>
+                  <span>â°</span>
                   <strong>Next Follow-up Appointment: {selectedRecordForDetail.followUpDate}</strong>
                 </div>
               )}
@@ -1276,7 +1288,7 @@ export function MedicalPage() {
               {/* Attachments Section */}
               <div style={{ marginTop: "24px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px" }}>
                 <h4 style={{ fontSize: "15px", color: "#fff", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>📎</span> Encrypted Document Attachments
+                  <span>ðŸ“Ž</span> Encrypted Document Attachments
                 </h4>
                 <AttachmentManager entityId={selectedRecordForDetail.id} />
               </div>
@@ -1293,7 +1305,7 @@ export function MedicalPage() {
                   }}
                   style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
-                  <span>✏️</span> Edit Record
+                  <span>âœï¸</span> Edit Record
                 </button>
 
                 <button
@@ -1308,6 +1320,12 @@ export function MedicalPage() {
           </section>
         </div>
       )}
+
+      <ProUpgradeModal
+        isOpen={showProUpgrade}
+        onClose={() => setShowProUpgrade(false)}
+        currentCount={vaultItemCount}
+      />
     </div>
   );
 }

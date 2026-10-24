@@ -8,7 +8,7 @@ async function ensureUnlocked(page: Page) {
   if (await onboardingHeader.isVisible()) {
     await page.fill('input#displayName', 'Mobile Tester');
     await page.check('input#termsCheckbox');
-    await page.click('button.primary-button');
+    await page.click('button:has-text("Create my local vault")');
     await onboardingHeader.waitFor({ state: 'detached', timeout: 10000 });
   }
 
@@ -44,7 +44,7 @@ test.describe('Mobile UI/UX Precision & Adaptability Suite', () => {
     // Onboarding Button Styling Verification
     const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
     if (await onboardingHeader.isVisible()) {
-      const submitBtn = page.locator('button.primary-button');
+      const submitBtn = page.locator('button.cta-button');
       await expect(submitBtn).toBeVisible();
 
       // Verify button font size is at least 15px (no micro-fonts)

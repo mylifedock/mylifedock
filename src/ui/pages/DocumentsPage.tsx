@@ -20,6 +20,8 @@ import type {
 
 import DocumentCard from "../components/DocumentCard";
 import { AttachmentManager } from "../components/AttachmentManager";
+import { getVaultQuotaStatus } from "../../application/vaultLimitService";
+import { ProUpgradeModal } from "../components/ProUpgradeModal";
 
 const CATEGORIES: {
   value: DocumentCategory;
@@ -40,9 +42,9 @@ const CATEGORIES: {
   { value: "other", label: "Other" },
 ];
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Document Form (Create + Edit)
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type DocumentFormProps = {
   initialDocument?: DocumentRecord;
@@ -263,7 +265,7 @@ function DocumentForm({
             disabled={isOcrScanning || isSaving}
             style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)" }}
           >
-            <span>📷</span>
+            <span>ðŸ“·</span>
             {isOcrScanning ? `Scanning (${ocrProgress}%)...` : "Snap Invoice"}
           </button>
           <button
@@ -273,7 +275,7 @@ function DocumentForm({
             disabled={isOcrScanning || isSaving}
             style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13.5px" }}
           >
-            <span>🖼️</span>
+            <span>ðŸ–¼ï¸</span>
             Upload to Scan
           </button>
         </div>
@@ -466,7 +468,7 @@ function DocumentForm({
                       removeTag(tag)
                     }
                   >
-                    ×
+                    Ã—
                   </button>
                 </span>
               ))}
@@ -531,7 +533,7 @@ function DocumentForm({
                   style={{ padding: "6px 12px", fontSize: "12.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)", display: "flex", alignItems: "center", gap: "6px" }}
                   onClick={() => cameraAttachmentRef.current?.click()}
                 >
-                  <span>📷</span>
+                  <span>ðŸ“·</span>
                   Snap Photo
                 </button>
                 <button
@@ -540,7 +542,7 @@ function DocumentForm({
                   style={{ padding: "6px 12px", fontSize: "12.5px", display: "flex", alignItems: "center", gap: "6px" }}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <span>📁</span>
+                  <span>ðŸ“</span>
                   Choose File
                 </button>
               </div>
@@ -599,7 +601,7 @@ function DocumentForm({
                 ? "Save changes"
                 : "Add document"}
 
-            <span>→</span>
+            <span>â†’</span>
           </button>
         </div>
       </form>
@@ -607,9 +609,9 @@ function DocumentForm({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Document Detail Modal
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function DocumentDetailModal({
   document,
@@ -655,7 +657,7 @@ function DocumentDetailModal({
             onClick={onClose}
             aria-label="Close"
           >
-            ×
+            Ã—
           </button>
         </div>
 
@@ -777,7 +779,7 @@ function DocumentDetailModal({
             onClick={onEdit}
           >
             Edit document
-            <span>→</span>
+            <span>â†’</span>
           </button>
         </div>
       </section>
@@ -785,9 +787,9 @@ function DocumentDetailModal({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Documents Page
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function DocumentsPage() {
   const documents = useLiveQuery(
@@ -818,8 +820,17 @@ function DocumentsPage() {
       "all",
     );
 
-  function openCreateForm() {
+  const [showProUpgrade, setShowProUpgrade] = useState(false);
+  const [vaultItemCount, setVaultItemCount] = useState(0);
+
+  async function openCreateForm() {
     setPageError("");
+    const quota = await getVaultQuotaStatus();
+    if (quota.isLimitReached) {
+      setVaultItemCount(quota.totalItems);
+      setShowProUpgrade(true);
+      return;
+    }
     setEditingDocument(undefined);
     setSelectedDocument(undefined);
     setShowForm(true);
@@ -1031,7 +1042,7 @@ function DocumentsPage() {
             {filteredDocuments.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">
-                  ▣
+                  â–£
                 </div>
 
                 <h3>
@@ -1059,7 +1070,7 @@ function DocumentsPage() {
                       }
                     >
                       Add your first
-                      document →
+                      document â†’
                     </button>
                   )}
               </div>
@@ -1109,6 +1120,12 @@ function DocumentsPage() {
           }
         />
       )}
+
+      <ProUpgradeModal
+        isOpen={showProUpgrade}
+        onClose={() => setShowProUpgrade(false)}
+        currentCount={vaultItemCount}
+      />
     </div>
   );
 }

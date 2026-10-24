@@ -48,6 +48,8 @@ import { SubscriptionsPage } from "./ui/pages/SubscriptionsPage";
 import { EmergencyKitPage } from "./ui/pages/EmergencyKitPage";
 import { MedicalPage } from "./ui/pages/MedicalPage";
 import AboutPage from "./ui/pages/AboutPage";
+import PillarsSlideshow from "./ui/components/PillarsSlideshow";
+import AppUpdateBanner from "./ui/components/AppUpdateBanner";
 
 function getAutoLockTimeoutMs(): number {
   try {
@@ -490,6 +492,9 @@ function App() {
             <span>One private dock.</span>
           </h1>
 
+          {/* 3 Core Pillars Slideshow: Zero Server Access, Zero-Knowledge, Sovereign Offline */}
+          <PillarsSlideshow />
+
           {/* New vs Returning User Tab Toggle */}
           <div style={{ display: "flex", background: "rgba(255, 255, 255, 0.06)", padding: "4px", borderRadius: "8px", margin: "18px 0 16px 0", gap: "4px" }}>
             <button
@@ -788,6 +793,7 @@ function App() {
       </div>
 
       <main className="main-content">
+        <AppUpdateBanner />
         {activePage === "dashboard" ? (
           <div className="mobile-topbar mobile-topbar-home">
             <button 

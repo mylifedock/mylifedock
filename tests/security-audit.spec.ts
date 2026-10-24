@@ -8,7 +8,7 @@ async function ensureOnboardedAndSetup(page: Page, secret: string = 'AuditSecret
   if (await onboardingHeader.isVisible()) {
     await page.fill('input#displayName', 'Security Audit Subject');
     await page.check('input#termsCheckbox');
-    await page.click('button.primary-button');
+    await page.click('button:has-text("Create my local vault")');
     await onboardingHeader.waitFor({ state: 'detached', timeout: 10000 });
   }
 
@@ -44,7 +44,7 @@ test.describe('Security Audit & Zero-Knowledge Verification Suite', () => {
     if (await onboardingHeader.isVisible()) {
       await page.fill('input#displayName', 'Security Audit Subject');
       await page.check('input#termsCheckbox');
-      await page.click('button.primary-button');
+      await page.click('button:has-text("Create my local vault")');
       await onboardingHeader.waitFor({ state: 'detached', timeout: 10000 });
     }
 

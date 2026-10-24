@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import { getDocuments } from "../../application/documentService";
 import { getProducts } from "../../application/productService";
 import { getUpcomingReminders } from "../../application/reminderService";
 import { getMedicalRecords } from "../../application/medicalService";
+import { getVaultQuotaStatus, type VaultQuotaStatus } from "../../application/vaultLimitService";
+import { ProUpgradeModal } from "../components/ProUpgradeModal";
 
 import StatCard from "../components/StatCard";
 import QuickAction from "../components/QuickAction";
@@ -49,6 +52,13 @@ function DashboardPage({
       (p) => p.sensitivity !== "normal",
     ).length;
 
+  const [quota, setQuota] = useState<VaultQuotaStatus | null>(null);
+  const [showProModal, setShowProModal] = useState(false);
+
+  useEffect(() => {
+    void getVaultQuotaStatus().then(setQuota);
+  }, [documents, products, medicalRecords]);
+
   return (
     <div className="page">
       <header className="page-header">
@@ -71,6 +81,69 @@ function DashboardPage({
           Local vault active
         </div>
       </header>
+
+      {quota && !quota.isPro && (
+        <section
+          style={{
+            background: "linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(30, 41, 59, 0.6) 100%)",
+            border: "1px solid rgba(234, 179, 8, 0.25)",
+            borderRadius: "12px",
+            padding: "16px 20px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "16px",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: "260px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "16px" }}>⚡</span>
+              <strong style={{ color: "#f8fafc", fontSize: "14px" }}>
+                Free Core Vault: {quota.totalItems} / {quota.limit} Slots Used
+              </strong>
+              {quota.isLimitReached && (
+                <span style={{ background: "#ef4444", color: "#fff", fontSize: "11px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px" }}>
+                  LIMIT REACHED
+                </span>
+              )}
+            </div>
+            <div style={{ background: "rgba(255, 255, 255, 0.1)", borderRadius: "6px", height: "6px", overflow: "hidden", maxWidth: "340px", marginBottom: "6px" }}>
+              <div
+                style={{
+                  background: quota.isLimitReached ? "#ef4444" : "#eab308",
+                  height: "100%",
+                  width: `${Math.min(100, (quota.totalItems / quota.limit) * 100)}%`,
+                  transition: "width 0.3s ease",
+                }}
+              />
+            </div>
+            <small style={{ color: "#94a3b8", fontSize: "12.5px" }}>
+              {quota.isLimitReached
+                ? "You have reached your 10 free items limit. Upgrade to Pro for unlimited storage."
+                : `Store up to 10 free items across all categories. ${quota.remainingItems} slot${quota.remainingItems === 1 ? "" : "s"} left.`}
+            </small>
+          </div>
+          <button
+            type="button"
+            className="primary-button"
+            style={{
+              background: "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)",
+              color: "#0f172a",
+              fontWeight: 700,
+              border: "none",
+              padding: "8px 16px",
+              fontSize: "13px",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(234, 179, 8, 0.25)",
+            }}
+            onClick={() => setShowProModal(true)}
+          >
+            ⭐ Upgrade to Pro
+          </button>
+        </section>
+      )}
 
       <section className="stats-grid">
         <StatCard
@@ -304,6 +377,12 @@ function DashboardPage({
           Vault Backups &rarr;
         </button>
       </section>
+
+      <ProUpgradeModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        currentCount={quota?.totalItems ?? 0}
+      />
     </div>
   );
 }

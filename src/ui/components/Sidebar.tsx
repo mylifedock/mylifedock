@@ -1,3 +1,5 @@
+import { getLicenseStatus } from "../../application/licenseService";
+
 type SidebarProps = {
   activePage: string;
   onNavigate: (page: string) => void;
@@ -58,6 +60,9 @@ function Sidebar({
   onLock,
   onClose,
 }: SidebarProps) {
+  const license = getLicenseStatus();
+  const isPro = license.isValid && license.tier !== "free_core";
+
   function handleNav(page: string) {
     onNavigate(page);
     if (onClose) {
@@ -128,6 +133,42 @@ function Sidebar({
       </nav>
 
       <div className="sidebar-bottom">
+        {!isPro ? (
+          <button
+            className="nav-item pro-nav-item"
+            type="button"
+            style={{
+              background: "linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(245, 158, 11, 0.08) 100%)",
+              border: "1px solid rgba(234, 179, 8, 0.3)",
+              color: "#facc15",
+              marginBottom: "8px",
+              fontWeight: 600,
+            }}
+            onClick={() => handleNav("settings")}
+          >
+            <span className="nav-icon" aria-hidden="true">⭐</span>
+            <span className="nav-label">Upgrade to Pro</span>
+            <span className="nav-item-badge" style={{ background: "#eab308", color: "#111827", fontWeight: 700 }}>10 Slots</span>
+          </button>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              color: "#eab308",
+              background: "rgba(234, 179, 8, 0.1)",
+              borderRadius: "6px",
+              marginBottom: "8px",
+              border: "1px solid rgba(234, 179, 8, 0.2)",
+            }}
+          >
+            <span>⭐</span>
+            <span style={{ fontWeight: 600 }}>PRO ACTIVE</span>
+          </div>
+        )}
         <button
           className={`nav-item ${activePage === "about" ? "nav-item-active" : ""}`}
           type="button"

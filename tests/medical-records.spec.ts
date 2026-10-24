@@ -8,7 +8,7 @@ async function ensureUnlocked(page: Page) {
   if (await onboardingHeader.isVisible()) {
     await page.fill('input#displayName', 'Medical Tester');
     await page.check('input#termsCheckbox');
-    await page.click('button.primary-button');
+    await page.click('button:has-text("Create my local vault")');
     await onboardingHeader.waitFor({ state: 'detached', timeout: 10000 });
   }
 

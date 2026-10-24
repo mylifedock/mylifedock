@@ -42,10 +42,12 @@ import type {
   CoverageRecord,
   CoverageType,
 } from "../../infrastructure/database/db";
+import { getVaultQuotaStatus } from "../../application/vaultLimitService";
+import { ProUpgradeModal } from "../components/ProUpgradeModal";
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Share helper
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 async function shareAttachmentBlob(
   fileName: string,
@@ -90,9 +92,9 @@ async function shareAttachmentBlob(
   }
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Product categories
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const PRODUCT_CATEGORIES = [
   "Electronics",
@@ -118,9 +120,9 @@ const COVERAGE_TYPES: {
   { value: "insurance", label: "Insurance" },
 ];
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Product Form
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type ProductFormProps = {
   initialProduct?: ProductRecord;
@@ -301,7 +303,7 @@ function ProductForm({
       if (invoiceFile) {
         const invoiceDoc =
           await createDocumentWithAttachment({
-            title: `Invoice — ${trimmedName}`,
+            title: `Invoice â€” ${trimmedName}`,
             category: "product",
             sensitivity,
             storagePolicy: "local-only",
@@ -542,7 +544,7 @@ function ProductForm({
                   event.target.value,
                 )
               }
-              placeholder="₹ 0"
+              placeholder="â‚¹ 0"
             />
           </div>
 
@@ -602,7 +604,7 @@ function ProductForm({
                 className="secondary-button" 
                 style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12.5px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.2)", padding: "6px 12px" }}
               >
-                <span>📷</span>
+                <span>ðŸ“·</span>
                 <span>Snap Invoice</span>
                 <input
                   type="file"
@@ -621,7 +623,7 @@ function ProductForm({
                 className="secondary-button" 
                 style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12.5px", padding: "6px 12px" }}
               >
-                <span>📁</span>
+                <span>ðŸ“</span>
                 <span>Choose File</span>
                 <input
                   id="productInvoice"
@@ -658,7 +660,7 @@ function ProductForm({
               </label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <label className="text-button" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px", color: "#38bdf8" }}>
-                  <span>{isScanning ? `Scanning... ${scanProgress}%` : "📷 Snap & Auto-Fill"}</span>
+                  <span>{isScanning ? `Scanning... ${scanProgress}%` : "ðŸ“· Snap & Auto-Fill"}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -669,7 +671,7 @@ function ProductForm({
                   />
                 </label>
                 <label className="text-button" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  <span>🖼️ Upload to Auto-Fill</span>
+                  <span>ðŸ–¼ï¸ Upload to Auto-Fill</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -724,7 +726,7 @@ function ProductForm({
                 ? "Save changes"
                 : "Add product"}
 
-            <span>→</span>
+            <span>â†’</span>
           </button>
         </div>
       </form>
@@ -732,9 +734,9 @@ function ProductForm({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Coverage Form
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type CoverageFormProps = {
   productId: string;
@@ -853,7 +855,7 @@ function CoverageForm({
 
         const doc =
           await createDocumentWithAttachment({
-            title: `${label} — ${productName}`,
+            title: `${label} â€” ${productName}`,
             category: "product",
             sensitivity: "normal",
             storagePolicy: "local-only",
@@ -1114,7 +1116,7 @@ function CoverageForm({
                 ? "Save changes"
                 : "Add coverage"}
 
-            <span>→</span>
+            <span>â†’</span>
           </button>
         </div>
       </form>
@@ -1122,9 +1124,9 @@ function CoverageForm({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Coverage Card
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function CoverageCard({
   coverage,
@@ -1170,7 +1172,7 @@ function CoverageCard({
         <div>
           <small>Period</small>
           <strong>
-            {coverage.startDate} →{" "}
+            {coverage.startDate} â†’{" "}
             {coverage.endDate}
           </strong>
         </div>
@@ -1228,9 +1230,9 @@ function CoverageCard({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Product Detail Item
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function ProductDetailItem({
   label,
@@ -1251,9 +1253,9 @@ function ProductDetailItem({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Product Details (full modal)
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function ProductDetails({
   product,
@@ -1452,7 +1454,7 @@ function ProductDetails({
               <p>
                 {product.brand}
                 {product.model
-                  ? ` · ${product.model}`
+                  ? ` Â· ${product.model}`
                   : ""}
               </p>
             )}
@@ -1464,7 +1466,7 @@ function ProductDetails({
             onClick={onClose}
             aria-label="Close product details"
           >
-            ×
+            Ã—
           </button>
         </div>
 
@@ -1655,7 +1657,7 @@ function ProductDetails({
                     setShowCoverageForm(true)
                   }
                 >
-                  Add first coverage →
+                  Add first coverage â†’
                 </button>
               </div>
             )}
@@ -1704,7 +1706,7 @@ function ProductDetails({
             onClick={onEdit}
           >
             Edit product
-            <span>→</span>
+            <span>â†’</span>
           </button>
         </div>
       </section>
@@ -1712,9 +1714,9 @@ function ProductDetails({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Product Card
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function ProductCard({
   product,
@@ -1746,7 +1748,7 @@ function ProductCard({
     <article className="product-card">
       <div className="product-card-top">
         <div className="product-card-icon">
-          □
+          â–¡
         </div>
 
         <div className="product-card-title">
@@ -1870,9 +1872,9 @@ function ProductCard({
   );
 }
 
-/* ──────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Products Page
- * ────────────────────────────────────────── */
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function ProductsPage() {
   const products = useLiveQuery(
@@ -1912,8 +1914,17 @@ function ProductsPage() {
     setPageError,
   ] = useState("");
 
-  function openCreateForm() {
+  const [showProUpgrade, setShowProUpgrade] = useState(false);
+  const [vaultItemCount, setVaultItemCount] = useState(0);
+
+  async function openCreateForm() {
     setPageError("");
+    const quota = await getVaultQuotaStatus();
+    if (quota.isLimitReached) {
+      setVaultItemCount(quota.totalItems);
+      setShowProUpgrade(true);
+      return;
+    }
     setEditingProduct(undefined);
     setSelectedProduct(undefined);
     setShowForm(true);
@@ -2065,7 +2076,7 @@ function ProductsPage() {
           {products.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">
-                □
+                â–¡
               </div>
 
               <h3>
@@ -2086,7 +2097,7 @@ function ProductsPage() {
                 className="text-button"
                 onClick={openCreateForm}
               >
-                Add your first product →
+                Add your first product â†’
               </button>
             </div>
           ) : (
@@ -2130,6 +2141,12 @@ function ProductsPage() {
           }
         />
       )}
+
+      <ProUpgradeModal
+        isOpen={showProUpgrade}
+        onClose={() => setShowProUpgrade(false)}
+        currentCount={vaultItemCount}
+      />
     </div>
   );
 }
