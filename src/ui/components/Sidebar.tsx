@@ -5,6 +5,7 @@ type SidebarProps = {
   onNavigate: (page: string) => void;
   onLock: () => void;
   onClose?: () => void;
+  onOpenFeedback?: () => void;
 };
 
 type NavItem = {
@@ -59,6 +60,7 @@ function Sidebar({
   onNavigate,
   onLock,
   onClose,
+  onOpenFeedback,
 }: SidebarProps) {
   const license = getLicenseStatus();
   const isPro = license.isValid && license.tier !== "free_core";
@@ -178,6 +180,23 @@ function Sidebar({
             ℹ️
           </span>
           <span className="nav-label">About & Support</span>
+        </button>
+        <button
+          className="nav-item"
+          type="button"
+          onClick={() => {
+            if (onClose) onClose();
+            if (onOpenFeedback) {
+              onOpenFeedback();
+            } else {
+              window.dispatchEvent(new CustomEvent("open-feedback-modal"));
+            }
+          }}
+        >
+          <span className="nav-icon" aria-hidden="true">
+            💬
+          </span>
+          <span className="nav-label">Send Feedback</span>
         </button>
         <button
           className={`nav-item ${activePage === "settings" ? "nav-item-active" : ""}`}

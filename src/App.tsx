@@ -50,6 +50,7 @@ import { MedicalPage } from "./ui/pages/MedicalPage";
 import AboutPage from "./ui/pages/AboutPage";
 import PillarsSlideshow from "./ui/components/PillarsSlideshow";
 import AppUpdateBanner from "./ui/components/AppUpdateBanner";
+import FeedbackModal from "./ui/components/FeedbackModal";
 
 function getAutoLockTimeoutMs(): number {
   try {
@@ -132,6 +133,17 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] =
     useState(false);
+
+  const [feedbackModalOpen, setFeedbackModalOpen] =
+    useState(false);
+
+  useEffect(() => {
+    function handleOpenFeedback() {
+      setFeedbackModalOpen(true);
+    }
+    window.addEventListener("open-feedback-modal", handleOpenFeedback);
+    return () => window.removeEventListener("open-feedback-modal", handleOpenFeedback);
+  }, []);
 
   const sidebarOpenRef = useRef(false);
   useEffect(() => {
@@ -792,6 +804,7 @@ function App() {
           }}
           onLock={lockApplication}
           onClose={() => setSidebarOpen(false)}
+          onOpenFeedback={() => setFeedbackModalOpen(true)}
         />
       </div>
 
@@ -974,6 +987,11 @@ function App() {
           </button>
         </nav>
       )}
+
+      <FeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+      />
     </div>
   );
 }

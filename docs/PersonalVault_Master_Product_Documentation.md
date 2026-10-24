@@ -254,6 +254,12 @@ sequenceDiagram
 3. **Feature 11.3 — Brute-Force Rate Limiting:** Progressively delays passphrase verification attempts (30s after 3 failures, 60s after 4, 300s after 5) to block automated brute-force attacks.
 4. **Feature 11.4 — Strict Content Security Policy:** Restricts script execution to `'self'`, blocking remote scripts, eval, and inline injections.
 
+### Module 12: Direct Founder Feedback & Support Channel
+1. **Feature 12.1 — Multi-Point Feedback Access:** Available via Sidebar ("💬 Send Feedback"), Settings Page ("💬 Share Feedback & Feature Requests"), and About Page ("💬 Submit App Feedback").
+2. **Feature 12.2 — Structured Feedback Modal:** Captures Category (Feature Request, Bug Report, General Review, Question), 1-5 Star Rating, Subject, Detailed Message, and optional user contact.
+3. **Feature 12.3 — Privacy-Preserving Diagnostic Attaching:** Optionally bundles non-sensitive OS/platform environment metadata without including personal documents, records, or encryption keys.
+4. **Feature 12.4 — Tagged Email Routing:** Automatically formats the email subject line as `[MyLifeDock Feedback] <Category>: <Subject>` and dispatches to `mylifedock@gmail.com` via client email launcher and optional Google Apps Script Webhook.
+
 ---
 
 ## Chapter 4: End-User Step-by-Step Operations Handbook
@@ -343,6 +349,20 @@ flowchart TD
    * Select your `.mldv` file.
    * Enter your **Master Passphrase**.
    * Personal Vault decrypts and reconstructs all profiles, medical records, assets, and documents!
+
+---
+
+### User Guide 6: Submitting Feedback & Feature Requests
+1. **Step 1:** Open the Navigation Sidebar and click **💬 Send Feedback** (or navigate to **Settings** → **Share Feedback**).
+2. **Step 2:** Select your **Feedback Category**:
+   * 💡 **Feature Request:** Suggest a new capability or improvement.
+   * 🐞 **Bug Report:** Report an unexpected behavior or visual alignment issue.
+   * ⭐ **General Review:** Share your experience or words of encouragement.
+   * ❓ **Question & Help:** Inquire about specific vault features or offline setup.
+3. **Step 3:** Select your **Experience Rating** (1 to 5 stars).
+4. **Step 4:** Enter a brief **Topic / Summary** (e.g., `Export to CSV option`) and your detailed comments.
+5. **Step 5 (Optional):** Enter your name and email if you would like a direct reply from the founder.
+6. **Step 6:** Click **🚀 Send to Founder**. Your email app opens instantly with the subject line formatted as `[MyLifeDock Feedback] Feature Request: Export to CSV option` directed to `mylifedock@gmail.com`.
 
 ---
 

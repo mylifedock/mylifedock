@@ -607,32 +607,33 @@ export function SettingsPage() {
             <div style={{ display: "grid", gap: "12px", marginBottom: "24px" }}>
               <div style={{ padding: "16px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <strong>6 Months Pass</strong>
-                  <small style={{ display: "block", color: "#94a3b8", fontSize: "13px" }}>Billed semi-annually</small>
+                  <strong>Monthly Pro Pass</strong>
+                  <small style={{ display: "block", color: "#94a3b8", fontSize: "13px" }}>Billed monthly, cancel or renew anytime</small>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "18px", fontWeight: "bold" }}>₹999 / $14</div>
+                  <div style={{ fontSize: "18px", fontWeight: "bold" }}>₹25 / $0.49</div>
+                </div>
+              </div>
+
+              <div style={{ padding: "16px", background: "rgba(16, 185, 129, 0.06)", border: "1px solid #10b981", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <span style={{ fontSize: "11px", background: "#10b981", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold", textTransform: "uppercase" }}>SAVE 2 MONTHS FREE</span>
+                  <strong style={{ display: "block", marginTop: "4px" }}>1 Year Subscription</strong>
+                  <small style={{ color: "#34d399", fontSize: "13px" }}>12 Months for the Price of 10! (Save ₹50)</small>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: "18px", fontWeight: "bold", color: "#34d399" }}>₹250 / $4.99</div>
                 </div>
               </div>
 
               <div style={{ padding: "16px", background: "rgba(234, 179, 8, 0.06)", border: "1px solid #eab308", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <span style={{ fontSize: "11px", background: "#eab308", color: "#000", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold", textTransform: "uppercase" }}>Most Popular</span>
-                  <strong style={{ display: "block", marginTop: "4px" }}>1 Year Subscription</strong>
-                  <small style={{ color: "#94a3b8", fontSize: "13px" }}>Full access for 12 months</small>
+                  <span style={{ fontSize: "11px", background: "#eab308", color: "#000", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold", textTransform: "uppercase" }}>BEST VALUE</span>
+                  <strong style={{ display: "block", marginTop: "4px" }}>Lifetime Founder License</strong>
+                  <small style={{ color: "#facc15", fontSize: "13px" }}>One-time payment, forever unlimited access</small>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "18px", fontWeight: "bold", color: "#eab308" }}>₹1,499 / $29</div>
-                </div>
-              </div>
-
-              <div style={{ padding: "16px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <strong>Lifetime Founder License</strong>
-                  <small style={{ display: "block", color: "#94a3b8", fontSize: "13px" }}>One-time payment, forever access</small>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "18px", fontWeight: "bold" }}>₹3,999 / $79</div>
+                  <div style={{ fontSize: "18px", fontWeight: "bold", color: "#eab308" }}>₹999 / $19.99</div>
                 </div>
               </div>
             </div>
@@ -776,6 +777,28 @@ export function SettingsPage() {
               onChange={handleFileSelect}
             />
           </div>
+        </div>
+      </div>
+
+      {/* User Feedback & Suggestions Card */}
+      <div className="card fade-in" style={{ marginTop: "24px", border: "1px solid rgba(56, 189, 248, 0.25)", background: "linear-gradient(135deg, rgba(56, 189, 248, 0.04) 0%, rgba(15, 23, 42, 0.6) 100%)" }}>
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>💬</span> Share Feedback & Feature Requests
+          </h3>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-feedback-modal"))}
+            style={{ fontSize: "13px", padding: "8px 16px", background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)" }}
+          >
+            Submit Feedback &rarr;
+          </button>
+        </div>
+        <div className="card-body">
+          <p style={{ fontSize: "13.5px", color: "#cbd5e1", lineHeight: "1.6" }}>
+            Have a suggestion, found a bug, or want a new feature? Your message is delivered directly to our founder (<strong style={{ color: "#38bdf8" }}>mylifedock@gmail.com</strong>) with a tagged subject line for prompt review.
+          </p>
         </div>
       </div>
 

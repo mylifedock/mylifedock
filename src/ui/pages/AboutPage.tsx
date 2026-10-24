@@ -292,6 +292,14 @@ export function AboutPage() {
             <button 
               type="button" 
               className="primary-button"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-feedback-modal"))}
+              style={{ background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)" }}
+            >
+              💬 Submit App Feedback & Suggestions
+            </button>
+            <button 
+              type="button" 
+              className="secondary-button"
               onClick={handleEmailSupport}
             >
               ✉️ Email Support ({supportEmail})

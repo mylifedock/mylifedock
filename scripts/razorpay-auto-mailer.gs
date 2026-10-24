@@ -29,6 +29,45 @@ function doPost(e) {
     var rawData = e.postData.contents;
     var payload = JSON.parse(rawData);
 
+    // -------------------------------------------------------------------------
+    // ACTION 1: INCOMING USER FEEDBACK SUBMISSION
+    // -------------------------------------------------------------------------
+    if (payload.action === "feedback" || payload.type === "feedback") {
+      var category = payload.category || "General";
+      var userSubject = payload.subject ? payload.subject.trim() : "App Experience";
+      var emailSubject = "[MyLifeDock Feedback] " + category + ": " + userSubject;
+      var userEmail = payload.email ? payload.email.trim() : "anonymous@user.com";
+      var userName = payload.name ? payload.name.trim() : "Valued User";
+      var ratingStars = payload.rating ? "★".repeat(payload.rating) + "☆".repeat(5 - payload.rating) + " (" + payload.rating + "/5)" : "Not rated";
+
+      var textBody = 
+        "NEW USER FEEDBACK RECEIVED\n" +
+        "==================================================\n" +
+        "Category : " + category + "\n" +
+        "Subject  : " + userSubject + "\n" +
+        "Rating   : " + ratingStars + "\n" +
+        "From     : " + userName + " <" + userEmail + ">\n" +
+        "Date     : " + new Date().toISOString() + "\n" +
+        "Platform : " + (payload.platform || "Unknown") + "\n" +
+        "==================================================\n\n" +
+        "MESSAGE:\n" +
+        (payload.message || "(No message provided)") + "\n\n" +
+        (payload.diagnostics ? "--- SYSTEM DIAGNOSTICS ---\n" + payload.diagnostics + "\n" : "");
+
+      GmailApp.sendEmail("mylifedock@gmail.com", emailSubject, textBody, {
+        name: "MyLifeDock Feedback Bot",
+        replyTo: userEmail
+      });
+
+      logFeedbackToSheet(category, userSubject, payload.rating, userName, userEmail, payload.message);
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Feedback delivered" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // -------------------------------------------------------------------------
+    // ACTION 2: RAZORPAY PAYMENT WEBHOOK NOTIFICATION
+    // -------------------------------------------------------------------------
     // Extract payment details from Razorpay payload
     var paymentEntity = null;
     if (payload.payload && payload.payload.payment && payload.payload.payment.entity) {
@@ -208,5 +247,22 @@ function logOrderToSheet(email, name, amount, plan, key) {
     sheet.appendRow([new Date().toISOString(), name, email, amount, plan, key]);
   } catch (e) {
     // Silent fail if no sheet attached
+  }
+}
+
+/**
+ * Appends feedback to a dedicated 'Feedback' sheet
+ */
+function logFeedbackToSheet(category, subject, rating, name, email, message) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("User Feedback");
+    if (!sheet) {
+      sheet = ss.insertSheet("User Feedback");
+      sheet.appendRow(["Timestamp", "Category", "Rating", "Subject", "User Name", "User Email", "Message"]);
+    }
+    sheet.appendRow([new Date().toISOString(), category, rating, subject, name, email, message]);
+  } catch (e) {
+    // Silent fail
   }
 }
