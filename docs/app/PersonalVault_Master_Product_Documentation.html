@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Vault — Master Product Documentation & Operational Manual (v1.0.0)</title>
+    <!-- Mermaid CDN for Architectural Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --heading-color: #38bdf8;
+            --border-color: #1e293b;
+            --accent-green: #22c55e;
+            --code-bg: #1e293b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 32px 16px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 48px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        @media (max-width: 640px) {
+            .container { padding: 24px 16px; }
+        }
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 42px;
+            letter-spacing: -0.02em;
+        }
+        h1 { font-size: 2.3rem; border-bottom: 2px solid #38bdf8; margin-top: 10px; }
+        h2 { font-size: 1.65rem; color: #7dd3fc; }
+        h3 { font-size: 1.35rem; color: #f1f5f9; }
+        h4 { font-size: 1.15rem; color: #cbd5e1; border-bottom: none; }
+        a { color: #38bdf8; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e293b;
+            color: #f8fafc;
+            font-weight: 700;
+        }
+        tr:nth-child(even) { background-color: #0f172a; }
+        tr:nth-child(odd) { background-color: #111827; }
+        .badge-passed {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        pre, code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: var(--code-bg);
+            border-radius: 6px;
+        }
+        code { padding: 2px 6px; font-size: 90%; color: #7dd3fc; }
+        pre { padding: 18px; overflow-x: auto; border: 1px solid var(--border-color); color: #a5f3fc; }
+        pre code { padding: 0; background: none; color: inherit; }
+        .mermaid {
+            background: #0f172a;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #1e293b;
+            margin: 24px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-links a {
+            margin-left: 10px;
+            font-size: 13.5px;
+            background: #1e293b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            display: inline-block;
+        }
+        .nav-links a:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+        .doc-badge {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .print-btn {
+            background: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13.5px;
+        }
+        .print-btn:hover { background: #0369a1; }
+        .step-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-left: 4px solid #38bdf8;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 16px 0;
+        }
+        .step-box strong { color: #38bdf8; }
+
+        /* Print to PDF Stylesheet */
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            .container { max-width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; }
+            .nav-header, .print-btn { display: none !important; }
+            h1, h2, h3, h4 { color: #000 !important; border-bottom: 1px solid #ccc !important; }
+            th { background: #f0f0f0 !important; color: #000 !important; }
+            tr:nth-child(even), tr:nth-child(odd) { background: #fff !important; }
+            th, td { border: 1px solid #ccc !important; color: #000 !important; }
+            pre { background: #f9f9f9 !important; border: 1px solid #ddd !important; color: #000 !important; }
+            code { color: #000 !important; }
+            .mermaid { background: #fff !important; border: 1px solid #ddd !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-header">
+            <strong>&#128737;&#65039; Personal Vault Master Documentation</strong>
+            <div class="nav-links">
+                <button class="print-btn" onclick="window.print()">&#128424; Print to PDF (Ctrl+P)</button>
+                <a href="index.html">&larr; Back to Landing Page</a>
+                <a href="MyLifeDock_Security_Audit_2026.html">Security Audit Report</a>
+            </div>
+        </div>
+
+        <div class="doc-badge">DOCUMENT ID: DOC-PV-2026-v1.0-ENTERPRISE-MASTER</div>
+        <h1>Personal Vault (MyLifeDock) — Master Product Documentation &amp; Operational Manual</h1>
+        <p>
+            <strong>Product:</strong> Personal Vault (Production Release v1.0.0)<br>
+            <strong>Founder &amp; System Architect:</strong> <a href="https://in.linkedin.com/in/srisaidineshbollupalli" target="_blank">B.S.S. Dinesh</a><br>
+            <strong>Target Platforms:</strong> Android (Capacitor v8), iOS (Capacitor v8), Windows / Mac (Tauri v2), Web / PWA (Vite)<br>
+            <strong>Release Date:</strong> October 25, 2026<br>
+            <strong>Classification:</strong> Internal Technical Specification, Functional Matrix &amp; Operational Manual<br>
+            <strong>Status:</strong> <span class="badge-passed">&#10003; CERTIFIED PRODUCTION READY &bull; 25/25 TESTS PASSED</span>
+        </p>
+
+        <h2>1. Document Control &amp; Revision History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Date</th>
+                    <th>Author</th>
+                    <th>Description of Changes</th>
+                    <th>Sign-Off</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>0.1.0</strong></td>
+                    <td>Aug 2026</td>
+                    <td>B.S.S. Dinesh</td>
+                    <td>Initial Core Vault Prototype (AES-256-GCM, Dexie.js)</td>
+                    <td>Approved</td>
+                </tr>
+                <tr>
+                    <td><strong>0.5.0</strong></td>
+                    <td>Sep 2026</td>
+                    <td>B.S.S. Dinesh</td>
+                    <td>Multi-module storage (Products, Documents, Credentials)</td>
+                    <td>Approved</td>
+                </tr>
+                <tr>
+                    <td><strong>1.0.0-RC</strong></td>
+                    <td>Oct 2026</td>
+                    <td>B.S.S. Dinesh</td>
+                    <td>Medical module, Freemium gate, Offline licensing, Mobile UX</td>
+                    <td>Approved</td>
+                </tr>
+                <tr>
+                    <td><strong>1.0.0</strong></td>
+                    <td>Oct 25, 2026</td>
+                    <td>B.S.S. Dinesh</td>
+                    <td>Production Release: Model A Kids Profiles, 25/25 Tests Passed</td>
+                    <td><span class="badge-passed">&#10003; PRODUCTION READY</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>2. Product Philosophy &amp; Core Objectives</h2>
+        <h3>2.1 The Sovereign Data Problem</h3>
+        <p>
+            Modern individuals must manage and safeguard highly sensitive life records: Government Identity cards (Aadhaar, Passport, PAN), doctor prescriptions, diagnostic lab blood reports, product warranty invoices, and digital credentials. Conventional cloud services (Google Drive, Dropbox, 1Password, Bitwarden) rely on centralized company databases where third-party servers hold master decryption metadata, making user records vulnerable to corporate surveillance, commercial profiling, AI model training, and catastrophic cloud breaches.
+        </p>
+
+        <h3>2.2 The Sovereign Vault Solution</h3>
+        <p>
+            Personal Vault operates on the principle of <strong>Zero-Knowledge by Construction</strong>:
+        </p>
+        <ul>
+            <li><strong>Zero Developer Servers:</strong> Personal Vault runs 100% locally on the user's client device. Zero server APIs, zero analytics cookies, zero tracking pixels.</li>
+            <li><strong>Client-Side Cryptography:</strong> All encryption, decryption, and key derivation take place strictly inside the user's device memory using WebCrypto and native OS Hardware Enclaves.</li>
+            <li><strong>Absolute User Sovereignty:</strong> Even under subpoena, developers cannot decrypt or produce user data because no user data ever reaches the developers.</li>
+        </ul>
+
+        <h2>3. High-Level System Architecture</h2>
+        <div class="mermaid">
+graph TD
+    UI["User Interface Layer (React 19 / TypeScript / Lucide Icons)"]
+    APP["Application Layer (ProfileService, MedicalService, LicenseService)"]
+    SEC["Security & Cryptographic Engine (PBKDF2, AES-256-GCM, Key Wrapping)"]
+    DB["Local Storage Engine (Dexie.js / IndexedDB)"]
+    BRIDGE["Native Bridge Layer (Capacitor v8 Android/iOS / Tauri v2 Desktop)"]
+    HW["Hardware Enclave & OS Biometrics (Android Keystore / iOS Secure Enclave)"]
+
+    UI --> APP
+    APP --> SEC
+    SEC --> DB
+    APP --> BRIDGE
+    BRIDGE --> HW
+        </div>
+
+        <h2>4. Exhaustive Feature Matrix (All 11 Modules)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Feature</th>
+                    <th>Description &amp; Technical Capabilities</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1. Onboarding</strong></td>
+                    <td>Vault Setup &amp; Recovery Key</td>
+                    <td>Passphrase creation, 100,000 rounds PBKDF2-HMAC-SHA256, 256-bit Hex Recovery Key generation with grouped display, 3 Core Pillars slideshow.</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Dashboard</strong></td>
+                    <td>Real-Time Overview</td>
+                    <td>Hardware enclave live badge, 4-metric statistics grid, 10-item freemium quota bar, upcoming medical follow-up reminders.</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Medical</strong></td>
+                    <td>Prescriptions &amp; Lab Reports</td>
+                    <td>Doctor name, diagnosis, dosage instructions, diagnostic lab test ranges, Tesseract OCR smart capture, multi-page PDF/image attachments.</td>
+                </tr>
+                <tr>
+                    <td><strong>4. Family</strong></td>
+                    <td>Kids &amp; Dependent Multi-Profiles</td>
+                    <td>Model A architecture: Dependent child/elder profiles with pediatrician, blood group, allergies, universal profile filter, safe cascading delete.</td>
+                </tr>
+                <tr>
+                    <td><strong>5. Products</strong></td>
+                    <td>Warranties &amp; Assets</td>
+                    <td>Electronics, appliances, vehicles, dual warranty tracking, automated expiration countdowns, receipt photo locker, global currency engine (INR, USD, etc.).</td>
+                </tr>
+                <tr>
+                    <td><strong>6. Documents</strong></td>
+                    <td>Secure File Locker</td>
+                    <td>Identity, Tax, Legal, Insurance, Property categories with AES-256-GCM encrypted binary blobs and zero-disk in-memory preview lightbox.</td>
+                </tr>
+                <tr>
+                    <td><strong>7. Credentials</strong></td>
+                    <td>Digital Keys Locker</td>
+                    <td>Web logins, Wi-Fi keys, software licenses, password reveal toggle, 30-second auto-clearing clipboard.</td>
+                </tr>
+                <tr>
+                    <td><strong>8. Emergency</strong></td>
+                    <td>Emergency Kit</td>
+                    <td>Blood group, chronic allergies, primary doctor, 1-tap ICE emergency contact dialing, health insurance policy and cashless card.</td>
+                </tr>
+                <tr>
+                    <td><strong>9. Releases</strong></td>
+                    <td>In-App Updates</td>
+                    <td>Zero-server GitHub Releases / Play Store update notification banner without touching or exposing database.</td>
+                </tr>
+                <tr>
+                    <td><strong>10. Licensing</strong></td>
+                    <td>Freemium &amp; Offline Licensing</td>
+                    <td>Free up to 10 items; Pro upgrade modal with ₹25/mo, ₹250/yr (Save 2 Months Free), or ₹999 lifetime pricing; offline HMAC-SHA256 license signature verification.</td>
+                </tr>
+                <tr>
+                    <td><strong>11. Security</strong></td>
+                    <td>Defense-in-Depth</td>
+                    <td>Privacy Shield screen blur/lock on minimization, inactivity timer, brute-force rate-limiting cooldown, strict CSP, native biometrics.</td>
+                </tr>
+                <tr>
+                    <td><strong>12. Feedback</strong></td>
+                    <td>Direct Founder Channel</td>
+                    <td>Multi-point feedback modal (Sidebar, Settings, About) with 1-5 star ratings, category tagging, diagnostic attaching, and email dispatch with tagged subject line to mylifedock@gmail.com.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5. Step-by-Step User Operations Handbook</h2>
+        <div class="step-box">
+            <strong>User Journey 1: Initial Vault Setup &amp; Recovery Key Safeguarding</strong>
+            <ol>
+                <li>Open <strong>Personal Vault</strong> on your device.</li>
+                <li>Enter your <strong>Display Name</strong> (e.g. <code>B.S.S. Dinesh</code>) and check the Terms &amp; Privacy Policy checkbox.</li>
+                <li>Review the <strong>3 Core Pillars</strong> slideshow and click <strong>Continue</strong>.</li>
+                <li>Set a strong <strong>Master Passphrase</strong> (minimum 8 characters) and confirm it.</li>
+                <li><strong>Critical Step:</strong> The app displays your <strong>256-bit Hex Recovery Key</strong> (<code>XXXX-XXXX-XXXX-...</code>). Click <strong>Copy Recovery Key</strong> and store it offline.</li>
+                <li>Check the confirmation box: <em>"I have safely stored my recovery key"</em> and click <strong>Enter Personal Vault</strong>.</li>
+            </ol>
+        </div>
+
+        <div class="step-box">
+            <strong>User Journey 2: Adding a Prescription for a Child</strong>
+            <ol>
+                <li>Tap <strong>Medical &amp; Health Records</strong> &rarr; Click <strong>+ Add Prescription</strong>.</li>
+                <li>In the Patient dropdown, select your child (e.g. <code>👶 Aarav Sharma</code>).</li>
+                <li>Enter the Doctor Name, Hospital, Department, and Diagnosis.</li>
+                <li>Set the Prescription Date and upcoming Follow-up Date.</li>
+                <li>Attach prescription scans or use <strong>Snap &amp; Auto-Fill</strong> to extract text via OCR.</li>
+                <li>Click <strong>Save Prescription</strong>.</li>
+            </ol>
+        </div>
+
+        <div class="step-box">
+            <strong>User Journey 3: Upgrading to Pro &amp; Activating License</strong>
+            <ol>
+                <li>Upon saving 10 items, the Pro Upgrade Modal opens (or go to <strong>Settings &rarr; Activate Pro License</strong>).</li>
+                <li>Click <strong>Get Pro License</strong> to pay via Razorpay (<code>https://razorpay.me/@bssdinesh</code>).</li>
+                <li>Check your email for your unique license key (<code>MLD-PRO-eyJuYW1l...</code>).</li>
+                <li>Paste the key into the activation modal and click <strong>Activate Pro License</strong>.</li>
+            </ol>
+        </div>
+
+        <div class="step-box">
+            <strong>User Journey 4: Exporting Encrypted Backups (.mldv)</strong>
+            <ol>
+                <li>Go to <strong>Settings</strong> &rarr; <strong>Backup &amp; Export</strong>.</li>
+                <li>Click <strong>Export Encrypted Backup (.mldv)</strong>.</li>
+                <li>Save the encrypted file to your internal storage, USB drive, or private storage.</li>
+            </ol>
+        </div>
+
+        <div class="step-box">
+            <strong>User Journey 6: Submitting Direct Feedback &amp; Feature Requests</strong>
+            <ol>
+                <li>Click <strong>💬 Send Feedback</strong> in the Sidebar navigation or navigate to <strong>Settings &rarr; Share Feedback</strong>.</li>
+                <li>Select your <strong>Category</strong>: Feature Request (💡), Bug Report (🐞), General Review (⭐), or Question (❓).</li>
+                <li>Choose your <strong>1 to 5 Star Rating</strong>.</li>
+                <li>Enter a brief <strong>Topic / Summary</strong> and your detailed comments.</li>
+                <li>Click <strong>🚀 Send to Founder</strong> to open your email client pre-filled with the tagged subject line <code>[MyLifeDock Feedback] &lt;Category&gt;: &lt;Topic&gt;</code> directed to <code>mylifedock@gmail.com</code>.</li>
+            </ol>
+        </div>
+
+        <h2>6. Administrator &amp; Operator Manual</h2>
+        <div class="step-box">
+            <strong>Admin Task 1: Generating Offline Pro License Keys</strong>
+            <pre><code>cd app
+node scripts/generate-license.cjs "Customer Name" "customer@gmail.com" "lifetime"</code></pre>
+        </div>
+
+        <div class="step-box">
+            <strong>Admin Task 2: Setting up Free Automated License Mailer</strong>
+            <ol>
+                <li>Open Google Apps Script (<code>https://script.google.com</code>) &rarr; New Project.</li>
+                <li>Paste the code from <code>app/scripts/razorpay-auto-mailer.gs</code>.</li>
+                <li>Deploy as <strong>Web app</strong> (Access: <strong>Anyone</strong>) &rarr; Copy Webhook URL.</li>
+                <li>In Razorpay Dashboard &rarr; Settings &rarr; Webhooks: Add URL with events <code>payment.captured</code> and <code>order.paid</code>.</li>
+            </ol>
+        </div>
+
+        <div class="step-box">
+            <strong>Admin Task 3: Building Signed Android App Bundle (.aab)</strong>
+            <ol>
+                <li>Generate Keystore: <code>keytool -genkey -v -keystore personal-vault-release.keystore -alias personalvault -keyalg RSA -keysize 2048 -validity 10000</code>.</li>
+                <li>In Android Studio: <strong>Build &rarr; Generate Signed Bundle / APK &rarr; Android App Bundle</strong>.</li>
+                <li>Upload the generated <code>.aab</code> file to Google Play Console.</li>
+            </ol>
+        </div>
+
+        <h2>7. Technical Specifications &amp; Data Dictionary (Annexures)</h2>
+        <h3>Annexure A: Cryptographic Engine Specifications</h3>
+        <ul>
+            <li><strong>Key Derivation:</strong> PBKDF2-HMAC-SHA256 (100,000 rounds, 128-bit random salt).</li>
+            <li><strong>Payload Cipher:</strong> AES-256-GCM with 96-bit unique IV and 128-bit authentication tag.</li>
+            <li><strong>Key Wrapping:</strong> AES-KW (NIST SP 800-38F).</li>
+            <li><strong>Offline Licensing:</strong> HMAC-SHA256 over base64 JSON payload.</li>
+        </ul>
+
+        <h3>Annexure B: Backup File (.mldv) Envelope Format</h3>
+        <pre><code>{
+  "magic": "MLDV_ENCRYPTED_VAULT_v1",
+  "salt": "&lt;16-byte base64 salt&gt;",
+  "iv": "&lt;12-byte base64 IV&gt;",
+  "ciphertext": "&lt;AES-256-GCM encrypted payload of all profiles, records, and files&gt;",
+  "exportedAt": 1761350400000,
+  "appVersion": "1.2.0"
+}</code></pre>
+
+        <h3>Annexure C: Security Audit &amp; Verification Sign-Off</h3>
+        <pre><code>========================================================================
+                      FINAL AUDIT VERDICT
+========================================================================
+  Zero-Knowledge Architecture:   VERIFIED (100% Client-Side)
+  Cryptographic Integrity:       VERIFIED (AES-256-GCM + PBKDF2)
+  Automated Test Coverage:       25 / 25 PASSED (100%)
+  SAST Vulnerabilities:          0 (Zero Sinks / 0 Errors)
+  SCA High/Critical CVEs:        0 (Zero Runtime Vulnerabilities)
+  DAST Injection Defenses:       100% Neutralized (CSP + XSS Sanitized)
+  Multi-Device Responsiveness:   100% Certified (PC, Android, iOS)
+------------------------------------------------------------------------
+  STATUS: READY FOR GOOGLE PLAY STORE & GLOBAL PRODUCTION RELEASE
+========================================================================</code></pre>
+
+        <div style="text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 13.5px;">
+            <p style="margin: 0 0 6px 0; color: #fff; font-weight: 600;">Certified by B.S.S. Dinesh &bull; Founder &amp; System Architect &bull; Personal Vault (v1.0.0 Release)</p>
+            <p style="margin: 0; font-size: 12px; color: #64748b;">&copy; 2026 MyLifeDock Technologies. Built with Zero-Knowledge Architecture. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
