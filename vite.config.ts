@@ -28,6 +28,25 @@ export default defineConfig({
     sourcemap: isTauriBuild ? true : false,
     // Modern ECMAScript target supported by all modern browsers, Android/iOS WebViews, and desktop WebView2/WebKit
     target: "es2022",
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/dexie") || id.includes("node_modules/dexie-react-hooks")) {
+            return "vendor-dexie";
+          }
+          if (id.includes("node_modules/@capacitor/") || id.includes("node_modules/@aparajita/")) {
+            return "vendor-capacitor";
+          }
+          if (id.includes("node_modules/@react-oauth/") || id.includes("node_modules/@codetrix-studio/")) {
+            return "vendor-google";
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 800,
   },
 
   plugins: [

@@ -1,5 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#0a0e1a"/>
-  <rect x="48" y="48" width="416" height="416" rx="48" fill="none" stroke="#5c6eff" stroke-width="24"/>
-  <text x="256" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="280" fill="#5c6eff">M</text>
+  <defs>
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#brand-grad)"/>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="rgba(255, 255, 255, 0.35)" stroke-width="12"/>
+  <g transform="translate(80, 80) scale(14.66)" stroke="#ffffff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="m9 12 2 2 4-4"/>
+  </g>
 </svg>

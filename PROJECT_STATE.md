@@ -2,30 +2,30 @@
 
 > **Single source of truth for continuing MyLifeDock development.**
 >
-> **Last updated:** 2026-10-22
+> **Last updated:** 2026-10-25
 > **Current Release Branch:** `release/v1.0.0`
-> **Current Application Version:** `v1.2.0`
+> **Current Application Version:** `v1.4.0 (Gold Master)`
 
 ---
 
 ## 0. Current Resume Snapshot
 
 **Product:** MyLifeDock  
-**Current milestone:** **v1.2.0 Privacy Shield Security Overhaul & Typography Architecture**  
+**Current milestone:** **v1.4.0 Gold Master Release — Complete Cloud Sync, Razorpay Automailer, Unified Brand Shield, Multi-Platform Bundle (Web, Android, iOS)**  
 **Desktop Target:** Tauri v2 Windows Setup (`MyLifeDock_1.2.0_x64-setup.exe` & `.msi`)  
-**Mobile Target:** Capacitor v8 Android (Signed `.aab` / Debug `.apk` ready with `FLAG_SECURE`) & iOS  
-**Web / PWA Target:** Vite production dist / PWA Service Worker / Cloudflare Pages (`wrangler.toml`)  
+**Mobile Target:** Capacitor v8 Android (Signed `.aab` / Debug `.apk` ready with `FLAG_SECURE`) & Apple iOS (Xcode 15+ / Swift Package Manager & CocoaPods ready)  
+**Web / PWA Target:** Vite production dist / PWA Service Worker / GitHub Pages (`https://mylifedock.github.io`) & Cloudflare Pages  
 **Marketing Target:** Standalone Production Landing Page (`docs/landing.html` & `public/landing.html`)  
+**Cloud Sync Milestone:** **CERTIFIED ZERO-KNOWLEDGE GOOGLE DRIVE SYNC** (OAuth 2.0 Web & Android registered, encrypted backup in isolated `appDataFolder`, 1-click cloud restore)  
+**Monetization Milestone:** **VERIFIED ZERO-COST LIVE RAZORPAY AUTOMATION** (Payment Pages with mandatory Name/Email/Phone, Google Apps Script webhook, offline cryptographic HMAC-SHA256 license generation, instant Gmail delivery, in-app offline verification)  
 **Security Milestone:** **CERTIFIED ZERO-KNOWLEDGE & PRIVACY SHIELD** (AES-256-GCM, PBKDF2 key derivation, Background / Recent Apps Auto-Lock, Android `FLAG_SECURE` carousel blur, Brute-Force Rate Limiting lockout, Configurable Inactivity Auto-Lock, SAST/OSA/DAST passed)  
 **Typography & UI/UX Architecture:** **COMPLETE & UPGRADED** (Eliminated all micro-fonts <13px, 14.5px-16px buttons with full-width tap targets, 15px-16px form inputs preventing iOS zoom, 13.5px metadata/descriptions, Deduplicated 5-item Home Dock, Category Directory Drawer, Dynamic Topbar with `[← Home]` back navigation, Keyboard Viewport Detection)  
-**Legal & Licensing:** **COMPLETE** (Dual-Engine: LemonSqueezy/Paddle Global + Razorpay India UPI, T&C Onboarding Gate, Patent Blueprint)  
-**Currency Engine:** **COMPLETE** (`currencyService.ts` supporting INR ₹ with Lakh/Crore, USD $, EUR €, GBP £, etc.)  
-**Hardware & Media:** **COMPLETE** (Native Camera capture, Persistent WebWorker OCR, Continuous Voice Search)  
-**Documentation Suite:** **COMPLETE** (HTML + MD guides with Mermaid flowcharts in `docs/`)  
-**Playwright Test Suite:** **PASS (12/12 Tests across 4 Suites: Desktop E2E, Mobile UI/UX, 360px Compact Android, Privacy Shield & Crypto Unit)**  
+**Bundle Optimization:** **SPLIT & COMPRESSED** (Rolldown/Vite manualChunks: `vendor-react`, `vendor-dexie`, `vendor-capacitor`, `vendor-google`, main bundle <310 kB)  
+**Brand Identity:** **UNIFIED SHIELD LOGO** (Blue-gradient rounded badge with vector check-shield across favicon.svg, pwa icons, Android launcher vector, iOS 1024x1024 AppIcon, Sidebar, and Landing Page)  
+**Playwright Test Suite:** **PASS (33/33 Tests across 7 Comprehensive Suites: Desktop E2E, Mobile UX, 360px Compact Android, Privacy Shield & Crypto Unit, Founder Admin Portal, Google Drive OAuth Popup, Freemium Quota Gate)**  
 **Lint (ESLint Security):** **PASS (0 errors)**  
 **Type Check (tsc):** **PASS (0 errors)**  
-**Build:** **PASS (Web dist + Isolated OCR Async Chunks + Android Gradle assembleDebug)**  
+**Build:** **PASS (Web dist + Isolated OCR Async Chunks + Android Gradle assembleDebug + iOS Assets)**  
 
 ### How to Run & Verify:
 1. **Launch Web App & Landing Page:**
