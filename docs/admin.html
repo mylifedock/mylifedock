@@ -299,11 +299,19 @@
         </div>
         <div class="form-group">
           <label>Admin Passcode</label>
-          <input type="password" id="login-pass" class="form-input" placeholder="Enter admin passcode" required autofocus>
+          <div style="position: relative; display: flex; align-items: center;">
+            <input type="password" id="login-pass" class="form-input" placeholder="Enter admin passcode" required autofocus style="padding-right: 44px;">
+            <button type="button" id="toggle-login-pass" onclick="togglePassVisibility('login-pass', this)" style="position: absolute; right: 8px; background: none; border: none; font-size: 15px; cursor: pointer; padding: 6px;" title="Show/Hide passcode">👁️</button>
+          </div>
         </div>
         <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px;">
           Authenticate & Open Dashboard &rarr;
         </button>
+        <div style="margin-top: 16px; text-align: center;">
+          <button type="button" onclick="resetToDefaultPasscode()" style="background: none; border: none; color: #94a3b8; cursor: pointer; text-decoration: underline; font-size: 12px; transition: color 0.15s;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#94a3b8'">
+            Forgot custom passcode? Reset to default setup key
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -682,14 +690,28 @@
           <form onsubmit="handleChangePassword(event)" style="margin-bottom: 30px;">
             <h4 style="font-size: 15px; margin-bottom: 12px; color: #fff;">Change Admin Passcode</h4>
             <div class="form-group">
-              <label>Current Passcode</label>
-              <input type="password" id="curr-pass" class="form-input" required>
+              <label>Current Passcode (or Default Setup Key)</label>
+              <div style="position: relative; display: flex; align-items: center;">
+                <input type="password" id="curr-pass" class="form-input" placeholder="Current passcode or MLD-Founder-2026!" required style="padding-right: 44px;">
+                <button type="button" id="toggle-curr-pass" onclick="togglePassVisibility('curr-pass', this)" style="position: absolute; right: 8px; background: none; border: none; font-size: 15px; cursor: pointer; padding: 6px;" title="Show/Hide passcode">👁️</button>
+              </div>
             </div>
             <div class="form-group">
-              <label>New Passcode</label>
-              <input type="password" id="new-pass" class="form-input" required>
+              <label>New Passcode (min 8 chars)</label>
+              <div style="position: relative; display: flex; align-items: center;">
+                <input type="password" id="new-pass" class="form-input" placeholder="Enter new custom passcode" required style="padding-right: 44px;">
+                <button type="button" id="toggle-new-pass" onclick="togglePassVisibility('new-pass', this)" style="position: absolute; right: 8px; background: none; border: none; font-size: 15px; cursor: pointer; padding: 6px;" title="Show/Hide passcode">👁️</button>
+              </div>
             </div>
-            <button type="submit" class="btn-secondary">Update Admin Passcode</button>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button type="submit" class="btn-primary">Update Admin Passcode</button>
+              <button type="button" class="btn-secondary" onclick="resetToDefaultPasscode()" style="color: #f87171; border-color: rgba(239, 68, 68, 0.3);">
+                Reset Passcode to Default
+              </button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">
+              💡 <em>Note: The default master setup key (<code>MLD-Founder-2026!</code>) remains active as an emergency fallback if you ever switch devices or forget your custom passcode.</em>
+            </p>
           </form>
 
           <hr style="border: none; border-top: 1px solid var(--border-light); margin: 24px 0;">
@@ -761,13 +783,59 @@
       }
     }
 
+    function checkUrlReset() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has("reset")) {
+          localStorage.removeItem("mld_admin_pass");
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          setTimeout(() => {
+            showToast("Admin passcode reset to default (MLD-Founder-2026!)", "info");
+          }, 400);
+        }
+      } catch (e) {
+        console.warn("Could not check URL reset params:", e);
+      }
+    }
+
+    function togglePassVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🔒";
+        btn.title = "Hide passcode";
+      } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+        btn.title = "Show passcode";
+      }
+    }
+
+    function resetToDefaultPasscode() {
+      if (confirm("Reset admin passcode back to default setup key (MLD-Founder-2026!)?")) {
+        localStorage.removeItem("mld_admin_pass");
+        const passInput = document.getElementById("login-pass");
+        if (passInput) {
+          passInput.value = "";
+          passInput.focus();
+        }
+        showToast("Passcode reset to default (MLD-Founder-2026!)", "success");
+      }
+    }
+
     function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById("login-email").value.trim().toLowerCase();
-      const pass = document.getElementById("login-pass").value;
-      const storedPass = localStorage.getItem("mld_admin_pass") || DEFAULT_PASS;
+      const pass = document.getElementById("login-pass").value.trim();
+      const storedPass = (localStorage.getItem("mld_admin_pass") || "").trim();
 
-      if (email === AUTH_EMAIL && pass === storedPass) {
+      // Master fallback: Either custom changed passcode OR master setup key is accepted!
+      const isCustomMatch = storedPass && pass === storedPass;
+      const isDefaultMatch = pass === DEFAULT_PASS;
+
+      if (email === AUTH_EMAIL && (isCustomMatch || isDefaultMatch)) {
         sessionStorage.setItem("mld_admin_auth", "true");
         showToast("Welcome Dinesh! Admin session authorized.", "success");
         checkAuth();
@@ -784,11 +852,14 @@
 
     function handleChangePassword(e) {
       e.preventDefault();
-      const curr = document.getElementById("curr-pass").value;
-      const next = document.getElementById("new-pass").value;
-      const storedPass = localStorage.getItem("mld_admin_pass") || DEFAULT_PASS;
+      const curr = document.getElementById("curr-pass").value.trim();
+      const next = document.getElementById("new-pass").value.trim();
+      const storedPass = (localStorage.getItem("mld_admin_pass") || "").trim();
 
-      if (curr !== storedPass) {
+      // Accepts either current custom stored passcode OR the default setup key
+      const isCurrValid = (storedPass && curr === storedPass) || (curr === DEFAULT_PASS);
+
+      if (!isCurrValid) {
         showToast("Current passcode is incorrect.", "error");
         return;
       }
@@ -874,7 +945,6 @@
       } else {
         amountInput.value = base;
       }
-    }
     }
 
     let lastGeneratedKey = "";
@@ -1363,6 +1433,8 @@ ${JSON.stringify(payload, null, 2)}`;
       setTimeout(() => { t.style.display = "none"; }, 3500);
     }
 
+    // Check URL parameters for emergency reset
+    checkUrlReset();
     // Initialize Auth state on load
     checkAuth();
   </script>
