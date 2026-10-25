@@ -78,7 +78,7 @@ To ensure Google Drive Cloud Backup works in production:
 1. **Open Google Cloud Console:** [console.cloud.google.com](https://console.cloud.google.com)
 2. **OAuth Consent Screen:**
    - App Name: `MyLifeDock`
-   - User Support Email: `support@mylifedock.com` (or your email)
+   - User Support Email: `mylifedock@gmail.com` (or your email)
    - Scope: Add `https://www.googleapis.com/auth/drive.appdata`
    - Publishing Status: Change from *Testing* to *Production* (or add test user emails).
 3. **Credentials / OAuth Client IDs:**

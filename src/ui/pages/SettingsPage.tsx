@@ -603,7 +603,7 @@ export function SettingsPage() {
                   className="text-button"
                   style={{ color: "#a78bfa", padding: 0, fontSize: "13px" }}
                   onClick={() => {
-                    const sampleKey = __generateDevLicense("founder@mylifedock.com", "pro_yearly");
+                    const sampleKey = __generateDevLicense("mylifedock@gmail.com", "pro_yearly");
                     setLicenseKeyInput(sampleKey);
                     showToast("Sample 1-Year Pro key populated! Click 'Activate Key' to test.", "info");
                   }}
@@ -671,7 +671,7 @@ export function SettingsPage() {
                 type="button" 
                 className="secondary-button"
                 onClick={() => {
-                  const sampleKey = __generateDevLicense("founder@mylifedock.com", "pro_yearly");
+                  const sampleKey = __generateDevLicense("mylifedock@gmail.com", "pro_yearly");
                   setLicenseKeyInput(sampleKey);
                   setShowPricingModal(false);
                   showToast("Sample 1-Year Pro key populated! Click 'Activate Key' to test.", "info");

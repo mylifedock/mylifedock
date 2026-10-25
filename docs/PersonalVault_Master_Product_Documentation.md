@@ -392,7 +392,7 @@ Personal Vault uses an automated serverless Google Apps Script webhook to delive
    const CONFIG = {
      SECRET_KEY: "MLD_PRO_VAULT_SUPER_SECRET_SALT_2026",
      FOUNDER_NAME: "B.S.S. Dinesh",
-     SUPPORT_EMAIL: "support@mylifedock.com",
+     SUPPORT_EMAIL: "mylifedock@gmail.com",
      PAYMENT_LINK: "https://razorpay.me/@bssdinesh",
      SPREADSHEET_ID: "" // Optional Google Sheet ID to log orders
    };

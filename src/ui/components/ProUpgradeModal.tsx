@@ -41,7 +41,7 @@ export function ProUpgradeModal({
 
   function handleFillTestKey() {
     try {
-      const sampleKey = __generateDevLicense("founder@mylifedock.com", "pro_lifetime");
+      const sampleKey = __generateDevLicense("mylifedock@gmail.com", "pro_lifetime");
       setLicenseKeyInput(sampleKey);
       showToast("Test Lifetime Pro key populated! Click 'Activate Key' to unlock.", "info");
     } catch {
