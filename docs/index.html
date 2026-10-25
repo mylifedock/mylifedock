@@ -140,132 +140,104 @@
     .footer-links a { color: var(--text-muted); }
     .footer-links a:hover { color: #fff; }
 
-    /* Live Offers Ticker & Interactive Coupon Bar */
-    .offers-section {
-      max-width: 960px;
-      margin: 0 auto 36px;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 16px;
-      padding: 20px 24px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(12px);
+    /* Compact Offers Strip */
+    .offers-compact-bar {
+      max-width: 860px;
+      margin: 0 auto 30px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      transition: all 0.2s ease;
     }
-    .offers-ticker-header {
+    .offers-compact-inner {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 14px;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 14px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .offers-live-badge {
+    .offers-compact-label {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      font-size: 12.5px;
+      gap: 7px;
+      font-size: 11.5px;
       font-weight: 800;
       color: #38bdf8;
       letter-spacing: 0.06em;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
     .live-pulse {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #10b981;
-      box-shadow: 0 0 10px #10b981;
+      box-shadow: 0 0 8px #10b981;
       animation: pulse 1.8s infinite;
+      display: inline-block;
     }
     @keyframes pulse {
       0% { transform: scale(0.95); opacity: 0.8; }
       50% { transform: scale(1.3); opacity: 1; }
       100% { transform: scale(0.95); opacity: 0.8; }
     }
-    .offers-marquee-container {
-      overflow: hidden;
-      white-space: nowrap;
-      position: relative;
+    .offers-compact-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .offer-pill-btn {
       background: #07090e;
-      border-radius: 10px;
-      padding: 10px 14px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      margin-bottom: 14px;
-    }
-    .offers-marquee-track {
-      display: inline-flex;
-      gap: 28px;
-      animation: ticker-scroll 30s linear infinite;
-    }
-    .offers-marquee-track:hover {
-      animation-play-state: paused;
-    }
-    @keyframes ticker-scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-    .offer-ticker-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13.5px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
       color: #e2e8f0;
-    }
-    .offer-code-tag {
-      background: rgba(56, 189, 248, 0.15);
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      color: #38bdf8;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-weight: 800;
-      font-family: monospace;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
       cursor: pointer;
-      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-family: inherit;
     }
-    .offer-code-tag:hover {
-      background: #38bdf8;
-      color: #07090e;
+    .offer-pill-btn:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      transform: translateY(-1px);
     }
-    .offers-instruction-box {
-      background: rgba(234, 179, 8, 0.08);
-      border: 1px solid rgba(234, 179, 8, 0.25);
-      border-radius: 10px;
-      padding: 11px 14px;
-      font-size: 13px;
-      color: #fde047;
+    .offer-pill-btn.active {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+    }
+    .offer-pill-code {
+      font-family: monospace;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+    .offer-pill-disc {
+      font-weight: 700;
+      color: #4ade80;
+      font-size: 11px;
+    }
+    .offers-compact-hint {
+      font-size: 11.5px;
+      color: #94a3b8;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-    .offers-chips-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .offer-chip {
-      background: #0b1120;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: all 0.2s;
-    }
-    .offer-chip:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      background: #0f172a;
-    }
-    .coupon-apply-bar {
-      display: flex;
-      gap: 8px;
-      max-width: 440px;
-      margin: 0 auto;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px;
     }
   </style>
 </head>
@@ -416,45 +388,22 @@
         <button class="toggle-btn" onclick="setCurrency('USD')">🌍 Global (USD $)</button>
       </div>
 
-            <!-- LIVE OFFERS & PROMOTIONS TICKER -->
-      <div id="live-offers-wrapper" class="offers-section">
-        <div class="offers-ticker-header">
-          <div class="offers-live-badge">
+                  <!-- COMPACT LIVE OFFERS STRIP -->
+      <div id="live-offers-wrapper" class="offers-compact-bar" style="display: none;">
+        <div class="offers-compact-inner">
+          <div class="offers-compact-label">
             <span class="live-pulse"></span>
-            <span>EXCLUSIVE PROMOTIONAL OFFERS</span>
+            <span>SPECIAL OFFERS</span>
           </div>
-          <div style="font-size: 12.5px; color: #94a3b8;">
-            Limited-time founder coupons. Click any code to copy!
+
+          <div class="offers-compact-pills" id="offers-chips-list">
+            <!-- Dynamic Offer Pills -->
           </div>
         </div>
-
-        <!-- Scrolling Ticker Marquee -->
-        <div class="offers-marquee-container">
-          <div class="offers-marquee-track" id="offers-ticker-track">
-            <!-- Dynamically populated or default ticker items -->
-          </div>
-        </div>
-
-        <!-- Redemption Instruction Box -->
-        <div class="offers-instruction-box">
-          <span style="font-size: 20px; flex-shrink: 0;">💡</span>
-          <div>
-            <strong>How to Redeem:</strong> Click any coupon code below to copy it. When you proceed to checkout, enter the same code on the final <strong>Razorpay payment page</strong> under <em>"Have an offer / coupon code?"</em> to claim your instant discount deduction!
-          </div>
-        </div>
-
-        <!-- Interactive Coupon Chips & Preview Box -->
-        <div class="offers-chips-list" id="offers-chips-list">
-          <!-- Dynamic Offer Chips -->
-        </div>
-
-        <div style="text-align: center; margin-top: 10px;">
-          <div class="coupon-apply-bar">
-            <input type="text" id="coupon-preview-input" placeholder="Enter coupon code (e.g. FOUNDER50)" style="flex: 1; padding: 9px 12px; background: #07090e; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 13px; text-transform: uppercase;">
-            <button type="button" class="btn-cta" onclick="applyCouponPreview()" style="padding: 9px 16px; font-size: 13px;">Apply to Preview</button>
-            <button type="button" class="btn-secondary" id="coupon-reset-btn" onclick="resetCouponPreview()" style="padding: 9px 12px; font-size: 13px; display: none;">Reset</button>
-          </div>
-          <div id="coupon-status-msg" style="display: none; margin-top: 10px; font-size: 12.5px; text-align: center;"></div>
+        <div class="offers-compact-hint">
+          💡 Click any code to copy & preview. Apply at final <strong>Razorpay checkout</strong>.
+          <span id="coupon-status-msg" style="display:none; margin-left: 8px; font-weight: 700; color: #4ade80;"></span>
+          <button type="button" id="coupon-reset-btn" onclick="resetCouponPreview()" style="display:none; margin-left:8px; background:none; border:none; color:#f87171; cursor:pointer; font-size:11px; text-decoration:underline;">[Reset Normal Price]</button>
         </div>
       </div>
 
@@ -640,7 +589,6 @@
         code: "FOUNDER50",
         discount: "50% OFF",
         plan: "Lifetime Founder",
-        desc: "Save 50% on Lifetime Vault!",
         inTicker: true,
         type: "percent",
         value: 50
@@ -649,7 +597,6 @@
         code: "LAUNCH20",
         discount: "20% OFF",
         plan: "All Plans",
-        desc: "20% OFF on any Monthly, Yearly, or Lifetime Plan!",
         inTicker: true,
         type: "percent",
         value: 20
@@ -658,7 +605,6 @@
         code: "SAVE50INR",
         discount: "₹50 FLAT OFF",
         plan: "Yearly Pro",
-        desc: "Flat ₹50 OFF Yearly Pro!",
         inTicker: true,
         type: "flat",
         value: 50
@@ -669,129 +615,80 @@
     let appliedCoupon = null;
 
     function renderPublicOffers() {
-      const isEnabled = localStorage.getItem("mld_offers_ticker_enabled") !== "false";
       const wrapper = document.getElementById("live-offers-wrapper");
+      if (!wrapper) return;
+
+      const isEnabled = localStorage.getItem("mld_offers_ticker_enabled") !== "false";
       if (!isEnabled) {
-        if (wrapper) wrapper.style.display = "none";
+        wrapper.style.display = "none";
         return;
       }
-      if (wrapper) wrapper.style.display = "block";
 
-      const pricing = getLivePricing();
       let rawOffers = localStorage.getItem("mld_public_offers") || localStorage.getItem("mld_admin_coupons");
       let offers = rawOffers ? JSON.parse(rawOffers) : DEFAULT_PUBLIC_OFFERS;
-      offers = offers.filter(o => o.inTicker !== false);
+      
+      // Strict filter: must have inTicker !== false AND status not paused/inactive
+      offers = offers.filter(o => o.inTicker !== false && o.status !== "Paused" && o.status !== "Inactive");
 
-      const track = document.getElementById("offers-ticker-track");
-      const chipsList = document.getElementById("offers-chips-list");
-      if (!track || !chipsList) return;
+      // STRICT TOTAL HIDING: if all offers turned off or empty array, hide wrapper completely!
+      if (!offers || offers.length === 0) {
+        wrapper.style.display = "none";
+        return;
+      }
 
-      track.innerHTML = "";
-      chipsList.innerHTML = "";
+      // Display the compact bar
+      wrapper.style.display = "block";
 
-      // Duplicate offers in marquee for seamless infinite loop
-      const marqueeItems = [...offers, ...offers, ...offers];
-      marqueeItems.forEach(o => {
-        const item = document.createElement("span");
-        item.className = "offer-ticker-item";
-        const descText = formatOfferDesc(o, pricing);
-        item.innerHTML = `
-          <span class="offer-code-tag" onclick="copyAndNotifyOffer('${o.code}')">${o.code}</span>
-          <strong style="color: #4ade80;">${o.discount}</strong>
-          <span>${descText}</span>
-          <span style="color: #64748b; margin: 0 8px;">•</span>
-        `;
-        track.appendChild(item);
-      });
+      const pillsList = document.getElementById("offers-chips-list");
+      if (!pillsList) return;
+      pillsList.innerHTML = "";
 
       offers.forEach(o => {
-        const chip = document.createElement("div");
-        chip.className = "offer-chip";
-        const descText = formatOfferDesc(o, pricing);
-        chip.innerHTML = `
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span class="offer-code-tag" onclick="copyAndNotifyOffer('${o.code}')">${o.code}</span>
-              <span style="color: #4ade80; font-weight: 700; font-size: 13.5px;">${o.discount}</span>
-            </div>
-            <div style="font-size: 12px; color: #94a3b8; margin: 6px 0 10px 0;">${descText}</div>
-          </div>
-          <div style="display:flex; gap:6px;">
-            <button type="button" class="btn-secondary" style="flex:1; padding: 5px 8px; font-size: 11.5px;" onclick="copyAndNotifyOffer('${o.code}')">📋 Copy Code</button>
-            <button type="button" class="btn-secondary" style="flex:1; padding: 5px 8px; font-size: 11.5px; border-color: rgba(56,189,248,0.4); color: #38bdf8;" onclick="quickApplyCoupon('${o.code}')">Apply Preview</button>
-          </div>
+        const pill = document.createElement("button");
+        pill.type = "button";
+        const isActive = appliedCoupon && appliedCoupon.code === o.code;
+        pill.className = "offer-pill-btn" + (isActive ? " active" : "");
+        const dText = o.discount || (o.value ? (o.type === "percent" ? o.value + "% OFF" : "₹" + o.value + " OFF") : "");
+        pill.innerHTML = `
+          <span class="offer-pill-code">${o.code}</span>
+          <span class="offer-pill-disc">${dText}</span>
         `;
-        chipsList.appendChild(chip);
+        pill.title = `Click to copy code '${o.code}' & preview discount`;
+        pill.onclick = () => selectOfferPill(o.code);
+        pillsList.appendChild(pill);
       });
     }
 
-    function formatOfferDesc(o, pricing) {
-      if (o.code === "FOUNDER50" || o.discount.includes("50%")) {
-        const d = Math.round(pricing.inr.lifetime * 0.5);
-        return `Save 50% on Lifetime Vault (Pay ₹${d} instead of ₹${pricing.inr.lifetime})!`;
-      }
-      if (o.code === "SAVE50INR") {
-        const d = Math.max(0, pricing.inr.yearly - 50);
-        return `Flat ₹50 OFF Yearly Pro! (Pay ₹${d}/yr instead of ₹${pricing.inr.yearly})`;
-      }
-      if (o.code === "LAUNCH20" || o.discount.includes("20%")) {
-        return `20% OFF on any Monthly (₹${Math.round(pricing.inr.monthly * 0.8)}), Yearly (₹${Math.round(pricing.inr.yearly * 0.8)}), or Lifetime (₹${Math.round(pricing.inr.lifetime * 0.8)}) Plan!`;
-      }
-      return o.desc || o.plan || '';
-    }
-
-    function copyAndNotifyOffer(code) {
-      navigator.clipboard.writeText(code);
-      showWebToast(`🎉 Copied '${code}'! Please enter this code on the final Razorpay checkout page.`);
-      const input = document.getElementById("coupon-preview-input");
-      if (input) input.value = code;
-    }
-
-    function quickApplyCoupon(code) {
-      const input = document.getElementById("coupon-preview-input");
-      if (input) input.value = code;
-      applyCouponPreview();
-    }
-
-    function applyCouponPreview() {
-      const input = document.getElementById("coupon-preview-input");
-      if (!input) return;
-      const code = input.value.trim().toUpperCase();
-      if (!code) return;
-
+    function selectOfferPill(code) {
       let rawOffers = localStorage.getItem("mld_public_offers") || localStorage.getItem("mld_admin_coupons");
       let offers = rawOffers ? JSON.parse(rawOffers) : DEFAULT_PUBLIC_OFFERS;
       const found = offers.find(o => o.code === code);
+      if (!found) return;
+
+      appliedCoupon = found;
+      navigator.clipboard.writeText(code);
+      showWebToast(`🎉 Copied '${code}'! Apply this code at final Razorpay checkout.`);
 
       const msg = document.getElementById("coupon-status-msg");
       const resetBtn = document.getElementById("coupon-reset-btn");
-
-      if (found) {
-        appliedCoupon = found;
-        if (msg) {
-          msg.style.display = "block";
-          msg.innerHTML = `<span style="color: #4ade80; font-weight: 700;">✅ Coupon '${found.code}' Active (${found.discount})!</span> <span style="color: #cbd5e1;">Preview prices updated below. Please enter <code>${found.code}</code> on the final Razorpay checkout page.</span>`;
-        }
-        if (resetBtn) resetBtn.style.display = "inline-block";
-        updatePrices();
-        showWebToast(`✅ Applied ${found.code}! Check preview prices below.`);
-      } else {
-        if (msg) {
-          msg.style.display = "block";
-          msg.innerHTML = `<span style="color: #f87171;">⚠️ Coupon code '${code}' not recognized in preview list. You can still apply partner codes at Razorpay checkout!</span>`;
-        }
+      if (msg) {
+        msg.style.display = "inline";
+        msg.innerText = `● Code '${found.code}' (${found.discount}) Active!`;
       }
+      if (resetBtn) resetBtn.style.display = "inline";
+
+      updatePrices();
+      renderPublicOffers();
     }
 
     function resetCouponPreview() {
       appliedCoupon = null;
-      const input = document.getElementById("coupon-preview-input");
-      if (input) input.value = "";
       const msg = document.getElementById("coupon-status-msg");
-      if (msg) msg.style.display = "none";
       const resetBtn = document.getElementById("coupon-reset-btn");
+      if (msg) msg.style.display = "none";
       if (resetBtn) resetBtn.style.display = "none";
       updatePrices();
+      renderPublicOffers();
       showWebToast("Prices reset to standard rates.");
     }
 
@@ -804,7 +701,6 @@
       const yearlyBtn = document.getElementById('yearly-buy-btn');
       const lifetimeBtn = document.getElementById('lifetime-buy-btn');
 
-      // Update button URLs dynamically from live config
       if (monthlyBtn && pricing.links && pricing.links.monthly) monthlyBtn.href = pricing.links.monthly;
       if (yearlyBtn && pricing.links && pricing.links.yearly) yearlyBtn.href = pricing.links.yearly;
       if (lifetimeBtn && pricing.links && pricing.links.lifetime) lifetimeBtn.href = pricing.links.lifetime;
@@ -848,1055 +744,9 @@
         const baseM = pricing.usd.monthly;
         const baseY = pricing.usd.yearly;
         const baseL = pricing.usd.lifetime;
-        pMonthly.innerText = '
-        pYearly.innerText = '
-        pLifetime.innerText = '
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseM;
-        pYearly.innerText = `${baseY}`;
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseM;
-        pYearly.innerText = '
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseL;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseM;
-        pYearly.innerText = `${baseY}`;
-        pLifetime.innerText = '
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseM;
-        pYearly.innerText = '
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseL;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = '
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseM;
-        pYearly.innerText = '
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseL;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseM;
-        pYearly.innerText = '
-        pLifetime.innerText = '
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = `${baseL}`;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseL;
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseY;
-        pLifetime.innerText = '
-      }
-    }
-
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
-      }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
-  </script>
-</body>
-</html>
- + baseL;
+        pMonthly.innerText = '$' + baseM;
+        pYearly.innerText = '$' + baseY;
+        pLifetime.innerText = '$' + baseL;
       }
     }
 
