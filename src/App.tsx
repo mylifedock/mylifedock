@@ -7,9 +7,11 @@ import {
 import { App as CapacitorApp } from "@capacitor/app";
 
 import {
+  isCapacitor,
   isTauri,
   onDesktopLockRequested,
 } from "./platform/desktopBridge";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 
 import {
   createLocalProfile,
@@ -394,41 +396,61 @@ function App() {
         );
       }
     };
-  }, [vaultUnlocked]);  const handleGoogleDriveRestore = useGoogleLogin({
-    scope: "https://www.googleapis.com/auth/drive.appdata",
-    onSuccess: async (tokenResponse) => {
-      try {
-        setIsRestoring(true);
-        showToast("Connecting to Google Drive...", "info");
-        const token = tokenResponse.access_token;
+  }, [vaultUnlocked]);
 
-        const files = await listBackups(token);
-        if (files.length === 0) {
-          showToast("No backups found in Google Drive.", "error");
-          setIsRestoring(false);
-          return;
-        }
+  async function performDriveRestoreWithToken(token: string) {
+    try {
+      setIsRestoring(true);
+      showToast("Connecting to Google Drive...", "info");
 
-        const latestBackup = files[0];
-        showToast("Downloading backup from Google Drive...", "info");
-        const blob = await downloadBackup(token, latestBackup.id);
-
-        setPendingRestoreBlob(blob);
-        setRestoreSource("Google Drive");
-        setRestoreError("");
-        setRestorePassphrase("");
-        setShowRestoreModal(true);
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : "Failed to fetch cloud backup", "error");
-      } finally {
-        setIsRestoring(false);
+      const files = await listBackups(token);
+      if (files.length === 0) {
+        showToast("No backups found in Google Drive.", "error");
+        return;
       }
-    },
+
+      const latestBackup = files[0];
+      showToast("Downloading backup from Google Drive...", "info");
+      const blob = await downloadBackup(token, latestBackup.id);
+
+      setPendingRestoreBlob(blob);
+      setRestoreSource("Google Drive");
+      setRestoreError("");
+      setRestorePassphrase("");
+      setShowRestoreModal(true);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to fetch cloud backup", "error");
+    } finally {
+      setIsRestoring(false);
+    }
+  }
+
+  const triggerWebRestore = useGoogleLogin({
+    scope: "https://www.googleapis.com/auth/drive.appdata",
+    onSuccess: (tokenResponse) => performDriveRestoreWithToken(tokenResponse.access_token),
     onError: () => {
       showToast("Google authentication cancelled or failed.", "error");
       setIsRestoring(false);
     },
   });
+
+  async function handleGoogleDriveRestore() {
+    if (isCapacitor()) {
+      try {
+        setIsRestoring(true);
+        showToast("Connecting with Google Account...", "info");
+        await GoogleAuth.initialize();
+        const user = await GoogleAuth.signIn();
+        const token = user.authentication.accessToken;
+        await performDriveRestoreWithToken(token);
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Android Google Sign-In failed", "error");
+        setIsRestoring(false);
+      }
+    } else {
+      triggerWebRestore();
+    }
+  }
 
   function handleFileRestoreSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

@@ -8,7 +8,7 @@ import { ToastProvider } from "./ui/components/Toast";
 
 // TODO: Replace with the actual Google Client ID from Google Cloud Console.
 // You must supply this for Phase 31 (Drive Sync) to work!
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PROVIDE_YOUR_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "350340206913-cka41qrr5efnqbi2i353c7mnb68so1hk.apps.googleusercontent.com";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
