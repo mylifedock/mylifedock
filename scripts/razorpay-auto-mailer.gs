@@ -25,6 +25,15 @@
  */
 
 function doPost(e) {
+  return handleWebhook(e);
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput("MyLifeDock Razorpay Webhook & Automailer is LIVE!")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+function handleWebhook(e) {
   try {
     var rawData = e.postData.contents;
     var payload = JSON.parse(rawData);
@@ -90,27 +99,53 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Determine license tier based on amount paid:
-    // < ₹25 (e.g. ₹1 to ₹10)              -> 3-Day Test / Underpayment Trial
-    // ₹25 to < ₹200 (e.g. ₹25 monthly)    -> Monthly Pro (30 Days)
-    // ₹200 to < ₹800 (e.g. ₹250 yearly)   -> Yearly Pro (365 Days - Save 2 Months Free!)
-    // >= ₹800 (e.g. ₹999)                 -> Lifetime Founder License (Never Expires)
+    // Extract textual description and notes from payment or payment link
+    var rawText = (
+      (paymentEntity.description || "") + " " +
+      (paymentEntity.notes ? JSON.stringify(paymentEntity.notes) : "") + " " +
+      (payload.payload && payload.payload.payment_link && payload.payload.payment_link.entity ? 
+        ((payload.payload.payment_link.entity.title || "") + " " + (payload.payload.payment_link.entity.description || "")) : "")
+    ).toLowerCase();
+
     var tier = "pro_monthly";
     var durationDays = 30;
     var planTitle = "MyLifeDock Pro (Monthly - 30 Days)";
-    
-    if (amountInRupees < 25) {
-      tier = "pro_monthly";
-      durationDays = 3;
-      planTitle = "MyLifeDock Pro (3-Day Test Pass - Standard Monthly is ₹25)";
-    } else if (amountInRupees >= 200 && amountInRupees < 800) {
-      tier = "pro_yearly";
-      durationDays = 365;
-      planTitle = "MyLifeDock Pro (1-Year - Save 2 Months Free)";
-    } else if (amountInRupees >= 800) {
+
+    // Priority 1: Check explicit plan keywords in payment notes/description
+    if (rawText.indexOf("lifetime") !== -1 || rawText.indexOf("founder") !== -1) {
       tier = "pro_lifetime";
       durationDays = null;
       planTitle = "MyLifeDock Lifetime Founder License";
+    } else if (rawText.indexOf("year") !== -1 || rawText.indexOf("annual") !== -1) {
+      tier = "pro_yearly";
+      durationDays = 365;
+      planTitle = "MyLifeDock Pro (1-Year - Save 2 Months Free)";
+    } else if (rawText.indexOf("month") !== -1) {
+      tier = "pro_monthly";
+      durationDays = 30;
+      planTitle = "MyLifeDock Pro (Monthly - 30 Days)";
+    }
+    // Priority 2: Coupon-aware amount bands (calibrated for discounts up to 60% & doubled pricing):
+    // >= ₹400                       -> Lifetime Founder (handles ₹499 with 50% coupon, ₹799 with 20%, ₹999 base, ₹1998 doubled)
+    // ₹70 to < ₹400                 -> Yearly Pro (handles ₹125 with 50% coupon, ₹200 with 20%, ₹250 base)
+    // ₹10 to < ₹70                  -> Monthly Pro (handles ₹12.5 with 50% coupon, ₹20 with 20%, ₹25 base)
+    // < ₹10                         -> 3-Day Test / Underpayment Pass
+    else if (amountInRupees >= 400) {
+      tier = "pro_lifetime";
+      durationDays = null;
+      planTitle = "MyLifeDock Lifetime Founder License";
+    } else if (amountInRupees >= 70 && amountInRupees < 400) {
+      tier = "pro_yearly";
+      durationDays = 365;
+      planTitle = "MyLifeDock Pro (1-Year - Save 2 Months Free)";
+    } else if (amountInRupees >= 10 && amountInRupees < 70) {
+      tier = "pro_monthly";
+      durationDays = 30;
+      planTitle = "MyLifeDock Pro (Monthly - 30 Days)";
+    } else {
+      tier = "pro_monthly";
+      durationDays = 3;
+      planTitle = "MyLifeDock Pro (3-Day Test Pass - Standard Monthly is ₹25)";
     }
 
     // Generate cryptographic license key
