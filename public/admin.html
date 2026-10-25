@@ -483,6 +483,15 @@
                   <option value="custom">Custom Duration Days</option>
                 </select>
               </div>
+              <div class="form-group">
+                <label>Apply Coupon / Discount Offer</label>
+                <select id="gen-coupon" class="form-select" onchange="handleGenCouponChange()">
+                  <option value="none">None (Full Standard Price)</option>
+                  <option value="FOUNDER50">FOUNDER50 (50% OFF Lifetime = ₹499)</option>
+                  <option value="LAUNCH20">LAUNCH20 (20% OFF All Plans)</option>
+                  <option value="SAVE50INR">SAVE50INR (₹50 Flat OFF Yearly = ₹200)</option>
+                </select>
+              </div>
               <div class="form-group" id="gen-custom-days-group" style="display:none;">
                 <label>Custom Duration (Days)</label>
                 <input type="number" id="gen-days" class="form-input" value="90">
@@ -519,11 +528,16 @@
       <section id="tab-coupons" class="tab-pane" style="display:none;">
         <div class="panel-card">
           <div class="panel-header">
-            <div class="panel-title"><span>🏷️</span> Promotional Coupon Codes</div>
-            <button class="btn-primary" onclick="showCouponModal()">+ Create New Coupon</button>
+            <div class="panel-title"><span>🏷️</span> Promotional Coupon Codes & Live Website Offers</div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <button id="ticker-master-btn" class="btn-secondary" onclick="toggleMasterTicker()" style="font-size: 12.5px; font-weight: 700; border-color: #10b981; color: #34d399;">
+                📢 Website Offers Ticker: 🟢 ACTIVE
+              </button>
+              <button class="btn-primary" onclick="showCouponModal()">+ Create New Coupon / Offer</button>
+            </div>
           </div>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 20px;">
-            Set up promotional discount codes for special marketing campaigns, seasonal sales, or social media giveaways.
+            Turn on/off promotional offers for all visitors on the website pricing section. When active, visitors see the scrolling offer banner and instructions to enter the code at the final Razorpay checkout page.
           </p>
 
           <div class="data-table-wrap">
@@ -533,6 +547,7 @@
                   <th>Coupon Code</th>
                   <th>Discount</th>
                   <th>Applicable Plan</th>
+                  <th>Website Ticker</th>
                   <th>Max Uses</th>
                   <th>Used</th>
                   <th>Valid Until</th>
@@ -731,16 +746,32 @@
     function handleGenTierChange() {
       const tier = document.getElementById("gen-tier").value;
       const customGroup = document.getElementById("gen-custom-days-group");
-      const amountInput = document.getElementById("gen-amount");
-
       if (tier === "custom") {
         customGroup.style.display = "block";
-        amountInput.value = "199";
       } else {
         customGroup.style.display = "none";
-        if (tier === "pro_lifetime") amountInput.value = "999";
-        else if (tier === "pro_yearly") amountInput.value = "250";
-        else if (tier === "pro_monthly") amountInput.value = "25";
+      }
+      handleGenCouponChange();
+    }
+
+    function handleGenCouponChange() {
+      const tier = document.getElementById("gen-tier").value;
+      const coupon = document.getElementById("gen-coupon") ? document.getElementById("gen-coupon").value : "none";
+      const amountInput = document.getElementById("gen-amount");
+
+      let base = 999;
+      if (tier === "pro_yearly") base = 250;
+      else if (tier === "pro_monthly") base = 25;
+      else if (tier === "custom") base = parseInt(document.getElementById("gen-days")?.value, 10) || 199;
+
+      if (coupon === "FOUNDER50") {
+        amountInput.value = tier === "pro_lifetime" ? "499" : Math.round(base * 0.5);
+      } else if (coupon === "LAUNCH20") {
+        amountInput.value = Math.round(base * 0.8);
+      } else if (coupon === "SAVE50INR") {
+        amountInput.value = Math.max(0, base - 50);
+      } else {
+        amountInput.value = base;
       }
     }
 
@@ -774,8 +805,17 @@
       const signature = await signPayload(payloadJson);
       const licenseKey = `MLD-PRO-${payloadB64}.${signature}`;
 
+      const appliedCoupon = document.getElementById("gen-coupon") ? document.getElementById("gen-coupon").value : "none";
       lastGeneratedKey = licenseKey;
-      lastGeneratedPayload = { name, email, plan: payload.tier, amount, licenseKey, payload };
+      lastGeneratedPayload = { 
+        name, 
+        email, 
+        plan: payload.tier, 
+        amount, 
+        licenseKey, 
+        payload, 
+        coupon: appliedCoupon !== "none" ? appliedCoupon : null 
+      };
 
       // Save to database
       const newEntry = {
@@ -785,6 +825,7 @@
         plan: payload.tier,
         planTitle: payload.tier === "pro_lifetime" ? "Lifetime Founder" : (payload.tier === "pro_yearly" ? "Yearly Pro" : "Monthly Pro"),
         amount,
+        coupon: appliedCoupon !== "none" ? appliedCoupon : null,
         key: licenseKey,
         expiresAt: payload.expiresAt || null
       };
@@ -818,7 +859,8 @@ Here is your cryptographic license key:
 -------------------------------------------------------
 ${p.licenseKey}
 -------------------------------------------------------
-Plan Tier : ${p.plan === "pro_lifetime" ? "Lifetime Founder (Never Expires)" : "Pro Plan"}
+Plan Tier : ${p.plan === "pro_lifetime" ? "Lifetime Founder (Never Expires)" : "Pro Plan"}${p.coupon ? "\nPromo Code: " + p.coupon + " (Discount Applied)" : ""}
+Amount Paid : ₹${p.amount}
 Issued To : ${p.email}
 
 HOW TO ACTIVATE IN 3 SECONDS:
@@ -1003,21 +1045,65 @@ ${JSON.stringify(payload, null, 2)}`;
       const tbody = document.getElementById("coupons-tbody");
       tbody.innerHTML = "";
       coupons.forEach((c, idx) => {
+        const inTicker = c.inTicker !== false;
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><code style="font-size:14px; font-weight:800; color:#38bdf8;">${c.code}</code></td>
           <td style="color:#4ade80; font-weight:700;">${c.discount}</td>
-          <td>${c.plan}</td>
+          <td>${c.plan || 'All Plans'}</td>
+          <td>
+            <button class="btn-secondary" style="padding:3px 8px; font-size:11px; ${inTicker ? 'border-color:#10b981; color:#34d399;' : 'color:#94a3b8;'}" onclick="toggleCouponTicker('${c.code}')">
+              ${inTicker ? '🟢 Live on Site' : '⚪ Hidden'}
+            </button>
+          </td>
           <td>${c.max}</td>
           <td>${c.used}</td>
           <td>${c.expires}</td>
           <td><span style="color:#10b981; font-weight:700;">● ${c.status}</span></td>
           <td>
-            <button class="btn-secondary" style="padding:4px 8px; font-size:11.5px;" onclick="copyCouponText('${c.code}')">Copy Code</button>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-secondary" style="padding:4px 8px; font-size:11.5px;" onclick="copyCouponText('${c.code}')">Copy</button>
+              <button class="btn-secondary" style="padding:4px 8px; font-size:11.5px; color:#f87171;" onclick="deleteCoupon('${c.code}')">Delete</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
+
+      const masterBtn = document.getElementById("ticker-master-btn");
+      if (masterBtn) {
+        const active = localStorage.getItem("mld_offers_ticker_enabled") !== "false";
+        masterBtn.innerHTML = active ? "📢 Website Offers Ticker: 🟢 ACTIVE" : "📢 Website Offers Ticker: ⚪ PAUSED";
+        masterBtn.style.color = active ? "#34d399" : "#94a3b8";
+        masterBtn.style.borderColor = active ? "#10b981" : "rgba(255,255,255,0.2)";
+      }
+    }
+
+    function toggleMasterTicker() {
+      const current = localStorage.getItem("mld_offers_ticker_enabled") !== "false";
+      localStorage.setItem("mld_offers_ticker_enabled", (!current).toString());
+      renderCouponsTable();
+      showToast(!current ? "Website Offers Ticker turned ON for all visitors!" : "Website Offers Ticker PAUSED on website.", "info");
+    }
+
+    function toggleCouponTicker(code) {
+      const c = coupons.find(x => x.code === code);
+      if (c) {
+        c.inTicker = c.inTicker === false ? true : false;
+        localStorage.setItem("mld_admin_coupons", JSON.stringify(coupons));
+        localStorage.setItem("mld_public_offers", JSON.stringify(coupons));
+        renderCouponsTable();
+        showToast(`Offer ${code} ${c.inTicker ? "is now LIVE in the website ticker!" : "is now HIDDEN from the website ticker."}`, "success");
+      }
+    }
+
+    function deleteCoupon(code) {
+      if (!confirm(`Delete coupon code ${code}?`)) return;
+      coupons = coupons.filter(x => x.code !== code);
+      localStorage.setItem("mld_admin_coupons", JSON.stringify(coupons));
+      localStorage.setItem("mld_public_offers", JSON.stringify(coupons));
+      renderCouponsTable();
+      showToast(`Coupon ${code} deleted.`, "info");
     }
 
     function getTierClass(tier) {
@@ -1058,25 +1144,29 @@ ${JSON.stringify(payload, null, 2)}`;
     }
 
     function showCouponModal() {
-      const code = prompt("Enter new Coupon Code (e.g. VIP25):");
+      const code = prompt("Enter new Coupon Code (e.g. VIP50):");
       if (!code) return;
-      const discount = prompt("Enter discount (e.g. 25% OFF or ₹50 OFF):", "25% OFF");
+      const discount = prompt("Enter discount (e.g. 50% OFF or ₹50 OFF):", "50% OFF");
       if (!discount) return;
+      const plan = prompt("Applicable Plan (e.g. All Plans, Lifetime Founder, Yearly Pro):", "All Plans");
 
       coupons.push({
         code: code.toUpperCase().trim(),
+        title: `${code.toUpperCase()} Special Promotion`,
         discount: discount.trim(),
-        type: "percent",
-        value: 25,
-        plan: "All Plans",
+        type: discount.includes("%") ? "percent" : "flat",
+        value: parseInt(discount.replace(/\D/g, ""), 10) || 20,
+        plan: (plan || "All Plans").trim(),
         max: 100,
         used: 0,
         expires: "2026-12-31",
-        status: "Active"
+        status: "Active",
+        inTicker: true
       });
       localStorage.setItem("mld_admin_coupons", JSON.stringify(coupons));
+      localStorage.setItem("mld_public_offers", JSON.stringify(coupons));
       renderCouponsTable();
-      showToast(`Coupon ${code.toUpperCase()} created!`, "success");
+      showToast(`Offer ${code.toUpperCase()} created & added to live website ticker!`, "success");
     }
 
     function saveSheetUrl() {
