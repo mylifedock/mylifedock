@@ -18,7 +18,7 @@ const PILLARS: PillarSlide[] = [
     description:
       "We operate zero central servers, zero cloud databases, and zero tracking analytics. Your personal files, financial accounts, and health records never leave your local hardware unencrypted.",
     highlights: [
-      "100% on-device IndexedDB storage",
+      "100% on-device local storage",
       "No developer backdoors or cloud telemetry",
       "Zero server accounts required",
     ],
@@ -53,10 +53,11 @@ const PILLARS: PillarSlide[] = [
 
 interface PillarsSlideshowProps {
   onComplete?: () => void;
+  onSkip?: () => void;
   standalone?: boolean;
 }
 
-export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlideshowProps) {
+export function PillarsSlideshow({ onComplete, onSkip, standalone = false }: PillarsSlideshowProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slide = PILLARS.at(currentSlide) ?? PILLARS[0];
@@ -75,44 +76,83 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
     }
   }
 
+  function handleSkip() {
+    if (onSkip) {
+      onSkip();
+    } else if (onComplete) {
+      onComplete();
+    }
+  }
+
   return (
     <div
       className="pillars-slideshow"
       style={{
-        background: "rgba(15, 23, 42, 0.75)",
+        background: "rgba(15, 23, 42, 0.85)",
         border: "1px solid rgba(56, 189, 248, 0.25)",
-        borderRadius: "14px",
-        padding: "24px 20px",
-        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.5)",
+        borderRadius: "16px",
+        padding: "26px 22px",
+        boxShadow: "0 14px 34px -5px rgba(0, 0, 0, 0.6)",
         backdropFilter: "blur(12px)",
         textAlign: "center",
         maxWidth: "540px",
-        margin: "0 auto 20px auto",
+        width: "100%",
+        margin: "0 auto",
       }}
     >
-      {/* Slide Badge */}
+      {/* Top Header: Badge + Skip Button */}
       <div
         style={{
-          display: "inline-block",
-          padding: "4px 12px",
-          borderRadius: "999px",
-          background: "rgba(56, 189, 248, 0.12)",
-          border: "1px solid rgba(56, 189, 248, 0.3)",
-          color: "#38bdf8",
-          fontSize: "11px",
-          fontWeight: 700,
-          letterSpacing: "0.08em",
-          marginBottom: "14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
         }}
       >
-        {slide.badge}
+        <div
+          style={{
+            padding: "4px 12px",
+            borderRadius: "999px",
+            background: "rgba(56, 189, 248, 0.12)",
+            border: "1px solid rgba(56, 189, 248, 0.3)",
+            color: "#38bdf8",
+            fontSize: "11px",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+          }}
+        >
+          {slide.badge}
+        </div>
+
+        {(onSkip || onComplete) && !standalone ? (
+          <button
+            type="button"
+            className="text-button"
+            onClick={handleSkip}
+            style={{
+              color: "#94a3b8",
+              fontSize: "13px",
+              fontWeight: 500,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px 8px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            <span>Skip</span>
+            <span aria-hidden="true">➔</span>
+          </button>
+        ) : null}
       </div>
 
       {/* Slide Icon */}
       <div
         style={{
-          fontSize: "44px",
-          marginBottom: "10px",
+          fontSize: "48px",
+          marginBottom: "12px",
           lineHeight: 1,
         }}
       >
@@ -122,7 +162,7 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
       {/* Slide Title */}
       <h3
         style={{
-          fontSize: "20px",
+          fontSize: "21px",
           fontWeight: 700,
           color: "#f8fafc",
           margin: "0 0 6px 0",
@@ -149,7 +189,7 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
           color: "#cbd5e1",
           fontSize: "13.5px",
           lineHeight: "1.55",
-          margin: "0 auto 16px auto",
+          margin: "0 auto 18px auto",
           maxWidth: "460px",
         }}
       >
@@ -159,13 +199,13 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
       {/* Highlights List */}
       <div
         style={{
-          background: "rgba(10, 15, 29, 0.6)",
-          border: "1px solid rgba(255, 255, 255, 0.05)",
-          borderRadius: "8px",
-          padding: "10px 14px",
-          margin: "0 auto 18px auto",
+          background: "rgba(10, 15, 29, 0.65)",
+          border: "1px solid rgba(255, 255, 255, 0.06)",
+          borderRadius: "10px",
+          padding: "12px 16px",
+          margin: "0 auto 20px auto",
           textAlign: "left",
-          maxWidth: "420px",
+          maxWidth: "430px",
         }}
       >
         {slide.highlights.map((item, idx) => (
@@ -174,10 +214,10 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "10px",
               fontSize: "12.5px",
-              color: "#94a3b8",
-              marginBottom: idx < slide.highlights.length - 1 ? "6px" : "0",
+              color: "#cbd5e1",
+              marginBottom: idx < slide.highlights.length - 1 ? "8px" : "0",
             }}
           >
             <span style={{ color: "#4ade80", fontWeight: "bold" }}>✓</span>
@@ -192,7 +232,7 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
           display: "flex",
           justifyContent: "center",
           gap: "8px",
-          marginBottom: "18px",
+          marginBottom: "20px",
         }}
       >
         {PILLARS.map((_, idx) => (
@@ -202,7 +242,7 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
             onClick={() => setCurrentSlide(idx)}
             aria-label={`Go to slide ${idx + 1}`}
             style={{
-              width: currentSlide === idx ? "24px" : "8px",
+              width: currentSlide === idx ? "26px" : "8px",
               height: "8px",
               borderRadius: "4px",
               background: currentSlide === idx ? "#38bdf8" : "rgba(255, 255, 255, 0.2)",
@@ -215,13 +255,13 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
         ))}
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons: Prev/Skip on left, Next/Get Started on right */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "10px",
+          gap: "12px",
         }}
       >
         {currentSlide > 0 ? (
@@ -233,8 +273,17 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
           >
             ← Previous
           </button>
+        ) : (onSkip || onComplete) && !standalone ? (
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={handleSkip}
+            style={{ fontSize: "13px", padding: "8px 16px", color: "#94a3b8" }}
+          >
+            Skip
+          </button>
         ) : (
-          <div style={{ width: "85px" }} />
+          <div style={{ width: "80px" }} />
         )}
 
         {standalone && onComplete ? (
@@ -255,15 +304,16 @@ export function PillarsSlideshow({ onComplete, standalone = false }: PillarsSlid
           style={{
             background: "#38bdf8",
             color: "#0f172a",
-            fontWeight: 600,
+            fontWeight: 700,
             border: "none",
-            borderRadius: "6px",
+            borderRadius: "8px",
             fontSize: "13.5px",
-            padding: "8px 18px",
+            padding: "9px 20px",
             display: "inline-flex",
             alignItems: "center",
             gap: "6px",
             cursor: "pointer",
+            boxShadow: "0 2px 10px rgba(56, 189, 248, 0.3)",
           }}
         >
           <span>{currentSlide === PILLARS.length - 1 ? "Get Started" : "Next Pillar"}</span>

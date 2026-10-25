@@ -4,6 +4,12 @@ async function ensureUnlocked(page: Page) {
   await page.goto('http://localhost:5173');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
+  // Dismiss onboarding slides if present on fresh run
+  const skipPillarsBtn = page.locator('button:has-text("Skip")').first();
+  if (await skipPillarsBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await skipPillarsBtn.click();
+  }
+
   const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
   if (await onboardingHeader.isVisible()) {
     await page.fill('input#displayName', 'Mobile Tester');
@@ -42,6 +48,10 @@ test.describe('Mobile UI/UX Precision & Adaptability Suite', () => {
     await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
     // Onboarding Button Styling Verification
+    const skipBtnMob = page.locator('button:has-text("Skip")').first();
+    if (await skipBtnMob.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await skipBtnMob.click();
+    }
     const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
     if (await onboardingHeader.isVisible()) {
       const submitBtn = page.locator('button.cta-button');

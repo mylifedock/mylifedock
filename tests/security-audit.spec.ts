@@ -4,6 +4,12 @@ async function ensureOnboardedAndSetup(page: Page, secret: string = 'AuditSecret
   await page.goto('http://localhost:5173');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
+  // Dismiss onboarding slides if present on fresh run
+  const skipPillarsBtn = page.locator('button:has-text("Skip")').first();
+  if (await skipPillarsBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await skipPillarsBtn.click();
+  }
+
   const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
   if (await onboardingHeader.isVisible()) {
     await page.fill('input#displayName', 'Security Audit Subject');
@@ -40,6 +46,10 @@ test.describe('Security Audit & Zero-Knowledge Verification Suite', () => {
     await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
     // Complete onboarding if present
+    const skipBtnSec = page.locator('button:has-text("Skip")').first();
+    if (await skipBtnSec.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await skipBtnSec.click();
+    }
     const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
     if (await onboardingHeader.isVisible()) {
       await page.fill('input#displayName', 'Security Audit Subject');

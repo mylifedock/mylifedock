@@ -6,6 +6,12 @@ test('End-to-End Vault Flow', async ({ page }) => {
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
   
   // 1b. Handle Initial Profile & Legal Terms Onboarding if present
+  // Dismiss onboarding slides if present on fresh run
+  const skipPillarsBtn = page.locator('button:has-text("Skip")').first();
+  if (await skipPillarsBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await skipPillarsBtn.click();
+  }
+
   const onboardingHeader = page.locator('text="WELCOME TO MYLIFEDOCK"');
   if (await onboardingHeader.isVisible()) {
     console.log('Detected fresh onboarding, entering name & accepting terms...');

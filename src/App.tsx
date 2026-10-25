@@ -116,6 +116,15 @@ function App() {
   const [restoreError, setRestoreError] =
     useState("");
 
+  const [hasCompletedOnboardingSlides, setHasCompletedOnboardingSlides] =
+    useState<boolean>(() => {
+      try {
+        return localStorage.getItem("mld_onboarding_slides_seen") === "true";
+      } catch {
+        return false;
+      }
+    });
+
   const restoreFileInputRef =
     useRef<HTMLInputElement>(null);
 
@@ -485,6 +494,46 @@ function App() {
   }
 
   if (!profile) {
+    if (!hasCompletedOnboardingSlides) {
+      return (
+        <main className="onboarding">
+          <div className="onboarding-glow" />
+
+          <div className="onboarding-card" style={{ maxWidth: "580px", padding: "28px 20px" }}>
+            <div className="brand-logo" style={{ width: "52px", height: "52px", borderRadius: "16px", margin: "0 auto 12px auto" }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+            </div>
+
+            <span className="eyebrow" style={{ display: "block", textAlign: "center", marginBottom: "4px" }}>
+              SECURITY & PRIVACY PILLARS
+            </span>
+
+            <h1 style={{ fontSize: "24px", textAlign: "center", marginBottom: "18px" }}>
+              Our 3 Security Pillars
+            </h1>
+
+            <PillarsSlideshow
+              onComplete={() => {
+                try {
+                  localStorage.setItem("mld_onboarding_slides_seen", "true");
+                } catch { /* ignore */ }
+                setHasCompletedOnboardingSlides(true);
+              }}
+              onSkip={() => {
+                try {
+                  localStorage.setItem("mld_onboarding_slides_seen", "true");
+                } catch { /* ignore */ }
+                setHasCompletedOnboardingSlides(true);
+              }}
+            />
+          </div>
+        </main>
+      );
+    }
+
     return (
       <main className="onboarding">
         <div className="onboarding-glow" />
@@ -506,9 +555,6 @@ function App() {
             <br />
             <span>One private dock.</span>
           </h1>
-
-          {/* 3 Core Pillars Slideshow: Zero Server Access, Zero-Knowledge, Sovereign Offline */}
-          <PillarsSlideshow />
 
           {/* New vs Returning User Tab Toggle */}
           <div style={{ display: "flex", background: "rgba(255, 255, 255, 0.06)", padding: "4px", borderRadius: "8px", margin: "18px 0 16px 0", gap: "4px" }}>
@@ -724,6 +770,29 @@ function App() {
               </div>
             </div>
           )}
+
+          {/* Link to review security pillars */}
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => setHasCompletedOnboardingSlides(false)}
+            style={{
+              color: "#94a3b8",
+              fontSize: "12.5px",
+              marginTop: "20px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              width: "100%",
+            }}
+          >
+            <span>🛡️</span>
+            <span>Review the 3 Security Pillars</span>
+          </button>
         </div>
       </main>
     );
