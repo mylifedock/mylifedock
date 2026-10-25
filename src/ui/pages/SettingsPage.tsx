@@ -13,6 +13,7 @@ import { getLicenseStatus, activateLicense, removeLicense, __generateDevLicense 
 import { getPreferredCurrency, setPreferredCurrency, SUPPORTED_CURRENCIES, type SupportedCurrency } from "../../application/currencyService";
 import { getAllProfiles, deleteDependentProfile, LOCAL_PROFILE_ID } from "../../application/profileService";
 import { AddDependentModal } from "../components/FamilyProfileSwitcher";
+import { ProUpgradeModal } from "../components/ProUpgradeModal";
 
 export function SettingsPage() {
   const { showToast } = useToast();
@@ -37,7 +38,7 @@ export function SettingsPage() {
 
   const [licenseStatus, setLicenseStatus] = useState(() => getLicenseStatus());
   const [licenseKeyInput, setLicenseKeyInput] = useState("");
-  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [currentCurrency, setCurrentCurrency] = useState<SupportedCurrency>(() => getPreferredCurrency());
   const familyProfiles = useLiveQuery(() => getAllProfiles(), [], []);
   const [showAddDependent, setShowAddDependent] = useState(false);
@@ -581,9 +582,41 @@ export function SettingsPage() {
             </div>
           ) : (
             <div>
-              <p>
+              <p style={{ marginBottom: "16px" }}>
                 The <strong>Free Core</strong> version includes 100% Zero-Knowledge security and offline access for up to 15 products and 20 documents. Upgrade to <strong>PRO</strong> for Unlimited Vault Storage, Automated Google Drive Sync, and all future updates.
               </p>
+
+              {/* Dedicated Upgrade to Pro Button */}
+              <div style={{ marginBottom: "18px" }}>
+                <button 
+                  type="button" 
+                  className="primary-button"
+                  style={{ 
+                    background: "linear-gradient(135deg, #eab308, #ca8a04)", 
+                    color: "#0f172a", 
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    padding: "13px 20px",
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 15px rgba(234, 179, 8, 0.25)",
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    cursor: "pointer"
+                  }}
+                  onClick={() => setShowUpgradeModal(true)}
+                >
+                  <span>👑 Upgrade to PRO (Unlimited Storage & Cloud Sync)</span>
+                  <span>&rarr;</span>
+                </button>
+              </div>
+
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px", letterSpacing: "0.05em" }}>
+                Already Purchased? Activate Your License Key:
+              </div>
               <div style={{ marginTop: "16px", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
                 <input 
                   type="text" 
@@ -615,7 +648,7 @@ export function SettingsPage() {
                   type="button"
                   className="text-button" 
                   style={{ color: "#38bdf8", padding: 0, fontWeight: 600 }}
-                  onClick={() => setShowPricingModal(true)}
+                  onClick={() => setShowUpgradeModal(true)}
                 >
                   💎 View Plans & Pricing Options &rarr;
                 </button>
@@ -637,81 +670,15 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Pricing & Subscription Modal */}
-      {showPricingModal && (
-        <div className="modal-backdrop" onClick={() => setShowPricingModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", padding: "28px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ margin: 0 }}>Choose your MyLifeDock PRO Plan</h3>
-              <button type="button" className="text-button" onClick={() => setShowPricingModal(false)} style={{ fontSize: "18px" }}>✕</button>
-            </div>
-            <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "20px" }}>
-              All plans include 100% Zero-Knowledge protection, Unlimited Documents & Products, Automated Cloud Sync, and Multi-Currency support.
-            </p>
-
-            <div style={{ display: "grid", gap: "12px", marginBottom: "24px" }}>
-              <div style={{ padding: "16px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <strong>Monthly Pro Pass</strong>
-                  <small style={{ display: "block", color: "#94a3b8", fontSize: "13px" }}>Billed monthly, cancel or renew anytime</small>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "18px", fontWeight: "bold" }}>₹25 / $0.49</div>
-                </div>
-              </div>
-
-              <div style={{ padding: "16px", background: "rgba(16, 185, 129, 0.06)", border: "1px solid #10b981", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <span style={{ fontSize: "11px", background: "#10b981", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold", textTransform: "uppercase" }}>SAVE 2 MONTHS FREE</span>
-                  <strong style={{ display: "block", marginTop: "4px" }}>1 Year Subscription</strong>
-                  <small style={{ color: "#34d399", fontSize: "13px" }}>12 Months for the Price of 10! (Save ₹50)</small>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "18px", fontWeight: "bold", color: "#34d399" }}>₹250 / $4.99</div>
-                </div>
-              </div>
-
-              <div style={{ padding: "16px", background: "rgba(234, 179, 8, 0.06)", border: "1px solid #eab308", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <span style={{ fontSize: "11px", background: "#eab308", color: "#000", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold", textTransform: "uppercase" }}>BEST VALUE</span>
-                  <strong style={{ display: "block", marginTop: "4px" }}>Lifetime Founder License</strong>
-                  <small style={{ color: "#facc15", fontSize: "13px" }}>One-time payment, forever unlimited access</small>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "18px", fontWeight: "bold", color: "#eab308" }}>₹999 / $19.99</div>
-                </div>
-              </div>
-            </div>
-
-            <p style={{ fontSize: "13.5px", color: "#94a3b8", marginBottom: "20px" }}>
-              💡 <em>Coupon codes and discounts can be applied directly at the checkout page. Once payment completes, your license key is emailed to you instantly.</em>
-            </p>
-
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-              <button 
-                type="button" 
-                className="secondary-button"
-                onClick={() => {
-                  const sampleKey = __generateDevLicense("mylifedock@gmail.com", "pro_yearly");
-                  setLicenseKeyInput(sampleKey);
-                  setShowPricingModal(false);
-                  showToast("Sample 1-Year Pro key populated! Click 'Activate Key' to test.", "info");
-                }}
-              >
-                🧪 Test Sample Key
-              </button>
-              <a 
-                href="/landing.html#pricing" 
-                target="_blank" 
-                className="primary-button" 
-                style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}
-              >
-                Go to Checkout Page &rarr;
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Pro Upgrade & Pricing Modal */}
+      <ProUpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onSuccess={() => {
+          setLicenseStatus(getLicenseStatus());
+          setShowUpgradeModal(false);
+        }}
+      />
 
       <div className="card fade-in" style={{ marginBottom: "24px" }}>
         <div className="card-header">

@@ -40,7 +40,7 @@ export const PRICING_CONFIG: {
         "Encrypted Google Drive Cloud Backup",
         "30 Days of Unlimited Protection",
       ],
-      razorpayPaymentLink: "https://rzp.io/rzp/RzGKEOuM",
+      razorpayPaymentLink: "https://rzp.io/rzp/lT9C4JH4",
     },
     {
       id: "pro_yearly",
@@ -57,7 +57,7 @@ export const PRICING_CONFIG: {
         "Encrypted Google Drive Cloud Backup",
         "Full 365 Days of Unlimited Protection",
       ],
-      razorpayPaymentLink: "https://rzp.io/rzp/aPFk0yOg",
+      razorpayPaymentLink: "https://rzp.io/rzp/lT9C4JH4",
     },
     {
       id: "pro_lifetime",

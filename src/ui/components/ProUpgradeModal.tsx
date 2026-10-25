@@ -18,7 +18,7 @@ export function ProUpgradeModal({
 }: ProUpgradeModalProps) {
   const { showToast } = useToast();
   const [licenseKeyInput, setLicenseKeyInput] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>(PRICING_CONFIG.plans[1]); // Default to Lifetime
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>(PRICING_CONFIG.plans[2] || PRICING_CONFIG.plans[0]); // Default to Lifetime (plans[2])
 
   if (!isOpen) return null;
 
