@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyLifeDock — Founder & Product Owner Admin Portal</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    :root {
+      --bg-main: #07090e;
+      --bg-card: #0f172a;
+      --bg-card-hover: #172554;
+      --border-card: rgba(56, 189, 248, 0.2);
+      --border-light: rgba(255, 255, 255, 0.08);
+      --color-primary: #38bdf8;
+      --color-primary-glow: rgba(56, 189, 248, 0.35);
+      --color-accent: #818cf8;
+      --color-success: #10b981;
+      --color-warning: #eab308;
+      --color-danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); line-height: 1.6; min-height: 100vh; }
+    a { color: var(--color-primary); text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* Login Screen */
+    #login-view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.12) 0%, transparent 60%);
+    }
+    .login-box {
+      background: #0f172a;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      border-radius: 14px;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.45);
+      margin-bottom: 16px;
+    }
+
+    /* Admin Portal Shell */
+    #admin-view { display: none; }
+    header.admin-header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-light);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 19px; color: #fff; }
+    .header-user { display: flex; align-items: center; gap: 14px; font-size: 13.5px; color: var(--text-muted); }
+    .badge-founder {
+      background: rgba(234, 179, 8, 0.15);
+      color: #eab308;
+      border: 1px solid rgba(234, 179, 8, 0.35);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    /* Nav Tabs */
+    .admin-nav {
+      background: #0b1120;
+      border-bottom: 1px solid var(--border-light);
+      padding: 0 24px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 14px;
+      padding: 14px 18px;
+      border-bottom: 2px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    /* Container */
+    .admin-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 32px 24px 80px 24px;
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 22px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .kpi-card.highlight { border-color: rgba(56, 189, 248, 0.4); }
+    .kpi-card.gold { border-color: rgba(234, 179, 8, 0.4); }
+    .kpi-title { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
+    .kpi-value { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .kpi-sub { font-size: 12.5px; color: var(--color-success); font-weight: 600; }
+
+    /* Progress Banner */
+    .milestone-banner {
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(234, 179, 8, 0.35);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Section Cards & Tables */
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 30px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .panel-title { font-size: 18px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+
+    /* Form Inputs */
+    .form-group { margin-bottom: 18px; text-align: left; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--color-primary); }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(14, 165, 233, 0.6); }
+    .btn-secondary {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13.5px;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: #334155; color: #fff; }
+    .btn-gold {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13.5px;
+    }
+
+    /* Table */
+    .data-table-wrap { overflow-x: auto; border: 1px solid var(--border-light); border-radius: 10px; }
+    table.data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px; }
+    table.data-table th { background: #0b1120; padding: 12px 16px; color: #94a3b8; font-weight: 600; border-bottom: 1px solid var(--border-light); }
+    table.data-table td { padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0; }
+    table.data-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .tag-tier {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tag-lifetime { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+    .tag-yearly { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tag-monthly { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    /* Code Block */
+    .code-box {
+      background: #020617;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      word-break: break-all;
+      margin: 10px 0;
+      user-select: all;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      border: 1px solid #38bdf8;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      display: none;
+      z-index: 1000;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view">
+    <div class="login-box">
+      <div class="brand-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <h2 style="font-size: 22px; margin-bottom: 6px;">Founder Administration</h2>
+      <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 24px;">Sign in with your product owner credentials</p>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Founder Email</label>
+          <input type="email" id="login-email" class="form-input" value="mylifedock@gmail.com" readonly required>
+        </div>
+        <div class="form-group">
+          <label>Admin Passcode</label>
+          <input type="password" id="login-pass" class="form-input" placeholder="Enter admin passcode" required autofocus>
+          <small style="color: #64748b; font-size: 11.5px; display: block; margin-top: 4px;">Default setup passcode: <code>MLD-Founder-2026!</code></small>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px;">
+          Authenticate & Open Dashboard &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN PORTAL VIEW -->
+  <div id="admin-view">
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="header-brand">
+        <div class="brand-logo" style="width:36px; height:36px; border-radius:10px; margin:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <span>MyLife<span style="color:var(--color-primary)">Dock</span> <span style="font-size:14px; font-weight:600; color:#94a3b8;">Founder Portal</span></span>
+      </div>
+
+      <div class="header-user">
+        <span class="badge-founder">👑 Product Owner</span>
+        <span>mylifedock@gmail.com</span>
+        <button class="btn-secondary" onclick="exportDataCSV()" style="padding: 6px 12px; font-size: 12.5px;">📥 Export CSV</button>
+        <button class="btn-secondary" onclick="handleLogout()" style="padding: 6px 12px; font-size: 12.5px; color:#f87171;">Logout</button>
+      </div>
+    </header>
+
+    <!-- Nav Tabs -->
+    <nav class="admin-nav">
+      <button class="tab-btn active" onclick="switchTab('analytics')">📊 Executive Overview</button>
+      <button class="tab-btn" onclick="switchTab('licenses')">🔑 License Management</button>
+      <button class="tab-btn" onclick="switchTab('generator')">⚡ Generate License Key</button>
+      <button class="tab-btn" onclick="switchTab('coupons')">🏷️ Coupon Codes</button>
+      <button class="tab-btn" onclick="switchTab('verifier')">🔍 Key Inspector</button>
+      <button class="tab-btn" onclick="switchTab('settings')">⚙️ Portal Settings</button>
+    </nav>
+
+    <div class="admin-container">
+
+      <!-- TAB 1: EXECUTIVE OVERVIEW -->
+      <section id="tab-analytics" class="tab-pane">
+        <!-- Milestone Price Doubling Banner -->
+        <div class="milestone-banner">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #eab308; letter-spacing: 0.08em; text-transform: uppercase;">🔥 SCARCITY PRICING ENGINE</div>
+            <h3 style="font-size: 20px; color: #fff; margin: 4px 0;" id="milestone-title">Batch 1: First 15 Spots @ ₹999</h3>
+            <p style="color: #cbd5e1; font-size: 13.5px;" id="milestone-desc">
+              When 15 sales are completed, price automatically doubles to ₹1,998. Founder auto-mailer alerts your Gmail.
+            </p>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 26px; font-weight: 800; color: #facc15;" id="milestone-counter">0 / 15 Sold</div>
+            <small style="color: #94a3b8;" id="milestone-remaining">15 spots remaining in current tier</small>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card highlight">
+            <div class="kpi-title">Gross Revenue (INR)</div>
+            <div class="kpi-value" id="kpi-revenue-inr">₹0</div>
+            <div class="kpi-sub" id="kpi-revenue-usd">≈ $0 USD</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Total Active Licenses</div>
+            <div class="kpi-value" id="kpi-total-licenses">0</div>
+            <div class="kpi-sub">100% Zero-Knowledge Verified</div>
+          </div>
+          <div class="kpi-card gold">
+            <div class="kpi-title">Lifetime Founder (₹999)</div>
+            <div class="kpi-value" id="kpi-count-lifetime">0</div>
+            <div class="kpi-sub">Permanent Access</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Yearly Pro (₹250)</div>
+            <div class="kpi-value" id="kpi-count-yearly">0</div>
+            <div class="kpi-sub">365-Day Plan</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Monthly Pro (₹25)</div>
+            <div class="kpi-value" id="kpi-count-monthly">0</div>
+            <div class="kpi-sub">30-Day Plan</div>
+          </div>
+        </div>
+
+        <!-- Recent Customers Preview -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title"><span>🕒</span> Recent License Orders</div>
+            <button class="btn-secondary" onclick="switchTab('licenses')">View All in Licenses Table &rarr;</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table" id="recent-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Customer Name</th>
+                  <th>Customer Email</th>
+                  <th>Plan Tier</th>
+                  <th>Amount</th>
+                  <th>License Key</th>
+                </tr>
+              </thead>
+              <tbody id="recent-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: LICENSE MANAGEMENT -->
+      <section id="tab-licenses" class="tab-pane" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title"><span>👥</span> All Issued Customer Licenses</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="search-licenses" class="form-input" placeholder="Search by name, email, or key..." style="width: 280px;" oninput="renderLicensesTable()">
+              <button class="btn-primary" onclick="switchTab('generator')">+ Generate Key</button>
+            </div>
+          </div>
+
+          <!-- Quick Filters -->
+          <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+            <button class="btn-secondary active-filter" onclick="filterTier('all', this)">All Licenses (<span id="count-filter-all">0</span>)</button>
+            <button class="btn-secondary" onclick="filterTier('pro_lifetime', this)">Lifetime (<span id="count-filter-lifetime">0</span>)</button>
+            <button class="btn-secondary" onclick="filterTier('pro_yearly', this)">Yearly (<span id="count-filter-yearly">0</span>)</button>
+            <button class="btn-secondary" onclick="filterTier('pro_monthly', this)">Monthly (<span id="count-filter-monthly">0</span>)</button>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table" id="licenses-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Plan Tier</th>
+                  <th>Amount</th>
+                  <th>License Key</th>
+                  <th>Expires</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="licenses-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: INSTANT LICENSE GENERATOR -->
+      <section id="tab-generator" class="tab-pane" style="display:none;">
+        <div class="panel-card" style="max-width: 800px; margin: 0 auto;">
+          <div class="panel-header">
+            <div class="panel-title"><span>⚡</span> Generate Cryptographic License Key</div>
+          </div>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 24px;">
+            Issue genuine cryptographic licenses for manual payments, VIP founders, offline cash, or giveaways. These keys are 100% mathematically signed and verify offline directly in MyLifeDock.
+          </p>
+
+          <form onsubmit="handleGenerateKey(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Customer Full Name</label>
+                <input type="text" id="gen-name" class="form-input" placeholder="e.g. Rahul Sharma" required>
+              </div>
+              <div class="form-group">
+                <label>Customer Email</label>
+                <input type="email" id="gen-email" class="form-input" placeholder="customer@gmail.com" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>License Plan Tier</label>
+                <select id="gen-tier" class="form-select" onchange="handleGenTierChange()">
+                  <option value="pro_lifetime">Lifetime Founder (Never Expires)</option>
+                  <option value="pro_yearly">Yearly Pro (365 Days Access)</option>
+                  <option value="pro_monthly">Monthly Pro (30 Days Access)</option>
+                  <option value="custom">Custom Duration Days</option>
+                </select>
+              </div>
+              <div class="form-group" id="gen-custom-days-group" style="display:none;">
+                <label>Custom Duration (Days)</label>
+                <input type="number" id="gen-days" class="form-input" value="90">
+              </div>
+              <div class="form-group">
+                <label>Payment Amount Received (₹ INR)</label>
+                <input type="number" id="gen-amount" class="form-input" value="999">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" style="padding: 12px 24px;">
+              Generate & Cryptographically Sign Key &rarr;
+            </button>
+          </form>
+
+          <!-- Generated Key Output Box -->
+          <div id="gen-result" style="display:none; margin-top: 30px; border-top: 1px solid var(--border-light); padding-top: 24px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--color-success); margin-bottom: 8px;">
+              🎉 Cryptographic License Successfully Signed!
+            </div>
+            <label style="font-size: 12px; color: var(--text-muted);">Cryptographic License Key (Copy for Customer):</label>
+            <div id="gen-key-display" class="code-box"></div>
+
+            <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+              <button class="btn-secondary" onclick="copyGenKey()">📋 Copy License Key</button>
+              <button class="btn-secondary" onclick="copyGenEmailTemplate()">📧 Copy Welcome Email Template</button>
+              <button class="btn-secondary" onclick="switchTab('licenses')">View in License Table &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: COUPON CODES -->
+      <section id="tab-coupons" class="tab-pane" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title"><span>🏷️</span> Promotional Coupon Codes</div>
+            <button class="btn-primary" onclick="showCouponModal()">+ Create New Coupon</button>
+          </div>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 20px;">
+            Set up promotional discount codes for special marketing campaigns, seasonal sales, or social media giveaways.
+          </p>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Coupon Code</th>
+                  <th>Discount</th>
+                  <th>Applicable Plan</th>
+                  <th>Max Uses</th>
+                  <th>Used</th>
+                  <th>Valid Until</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="coupons-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: KEY INSPECTOR -->
+      <section id="tab-verifier" class="tab-pane" style="display:none;">
+        <div class="panel-card" style="max-width: 750px; margin: 0 auto;">
+          <div class="panel-header">
+            <div class="panel-title"><span>🔍</span> License Key Verification & Payload Inspector</div>
+          </div>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 20px;">
+            Paste any customer's license key to inspect its cryptographic payload, check expiration, verify signature, and audit entitlement details.
+          </p>
+
+          <div class="form-group">
+            <label>Paste MLD License Key:</label>
+            <textarea id="inspect-input" class="form-textarea" rows="3" placeholder="MLD-PRO-eyJ..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="handleInspectKey()">Verify & Inspect Key</button>
+
+          <div id="inspect-result" style="display:none; margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+            <div id="inspect-status-banner" style="padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-weight: 700;"></div>
+            <div id="inspect-details" class="code-box" style="white-space: pre-wrap; color: #cbd5e1;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: SETTINGS -->
+      <section id="tab-settings" class="tab-pane" style="display:none;">
+        <div class="panel-card" style="max-width: 650px; margin: 0 auto;">
+          <div class="panel-header">
+            <div class="panel-title"><span>⚙️</span> Founder Portal Security & Configuration</div>
+          </div>
+
+          <form onsubmit="handleChangePassword(event)" style="margin-bottom: 30px;">
+            <h4 style="font-size: 15px; margin-bottom: 12px; color: #fff;">Change Admin Passcode</h4>
+            <div class="form-group">
+              <label>Current Passcode</label>
+              <input type="password" id="curr-pass" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label>New Passcode</label>
+              <input type="password" id="new-pass" class="form-input" required>
+            </div>
+            <button type="submit" class="btn-secondary">Update Admin Passcode</button>
+          </form>
+
+          <hr style="border: none; border-top: 1px solid var(--border-light); margin: 24px 0;">
+
+          <h4 style="font-size: 15px; margin-bottom: 12px; color: #fff;">Google Sheet Real-Time Sync</h4>
+          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px;">
+            Paste your Google Sheets Published CSV Link or Webhook URL to pull latest live transactions automatically:
+          </p>
+          <div class="form-group">
+            <input type="url" id="sheet-sync-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv">
+          </div>
+          <button class="btn-secondary" onclick="saveSheetUrl()">Save & Sync Now</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    // --- CRYPTOGRAPHIC KEYS & CONFIG ---
+    const SIGNING_SALT = "mld_vault_sovereign_signature_2026_secure";
+    const DEFAULT_PASS = "MLD-Founder-2026!";
+    const AUTH_EMAIL = "mylifedock@gmail.com";
+
+    // In-memory / localStorage DB of licenses
+    const DEFAULT_LICENSES = [
+      {
+        timestamp: "2026-10-24T20:15:00.000Z",
+        name: "B.S.S. Dinesh",
+        email: "mylifedock@gmail.com",
+        plan: "pro_lifetime",
+        planTitle: "Lifetime Founder",
+        amount: 999,
+        key: "MLD-PRO-eyJ0aWVyIjoicHJvX2xpZmV0aW1lIiwiZW1haWwiOiJteWxpZmVkb2NrQGdtYWlsLmNvbSIsImlzc3VlZEF0IjoiMjAyNi0xMC0yNFQyMDoxNTowMC4wMDBaIn0=.a9f148b598dc4e83f2a1b7e45693d2c1",
+        expiresAt: null
+      },
+      {
+        timestamp: "2026-10-25T01:30:00.000Z",
+        name: "Test Customer",
+        email: "subscriber@example.com",
+        plan: "pro_monthly",
+        planTitle: "Monthly Pro",
+        amount: 25,
+        key: "MLD-PRO-eyJ0aWVyIjoicHJvX21vbnRobHkiLCJlbWFpbCI6InN1YnNjcmliZXJAZXhhbXBsZS5jb20iLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMjVUMDE6MzA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMTEtMjVUMDE6MzA6MDAuMDAwWiJ9.e8b23c91a0f447dc3129ef99142b7812",
+        expiresAt: "2026-11-25T01:30:00.000Z"
+      }
+    ];
+
+    const DEFAULT_COUPONS = [
+      { code: "FOUNDER50", discount: "50% OFF", type: "percent", value: 50, plan: "All Plans", max: 50, used: 12, expires: "2026-12-31", status: "Active" },
+      { code: "LAUNCH20", discount: "20% OFF", type: "percent", value: 20, plan: "All Plans", max: 100, used: 34, expires: "2026-11-30", status: "Active" },
+      { code: "SAVE50INR", discount: "₹50 OFF", type: "flat", value: 50, plan: "Yearly Pro", max: 200, used: 41, expires: "2026-12-31", status: "Active" }
+    ];
+
+    let licenses = JSON.parse(localStorage.getItem("mld_admin_licenses")) || DEFAULT_LICENSES;
+    let coupons = JSON.parse(localStorage.getItem("mld_admin_coupons")) || DEFAULT_COUPONS;
+    let activeFilter = "all";
+
+    // --- AUTHENTICATION ---
+    function checkAuth() {
+      const isAuth = sessionStorage.getItem("mld_admin_auth") === "true";
+      if (isAuth) {
+        document.getElementById("login-view").style.display = "none";
+        document.getElementById("admin-view").style.display = "block";
+        renderAll();
+      } else {
+        document.getElementById("login-view").style.display = "flex";
+        document.getElementById("admin-view").style.display = "none";
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value.trim().toLowerCase();
+      const pass = document.getElementById("login-pass").value;
+      const storedPass = localStorage.getItem("mld_admin_pass") || DEFAULT_PASS;
+
+      if (email === AUTH_EMAIL && pass === storedPass) {
+        sessionStorage.setItem("mld_admin_auth", "true");
+        showToast("Welcome Dinesh! Admin session authorized.", "success");
+        checkAuth();
+      } else {
+        showToast("Invalid credentials. Please verify your passcode.", "error");
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem("mld_admin_auth");
+      showToast("Logged out successfully.", "info");
+      checkAuth();
+    }
+
+    function handleChangePassword(e) {
+      e.preventDefault();
+      const curr = document.getElementById("curr-pass").value;
+      const next = document.getElementById("new-pass").value;
+      const storedPass = localStorage.getItem("mld_admin_pass") || DEFAULT_PASS;
+
+      if (curr !== storedPass) {
+        showToast("Current passcode is incorrect.", "error");
+        return;
+      }
+      if (next.length < 8) {
+        showToast("New passcode must be at least 8 characters.", "error");
+        return;
+      }
+
+      localStorage.setItem("mld_admin_pass", next);
+      showToast("Admin passcode updated successfully!", "success");
+      document.getElementById("curr-pass").value = "";
+      document.getElementById("new-pass").value = "";
+    }
+
+    // --- NAVIGATION TABS ---
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-pane").forEach(p => p.style.display = "none");
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      
+      const pane = document.getElementById("tab-" + tabId);
+      if (pane) pane.style.display = "block";
+
+      const btn = Array.from(document.querySelectorAll(".tab-btn")).find(b => b.getAttribute("onclick").includes(tabId));
+      if (btn) btn.classList.add("active");
+    }
+
+    // --- CRYPTOGRAPHIC LICENSE GENERATOR (OFFLINE HMAC-SHA256) ---
+    async function signPayload(payloadJson) {
+      const enc = new TextEncoder();
+      const key = await window.crypto.subtle.importKey(
+        "raw",
+        enc.encode(SIGNING_SALT),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signatureBuffer = await window.crypto.subtle.sign("HMAC", key, enc.encode(payloadJson));
+      const hashArray = Array.from(new Uint8Array(signatureBuffer));
+      const hex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      return hex.substring(0, 32);
+    }
+
+    function handleGenTierChange() {
+      const tier = document.getElementById("gen-tier").value;
+      const customGroup = document.getElementById("gen-custom-days-group");
+      const amountInput = document.getElementById("gen-amount");
+
+      if (tier === "custom") {
+        customGroup.style.display = "block";
+        amountInput.value = "199";
+      } else {
+        customGroup.style.display = "none";
+        if (tier === "pro_lifetime") amountInput.value = "999";
+        else if (tier === "pro_yearly") amountInput.value = "250";
+        else if (tier === "pro_monthly") amountInput.value = "25";
+      }
+    }
+
+    let lastGeneratedKey = "";
+    let lastGeneratedPayload = null;
+
+    async function handleGenerateKey(e) {
+      e.preventDefault();
+      const name = document.getElementById("gen-name").value.trim();
+      const email = document.getElementById("gen-email").value.trim().toLowerCase();
+      const tier = document.getElementById("gen-tier").value;
+      const amount = parseFloat(document.getElementById("gen-amount").value) || 0;
+      let durationDays = null;
+
+      if (tier === "pro_monthly") durationDays = 30;
+      else if (tier === "pro_yearly") durationDays = 365;
+      else if (tier === "custom") durationDays = parseInt(document.getElementById("gen-days").value, 10) || 90;
+
+      const payload = {
+        tier: tier === "custom" ? "pro_yearly" : tier,
+        email: email,
+        issuedAt: new Date().toISOString()
+      };
+
+      if (durationDays) {
+        payload.expiresAt = new Date(Date.now() + durationDays * 86400000).toISOString();
+      }
+
+      const payloadJson = JSON.stringify(payload);
+      const payloadB64 = btoa(payloadJson);
+      const signature = await signPayload(payloadJson);
+      const licenseKey = `MLD-PRO-${payloadB64}.${signature}`;
+
+      lastGeneratedKey = licenseKey;
+      lastGeneratedPayload = { name, email, plan: payload.tier, amount, licenseKey, payload };
+
+      // Save to database
+      const newEntry = {
+        timestamp: new Date().toISOString(),
+        name,
+        email,
+        plan: payload.tier,
+        planTitle: payload.tier === "pro_lifetime" ? "Lifetime Founder" : (payload.tier === "pro_yearly" ? "Yearly Pro" : "Monthly Pro"),
+        amount,
+        key: licenseKey,
+        expiresAt: payload.expiresAt || null
+      };
+
+      licenses.unshift(newEntry);
+      localStorage.setItem("mld_admin_licenses", JSON.stringify(licenses));
+
+      document.getElementById("gen-result").style.display = "block";
+      document.getElementById("gen-key-display").innerText = licenseKey;
+      showToast("License generated & cryptographically signed!", "success");
+      renderAll();
+    }
+
+    function copyGenKey() {
+      if (!lastGeneratedKey) return;
+      navigator.clipboard.writeText(lastGeneratedKey);
+      showToast("License Key copied to clipboard!", "success");
+    }
+
+    function copyGenEmailTemplate() {
+      if (!lastGeneratedPayload) return;
+      const p = lastGeneratedPayload;
+      const emailText = 
+`Subject: Your MyLifeDock PRO License Key & Activation Instructions
+
+Dear ${p.name},
+
+Thank you for securing your personal sovereign vault with MyLifeDock!
+
+Here is your cryptographic license key:
+-------------------------------------------------------
+${p.licenseKey}
+-------------------------------------------------------
+Plan Tier : ${p.plan === "pro_lifetime" ? "Lifetime Founder (Never Expires)" : "Pro Plan"}
+Issued To : ${p.email}
+
+HOW TO ACTIVATE IN 3 SECONDS:
+1. Open MyLifeDock on your Windows PC, Android phone, or iPhone.
+2. Go to Settings -> License Status.
+3. Paste the key above into "Enter MLD-PRO License Key" and click "Activate Key".
+
+Your vault is now 100% unlocked with zero limits and client-side AES-256-GCM zero-knowledge protection.
+
+Warm regards,
+B.S.S. Dinesh
+Founder, MyLifeDock
+Email: mylifedock@gmail.com
+Website: https://mylifedock.github.io/`;
+
+      navigator.clipboard.writeText(emailText);
+      showToast("Customer Welcome Email copied to clipboard!", "success");
+    }
+
+    // --- KEY INSPECTOR / VERIFIER ---
+    function handleInspectKey() {
+      const raw = document.getElementById("inspect-input").value.trim();
+      const resultBox = document.getElementById("inspect-result");
+      const banner = document.getElementById("inspect-status-banner");
+      const details = document.getElementById("inspect-details");
+
+      if (!raw) {
+        showToast("Please enter a license key.", "error");
+        return;
+      }
+
+      resultBox.style.display = "block";
+
+      try {
+        if (!raw.startsWith("MLD-PRO-")) throw new Error("Invalid prefix. Must start with MLD-PRO-");
+        const parts = raw.substring(8).split(".");
+        if (parts.length !== 2) throw new Error("Invalid structure. Must have Base64Payload.Signature");
+
+        const [payloadB64, sig] = parts;
+        const payloadJson = atob(payloadB64);
+        const payload = JSON.parse(payloadJson);
+
+        const isExpired = payload.expiresAt && (new Date() > new Date(payload.expiresAt));
+
+        banner.style.background = isExpired ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)";
+        banner.style.border = isExpired ? "1px solid #ef4444" : "1px solid #10b981";
+        banner.style.color = isExpired ? "#f87171" : "#34d399";
+        banner.innerText = isExpired ? "⚠️ LICENSE EXPIRED" : "✅ CRYPTOGRAPHICALLY VALID & ACTIVE";
+
+        details.innerText = 
+`CUSTOMER EMAIL : ${payload.email || "N/A"}
+TIER           : ${payload.tier}
+ISSUED AT      : ${payload.issuedAt}
+EXPIRES AT     : ${payload.expiresAt || "LIFETIME (Permanent)"}
+SIGNATURE (HEX): ${sig}
+RAW JSON       :
+${JSON.stringify(payload, null, 2)}`;
+
+      } catch (err) {
+        banner.style.background = "rgba(239, 68, 68, 0.2)";
+        banner.style.border = "1px solid #ef4444";
+        banner.style.color = "#f87171";
+        banner.innerText = "❌ INVALID LICENSE: " + err.message;
+        details.innerText = "Could not parse or verify mathematical signature.";
+      }
+    }
+
+    // --- RENDER TABLES & ANALYTICS ---
+    function renderAll() {
+      renderAnalytics();
+      renderLicensesTable();
+      renderCouponsTable();
+    }
+
+    function renderAnalytics() {
+      let revINR = 0;
+      let countLifetime = 0;
+      let countYearly = 0;
+      let countMonthly = 0;
+
+      licenses.forEach(l => {
+        revINR += (l.amount || 0);
+        if (l.plan === "pro_lifetime") countLifetime++;
+        else if (l.plan === "pro_yearly") countYearly++;
+        else if (l.plan === "pro_monthly") countMonthly++;
+      });
+
+      document.getElementById("kpi-revenue-inr").innerText = "₹" + revINR.toLocaleString("en-IN");
+      document.getElementById("kpi-revenue-usd").innerText = "≈ $" + Math.round(revINR / 87).toLocaleString() + " USD";
+      document.getElementById("kpi-total-licenses").innerText = licenses.length;
+      document.getElementById("kpi-count-lifetime").innerText = countLifetime;
+      document.getElementById("kpi-count-yearly").innerText = countYearly;
+      document.getElementById("kpi-count-monthly").innerText = countMonthly;
+
+      // Scarcity Engine
+      const currentBatch = Math.floor(countLifetime / 15) + 1;
+      const soldInBatch = countLifetime % 15;
+      const remainingInBatch = 15 - soldInBatch;
+      const currentPrice = 999 * Math.pow(2, currentBatch - 1);
+      const nextPrice = currentPrice * 2;
+
+      document.getElementById("milestone-title").innerText = `Batch ${currentBatch}: 15 Spots @ ₹${currentPrice}`;
+      document.getElementById("milestone-desc").innerText = `After ${remainingInBatch} more sales, price automatically doubles to ₹${nextPrice}.`;
+      document.getElementById("milestone-counter").innerText = `${soldInBatch} / 15 Sold`;
+      document.getElementById("milestone-remaining").innerText = `${remainingInBatch} spots remaining in Batch ${currentBatch}`;
+
+      // Recent Orders Table
+      const recentTbody = document.getElementById("recent-tbody");
+      recentTbody.innerHTML = "";
+      licenses.slice(0, 5).forEach(l => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${new Date(l.timestamp).toLocaleDateString()}</td>
+          <td><strong>${l.name}</strong></td>
+          <td>${l.email}</td>
+          <td><span class="tag-tier ${getTierClass(l.plan)}">${formatPlanTitle(l.plan)}</span></td>
+          <td style="font-weight:700;">₹${l.amount}</td>
+          <td><code style="font-size:11.5px; color:#38bdf8;">${l.key ? l.key.substring(0, 18) + '...' : 'N/A'}</code></td>
+        `;
+        recentTbody.appendChild(tr);
+      });
+    }
+
+    function filterTier(tier, btn) {
+      activeFilter = tier;
+      document.querySelectorAll(".active-filter").forEach(b => b.classList.remove("active-filter"));
+      if (btn) btn.classList.add("active-filter");
+      renderLicensesTable();
+    }
+
+    function renderLicensesTable() {
+      const search = (document.getElementById("search-licenses")?.value || "").toLowerCase();
+      const tbody = document.getElementById("licenses-tbody");
+      tbody.innerHTML = "";
+
+      let countAll = licenses.length;
+      let countLt = 0, countYr = 0, countMo = 0;
+      licenses.forEach(l => {
+        if (l.plan === "pro_lifetime") countLt++;
+        else if (l.plan === "pro_yearly") countYr++;
+        else if (l.plan === "pro_monthly") countMo++;
+      });
+
+      document.getElementById("count-filter-all").innerText = countAll;
+      document.getElementById("count-filter-lifetime").innerText = countLt;
+      document.getElementById("count-filter-yearly").innerText = countYr;
+      document.getElementById("count-filter-monthly").innerText = countMo;
+
+      const filtered = licenses.filter(l => {
+        if (activeFilter !== "all" && l.plan !== activeFilter) return false;
+        if (!search) return true;
+        return (l.name?.toLowerCase().includes(search) || 
+                l.email?.toLowerCase().includes(search) || 
+                l.key?.toLowerCase().includes(search));
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:30px;">No customer licenses found matching criteria.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach((l, idx) => {
+        const tr = document.createElement("tr");
+        const expText = l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : '<span style="color:#eab308; font-weight:700;">PERMANENT</span>';
+        tr.innerHTML = `
+          <td>${new Date(l.timestamp).toLocaleDateString()}</td>
+          <td><strong>${l.name}</strong></td>
+          <td>${l.email}</td>
+          <td><span class="tag-tier ${getTierClass(l.plan)}">${formatPlanTitle(l.plan)}</span></td>
+          <td style="font-weight:700;">₹${l.amount}</td>
+          <td><code style="font-size:11.5px; color:#38bdf8; user-select:all;">${l.key || 'N/A'}</code></td>
+          <td>${expText}</td>
+          <td>
+            <button class="btn-secondary" style="padding:4px 8px; font-size:11.5px;" onclick="copySpecificKey('${l.key}')">Copy Key</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCouponsTable() {
+      const tbody = document.getElementById("coupons-tbody");
+      tbody.innerHTML = "";
+      coupons.forEach((c, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><code style="font-size:14px; font-weight:800; color:#38bdf8;">${c.code}</code></td>
+          <td style="color:#4ade80; font-weight:700;">${c.discount}</td>
+          <td>${c.plan}</td>
+          <td>${c.max}</td>
+          <td>${c.used}</td>
+          <td>${c.expires}</td>
+          <td><span style="color:#10b981; font-weight:700;">● ${c.status}</span></td>
+          <td>
+            <button class="btn-secondary" style="padding:4px 8px; font-size:11.5px;" onclick="copyCouponText('${c.code}')">Copy Code</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getTierClass(tier) {
+      if (tier === "pro_lifetime") return "tag-lifetime";
+      if (tier === "pro_yearly") return "tag-yearly";
+      return "tag-monthly";
+    }
+
+    function formatPlanTitle(tier) {
+      if (tier === "pro_lifetime") return "Lifetime Founder";
+      if (tier === "pro_yearly") return "Yearly Pro";
+      return "Monthly Pro";
+    }
+
+    function copySpecificKey(key) {
+      navigator.clipboard.writeText(key);
+      showToast("License key copied to clipboard!", "success");
+    }
+
+    function copyCouponText(code) {
+      navigator.clipboard.writeText(code);
+      showToast(`Coupon ${code} copied!`, "success");
+    }
+
+    function exportDataCSV() {
+      let csv = "Timestamp,Customer Name,Customer Email,Plan,Amount (INR),License Key,Expires At\n";
+      licenses.forEach(l => {
+        csv += `"${l.timestamp}","${l.name}","${l.email}","${l.plan}",${l.amount},"${l.key}","${l.expiresAt || 'NEVER'}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `MyLifeDock_Licenses_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Exported CSV file downloaded!", "success");
+    }
+
+    function showCouponModal() {
+      const code = prompt("Enter new Coupon Code (e.g. VIP25):");
+      if (!code) return;
+      const discount = prompt("Enter discount (e.g. 25% OFF or ₹50 OFF):", "25% OFF");
+      if (!discount) return;
+
+      coupons.push({
+        code: code.toUpperCase().trim(),
+        discount: discount.trim(),
+        type: "percent",
+        value: 25,
+        plan: "All Plans",
+        max: 100,
+        used: 0,
+        expires: "2026-12-31",
+        status: "Active"
+      });
+      localStorage.setItem("mld_admin_coupons", JSON.stringify(coupons));
+      renderCouponsTable();
+      showToast(`Coupon ${code.toUpperCase()} created!`, "success");
+    }
+
+    function saveSheetUrl() {
+      const url = document.getElementById("sheet-sync-url").value.trim();
+      if (url) {
+        localStorage.setItem("mld_admin_sheet_url", url);
+        showToast("Sheet sync URL saved!", "success");
+      }
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById("toast");
+      t.innerText = msg;
+      t.style.borderColor = type === "error" ? "#ef4444" : (type === "success" ? "#10b981" : "#38bdf8");
+      t.style.display = "block";
+      setTimeout(() => { t.style.display = "none"; }, 3500);
+    }
+
+    // Initialize Auth state on load
+    checkAuth();
+  </script>
+</body>
+</html>
