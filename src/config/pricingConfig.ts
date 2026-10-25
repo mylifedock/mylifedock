@@ -74,7 +74,7 @@ export const PRICING_CONFIG: {
         "Priority Customer Support",
         "Zero Recurring Subscriptions",
       ],
-      razorpayPaymentLink: "https://rzp.io/rzp/9OJ0xeJS",
+      razorpayPaymentLink: "https://rzp.io/rzp/lT9C4JH4",
     },
   ],
 };
