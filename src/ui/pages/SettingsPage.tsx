@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useGoogleLogin } from "@react-oauth/google";
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
@@ -19,6 +19,15 @@ export function SettingsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Safety timeout: Reset syncing state if an auth window is dismissed or hangs
+  useEffect(() => {
+    if (!isSyncing) return;
+    const timer = setTimeout(() => {
+      setIsSyncing(false);
+    }, 45000);
+    return () => clearTimeout(timer);
+  }, [isSyncing]);
   const [isTestingNotif, setIsTestingNotif] = useState(false);
   const [bioStatus, setBioStatus] = useState<BiometricStatus | null>(null);
   const [bioEnabled, setBioEnabled] = useState(false);
@@ -148,19 +157,31 @@ export function SettingsPage() {
   const triggerWebSync = useGoogleLogin({
     scope: "https://www.googleapis.com/auth/drive.appdata",
     onSuccess: (tokenResponse) => performDriveBackupWithToken(tokenResponse.access_token),
-    onError: () => showToast("Google Auth Failed on Web", "error"),
+    onError: () => {
+      showToast("Google authentication cancelled or failed.", "error");
+      setIsSyncing(false);
+    },
+    onNonOAuthError: () => {
+      setIsSyncing(false);
+    },
   });
 
   const triggerWebRestore = useGoogleLogin({
     scope: "https://www.googleapis.com/auth/drive.appdata",
     onSuccess: (tokenResponse) => performDriveRestoreWithToken(tokenResponse.access_token),
-    onError: () => showToast("Google Auth Failed on Web", "error"),
+    onError: () => {
+      showToast("Google authentication cancelled or failed.", "error");
+      setIsSyncing(false);
+    },
+    onNonOAuthError: () => {
+      setIsSyncing(false);
+    },
   });
 
   async function handleCloudSync() {
+    setIsSyncing(true);
     if (isCapacitor()) {
       try {
-        setIsSyncing(true);
         showToast("Connecting with Google Account...", "info");
         await GoogleAuth.initialize();
         const user = await GoogleAuth.signIn();
@@ -176,9 +197,9 @@ export function SettingsPage() {
   }
 
   async function handleCloudRestore() {
+    setIsSyncing(true);
     if (isCapacitor()) {
       try {
-        setIsSyncing(true);
         showToast("Connecting with Google Account...", "info");
         await GoogleAuth.initialize();
         const user = await GoogleAuth.signIn();

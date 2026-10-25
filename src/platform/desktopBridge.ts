@@ -19,11 +19,14 @@ export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
+import { Capacitor } from "@capacitor/core";
+
 /**
  * Returns true when running inside a Capacitor native shell (Android/iOS).
+ * Uses Capacitor.isNativePlatform() to ensure plain web browsers return false.
  */
 export function isCapacitor(): boolean {
-  return typeof window !== "undefined" && "Capacitor" in window;
+  return typeof window !== "undefined" && Capacitor.isNativePlatform();
 }
 
 /**

@@ -432,12 +432,15 @@ function App() {
       showToast("Google authentication cancelled or failed.", "error");
       setIsRestoring(false);
     },
+    onNonOAuthError: () => {
+      setIsRestoring(false);
+    },
   });
 
   async function handleGoogleDriveRestore() {
+    setIsRestoring(true);
     if (isCapacitor()) {
       try {
-        setIsRestoring(true);
         showToast("Connecting with Google Account...", "info");
         await GoogleAuth.initialize();
         const user = await GoogleAuth.signIn();
