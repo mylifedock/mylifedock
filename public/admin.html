@@ -335,7 +335,8 @@
       <button class="tab-btn active" onclick="switchTab('analytics')">📊 Executive Overview</button>
       <button class="tab-btn" onclick="switchTab('licenses')">🔑 License Management</button>
       <button class="tab-btn" onclick="switchTab('generator')">⚡ Generate License Key</button>
-      <button class="tab-btn" onclick="switchTab('coupons')">🏷️ Coupon Codes</button>
+      <button class="tab-btn" onclick="switchTab('pricing')">💰 Plan Pricing & Links</button>
+      <button class="tab-btn" onclick="switchTab('coupons')">🏷️ Coupons & Offers</button>
       <button class="tab-btn" onclick="switchTab('verifier')">🔍 Key Inspector</button>
       <button class="tab-btn" onclick="switchTab('settings')">⚙️ Portal Settings</button>
     </nav>
@@ -520,6 +521,93 @@
               <button class="btn-secondary" onclick="copyGenEmailTemplate()">📧 Copy Welcome Email Template</button>
               <button class="btn-secondary" onclick="switchTab('licenses')">View in License Table &rarr;</button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: DYNAMIC PLAN PRICING & PAYMENT LINKS -->
+      <section id="tab-pricing" class="tab-pane" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title"><span>💰</span> Dynamic Plan Pricing & Payment Links</div>
+            <button class="btn-primary" onclick="savePricingConfig()">💾 Save & Publish Pricing</button>
+          </div>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 24px;">
+            Set your standard base prices for Monthly, Yearly, and Founder Lifetime tiers. All website pricing cards, active coupon percentage discounts (e.g. 50% or 20%), and the Key Generator will dynamically compute against these live base prices!
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px;">
+            
+            <!-- Monthly Pro Card -->
+            <div style="background: #07090e; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 20px;">
+              <h3 style="color: #38bdf8; font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Monthly Pro</span>
+                <span class="tag-monthly">Subscription</span>
+              </h3>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Base Price (₹ INR)</label>
+                <input type="number" id="cfg-price-monthly-inr" class="form-input" value="25" min="1">
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Base Price ($ USD)</label>
+                <input type="number" step="0.01" id="cfg-price-monthly-usd" class="form-input" value="0.49" min="0.01">
+              </div>
+              <div class="form-group">
+                <label>Razorpay Payment Link</label>
+                <input type="url" id="cfg-link-monthly" class="form-input" value="https://rzp.io/rzp/RzGKEOuM">
+              </div>
+            </div>
+
+            <!-- Yearly Pro Card -->
+            <div style="background: #07090e; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 20px;">
+              <h3 style="color: #34d399; font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Yearly Pro</span>
+                <span class="tag-yearly">Annual (Save ₹50)</span>
+              </h3>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Base Price (₹ INR)</label>
+                <input type="number" id="cfg-price-yearly-inr" class="form-input" value="250" min="1">
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Base Price ($ USD)</label>
+                <input type="number" step="0.01" id="cfg-price-yearly-usd" class="form-input" value="4.99" min="0.01">
+              </div>
+              <div class="form-group">
+                <label>Razorpay Payment Link</label>
+                <input type="url" id="cfg-link-yearly" class="form-input" value="https://rzp.io/rzp/aPFk0yOg">
+              </div>
+            </div>
+
+            <!-- Lifetime Founder Card -->
+            <div style="background: #07090e; border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 12px; padding: 20px;">
+              <h3 style="color: #facc15; font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Lifetime Founder</span>
+                <span class="tag-lifetime">Permanent Access</span>
+              </h3>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Base Price (₹ INR)</span>
+                  <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 10.5px; border-color: #eab308; color: #facc15;" onclick="doubleFounderPrice()">
+                    ⚡ 1-Click Double (₹1,998)
+                  </button>
+                </label>
+                <input type="number" id="cfg-price-lifetime-inr" class="form-input" value="999" min="1">
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Base Price ($ USD)</label>
+                <input type="number" step="0.01" id="cfg-price-lifetime-usd" class="form-input" value="19.99" min="0.01">
+              </div>
+              <div class="form-group">
+                <label>Razorpay Payment Link</label>
+                <input type="url" id="cfg-link-lifetime" class="form-input" value="https://rzp.io/rzp/9OJ0xeJS">
+              </div>
+            </div>
+
+          </div>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="savePricingConfig()">💾 Save & Publish Pricing</button>
+            <button class="btn-secondary" onclick="resetDefaultPricing()">🔄 Reset to Launch Defaults (₹25 / ₹250 / ₹999)</button>
           </div>
         </div>
       </section>
@@ -756,23 +844,37 @@
 
     function handleGenCouponChange() {
       const tier = document.getElementById("gen-tier").value;
-      const coupon = document.getElementById("gen-coupon") ? document.getElementById("gen-coupon").value : "none";
+      const couponCode = document.getElementById("gen-coupon") ? document.getElementById("gen-coupon").value : "none";
       const amountInput = document.getElementById("gen-amount");
 
-      let base = 999;
-      if (tier === "pro_yearly") base = 250;
-      else if (tier === "pro_monthly") base = 25;
+      const pricing = getPricingConfig();
+      let base = pricing.inr.lifetime;
+      if (tier === "pro_yearly") base = pricing.inr.yearly;
+      else if (tier === "pro_monthly") base = pricing.inr.monthly;
       else if (tier === "custom") base = parseInt(document.getElementById("gen-days")?.value, 10) || 199;
 
-      if (coupon === "FOUNDER50") {
-        amountInput.value = tier === "pro_lifetime" ? "499" : Math.round(base * 0.5);
-      } else if (coupon === "LAUNCH20") {
+      if (couponCode === "none") {
+        amountInput.value = base;
+        return;
+      }
+
+      const c = coupons.find(x => x.code === couponCode);
+      if (c) {
+        if (c.type === "percent") {
+          amountInput.value = Math.round(base * (1 - c.value / 100));
+        } else {
+          amountInput.value = Math.max(0, base - c.value);
+        }
+      } else if (couponCode === "FOUNDER50") {
+        amountInput.value = Math.round(base * 0.5);
+      } else if (couponCode === "LAUNCH20") {
         amountInput.value = Math.round(base * 0.8);
-      } else if (coupon === "SAVE50INR") {
+      } else if (couponCode === "SAVE50INR") {
         amountInput.value = Math.max(0, base - 50);
       } else {
         amountInput.value = base;
       }
+    }
     }
 
     let lastGeneratedKey = "";
@@ -929,7 +1031,83 @@ ${JSON.stringify(payload, null, 2)}`;
     }
 
     // --- RENDER TABLES & ANALYTICS ---
+    
+    // --- DYNAMIC PRICING CONFIGURATION ---
+    const DEFAULT_PRICING = {
+      inr: { monthly: 25, yearly: 250, lifetime: 999 },
+      usd: { monthly: 0.49, yearly: 4.99, lifetime: 19.99 },
+      links: {
+        monthly: "https://rzp.io/rzp/RzGKEOuM",
+        yearly: "https://rzp.io/rzp/aPFk0yOg",
+        lifetime: "https://rzp.io/rzp/9OJ0xeJS"
+      }
+    };
+
+    function getPricingConfig() {
+      try {
+        const stored = localStorage.getItem("mld_public_pricing");
+        if (stored) return JSON.parse(stored);
+      } catch (e) {}
+      return DEFAULT_PRICING;
+    }
+
+    function renderPricingInputs() {
+      const p = getPricingConfig();
+      if (document.getElementById("cfg-price-monthly-inr")) document.getElementById("cfg-price-monthly-inr").value = p.inr.monthly;
+      if (document.getElementById("cfg-price-monthly-usd")) document.getElementById("cfg-price-monthly-usd").value = p.usd.monthly;
+      if (document.getElementById("cfg-link-monthly")) document.getElementById("cfg-link-monthly").value = p.links.monthly;
+
+      if (document.getElementById("cfg-price-yearly-inr")) document.getElementById("cfg-price-yearly-inr").value = p.inr.yearly;
+      if (document.getElementById("cfg-price-yearly-usd")) document.getElementById("cfg-price-yearly-usd").value = p.usd.yearly;
+      if (document.getElementById("cfg-link-yearly")) document.getElementById("cfg-link-yearly").value = p.links.yearly;
+
+      if (document.getElementById("cfg-price-lifetime-inr")) document.getElementById("cfg-price-lifetime-inr").value = p.inr.lifetime;
+      if (document.getElementById("cfg-price-lifetime-usd")) document.getElementById("cfg-price-lifetime-usd").value = p.usd.lifetime;
+      if (document.getElementById("cfg-link-lifetime")) document.getElementById("cfg-link-lifetime").value = p.links.lifetime;
+    }
+
+    function savePricingConfig() {
+      const mINR = parseInt(document.getElementById("cfg-price-monthly-inr").value, 10) || 25;
+      const mUSD = parseFloat(document.getElementById("cfg-price-monthly-usd").value) || 0.49;
+      const mLink = document.getElementById("cfg-link-monthly").value.trim() || DEFAULT_PRICING.links.monthly;
+
+      const yINR = parseInt(document.getElementById("cfg-price-yearly-inr").value, 10) || 250;
+      const yUSD = parseFloat(document.getElementById("cfg-price-yearly-usd").value) || 4.99;
+      const yLink = document.getElementById("cfg-link-yearly").value.trim() || DEFAULT_PRICING.links.yearly;
+
+      const lINR = parseInt(document.getElementById("cfg-price-lifetime-inr").value, 10) || 999;
+      const lUSD = parseFloat(document.getElementById("cfg-price-lifetime-usd").value) || 19.99;
+      const lLink = document.getElementById("cfg-link-lifetime").value.trim() || DEFAULT_PRICING.links.lifetime;
+
+      const newPricing = {
+        inr: { monthly: mINR, yearly: yINR, lifetime: lINR },
+        usd: { monthly: mUSD, yearly: yUSD, lifetime: lUSD },
+        links: { monthly: mLink, yearly: yLink, lifetime: lLink }
+      };
+
+      localStorage.setItem("mld_public_pricing", JSON.stringify(newPricing));
+      showToast("Plan pricing & Razorpay links updated and published!", "success");
+      handleGenCouponChange();
+      renderAll();
+    }
+
+    function doubleFounderPrice() {
+      const input = document.getElementById("cfg-price-lifetime-inr");
+      const current = parseInt(input.value, 10) || 999;
+      input.value = current * 2;
+      showToast(`Doubled Lifetime Founder price to ₹${input.value}! Click Save to apply.`, "info");
+    }
+
+    function resetDefaultPricing() {
+      if (!confirm("Reset all plan prices and links back to launch defaults?")) return;
+      localStorage.setItem("mld_public_pricing", JSON.stringify(DEFAULT_PRICING));
+      renderPricingInputs();
+      handleGenCouponChange();
+      showToast("Prices reset to launch defaults (₹25 / ₹250 / ₹999).", "info");
+    }
+
     function renderAll() {
+      renderPricingInputs();
       renderAnalytics();
       renderLicensesTable();
       renderCouponsTable();

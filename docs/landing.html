@@ -616,28 +616,52 @@
     </div>
   </footer>
 
-    <script>
+      <script>
+    const DEFAULT_PRICING = {
+      inr: { monthly: 25, yearly: 250, lifetime: 999 },
+      usd: { monthly: 0.49, yearly: 4.99, lifetime: 19.99 },
+      links: {
+        monthly: "https://rzp.io/rzp/RzGKEOuM",
+        yearly: "https://rzp.io/rzp/aPFk0yOg",
+        lifetime: "https://rzp.io/rzp/9OJ0xeJS"
+      }
+    };
+
+    function getLivePricing() {
+      try {
+        const stored = localStorage.getItem("mld_public_pricing");
+        if (stored) return JSON.parse(stored);
+      } catch (e) {}
+      return DEFAULT_PRICING;
+    }
+
     const DEFAULT_PUBLIC_OFFERS = [
       {
         code: "FOUNDER50",
         discount: "50% OFF",
         plan: "Lifetime Founder",
-        desc: "Save 50% on Lifetime Vault (Pay ₹499 instead of ₹999)!",
-        inTicker: true
+        desc: "Save 50% on Lifetime Vault!",
+        inTicker: true,
+        type: "percent",
+        value: 50
       },
       {
         code: "LAUNCH20",
         discount: "20% OFF",
         plan: "All Plans",
         desc: "20% OFF on any Monthly, Yearly, or Lifetime Plan!",
-        inTicker: true
+        inTicker: true,
+        type: "percent",
+        value: 20
       },
       {
         code: "SAVE50INR",
         discount: "₹50 FLAT OFF",
         plan: "Yearly Pro",
-        desc: "Flat ₹50 OFF Yearly Pro! Pay ₹200/yr instead of ₹250.",
-        inTicker: true
+        desc: "Flat ₹50 OFF Yearly Pro!",
+        inTicker: true,
+        type: "flat",
+        value: 50
       }
     ];
 
@@ -653,6 +677,7 @@
       }
       if (wrapper) wrapper.style.display = "block";
 
+      const pricing = getLivePricing();
       let rawOffers = localStorage.getItem("mld_public_offers") || localStorage.getItem("mld_admin_coupons");
       let offers = rawOffers ? JSON.parse(rawOffers) : DEFAULT_PUBLIC_OFFERS;
       offers = offers.filter(o => o.inTicker !== false);
@@ -669,10 +694,11 @@
       marqueeItems.forEach(o => {
         const item = document.createElement("span");
         item.className = "offer-ticker-item";
+        const descText = formatOfferDesc(o, pricing);
         item.innerHTML = `
           <span class="offer-code-tag" onclick="copyAndNotifyOffer('${o.code}')">${o.code}</span>
           <strong style="color: #4ade80;">${o.discount}</strong>
-          <span>${o.desc || o.plan || ''}</span>
+          <span>${descText}</span>
           <span style="color: #64748b; margin: 0 8px;">•</span>
         `;
         track.appendChild(item);
@@ -681,13 +707,14 @@
       offers.forEach(o => {
         const chip = document.createElement("div");
         chip.className = "offer-chip";
+        const descText = formatOfferDesc(o, pricing);
         chip.innerHTML = `
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span class="offer-code-tag" onclick="copyAndNotifyOffer('${o.code}')">${o.code}</span>
               <span style="color: #4ade80; font-weight: 700; font-size: 13.5px;">${o.discount}</span>
             </div>
-            <div style="font-size: 12px; color: #94a3b8; margin: 6px 0 10px 0;">${o.desc || o.plan}</div>
+            <div style="font-size: 12px; color: #94a3b8; margin: 6px 0 10px 0;">${descText}</div>
           </div>
           <div style="display:flex; gap:6px;">
             <button type="button" class="btn-secondary" style="flex:1; padding: 5px 8px; font-size: 11.5px;" onclick="copyAndNotifyOffer('${o.code}')">📋 Copy Code</button>
@@ -696,6 +723,21 @@
         `;
         chipsList.appendChild(chip);
       });
+    }
+
+    function formatOfferDesc(o, pricing) {
+      if (o.code === "FOUNDER50" || o.discount.includes("50%")) {
+        const d = Math.round(pricing.inr.lifetime * 0.5);
+        return `Save 50% on Lifetime Vault (Pay ₹${d} instead of ₹${pricing.inr.lifetime})!`;
+      }
+      if (o.code === "SAVE50INR") {
+        const d = Math.max(0, pricing.inr.yearly - 50);
+        return `Flat ₹50 OFF Yearly Pro! (Pay ₹${d}/yr instead of ₹${pricing.inr.yearly})`;
+      }
+      if (o.code === "LAUNCH20" || o.discount.includes("20%")) {
+        return `20% OFF on any Monthly (₹${Math.round(pricing.inr.monthly * 0.8)}), Yearly (₹${Math.round(pricing.inr.yearly * 0.8)}), or Lifetime (₹${Math.round(pricing.inr.lifetime * 0.8)}) Plan!`;
+      }
+      return o.desc || o.plan || '';
     }
 
     function copyAndNotifyOffer(code) {
@@ -754,38 +796,1107 @@
     }
 
     function updatePrices() {
+      const pricing = getLivePricing();
       const pMonthly = document.getElementById('price-monthly');
       const pYearly = document.getElementById('price-yearly');
       const pLifetime = document.getElementById('price-lifetime');
+      const monthlyBtn = document.getElementById('monthly-buy-btn');
+      const yearlyBtn = document.getElementById('yearly-buy-btn');
+      const lifetimeBtn = document.getElementById('lifetime-buy-btn');
+
+      // Update button URLs dynamically from live config
+      if (monthlyBtn && pricing.links && pricing.links.monthly) monthlyBtn.href = pricing.links.monthly;
+      if (yearlyBtn && pricing.links && pricing.links.yearly) yearlyBtn.href = pricing.links.yearly;
+      if (lifetimeBtn && pricing.links && pricing.links.lifetime) lifetimeBtn.href = pricing.links.lifetime;
+
       if (!pMonthly || !pYearly || !pLifetime) return;
 
       if (currentCurrency === 'INR') {
-        let m = 25;
-        let y = 250;
-        let l = 999;
+        const baseM = pricing.inr.monthly;
+        const baseY = pricing.inr.yearly;
+        const baseL = pricing.inr.lifetime;
+
+        let m = baseM;
+        let y = baseY;
+        let l = baseL;
 
         if (appliedCoupon) {
-          if (appliedCoupon.code === "FOUNDER50") {
-            l = 499;
-          } else if (appliedCoupon.code === "LAUNCH20") {
-            m = 20; y = 200; l = 799;
+          if (appliedCoupon.code === "FOUNDER50" || appliedCoupon.value === 50) {
+            l = Math.round(baseL * 0.5);
+          } else if (appliedCoupon.code === "LAUNCH20" || appliedCoupon.value === 20) {
+            m = Math.round(baseM * 0.8);
+            y = Math.round(baseY * 0.8);
+            l = Math.round(baseL * 0.8);
           } else if (appliedCoupon.code === "SAVE50INR") {
-            y = 200;
+            y = Math.max(0, baseY - 50);
           } else if (appliedCoupon.type === "percent") {
             const factor = (100 - appliedCoupon.value) / 100;
-            m = Math.round(m * factor);
-            y = Math.round(y * factor);
-            l = Math.round(l * factor);
+            m = Math.round(baseM * factor);
+            y = Math.round(baseY * factor);
+            l = Math.round(baseL * factor);
+          } else if (appliedCoupon.type === "flat") {
+            m = Math.max(0, baseM - appliedCoupon.value);
+            y = Math.max(0, baseY - appliedCoupon.value);
+            l = Math.max(0, baseL - appliedCoupon.value);
           }
         }
 
-        pMonthly.innerHTML = (m === 25) ? '&#8377;25' : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;25</span>&#8377;${m}`;
-        pYearly.innerHTML = (y === 250) ? '&#8377;250' : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;250</span>&#8377;${y}`;
-        pLifetime.innerHTML = (l === 999) ? '&#8377;999' : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;999</span>&#8377;${l}`;
+        pMonthly.innerHTML = (m === baseM) ? `&#8377;${baseM}` : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;${baseM}</span>&#8377;${m}`;
+        pYearly.innerHTML = (y === baseY) ? `&#8377;${baseY}` : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;${baseY}</span>&#8377;${y}`;
+        pLifetime.innerHTML = (l === baseL) ? `&#8377;${baseL}` : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;${baseL}</span>&#8377;${l}`;
       } else {
-        pMonthly.innerText = '$0.49';
-        pYearly.innerText = '$4.99';
-        pLifetime.innerText = '$19.99';
+        const baseM = pricing.usd.monthly;
+        const baseY = pricing.usd.yearly;
+        const baseL = pricing.usd.lifetime;
+        pMonthly.innerText = '
+        pYearly.innerText = '
+        pLifetime.innerText = '
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseM;
+        pYearly.innerText = `${baseY}`;
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseM;
+        pYearly.innerText = '
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseL;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseM;
+        pYearly.innerText = `${baseY}`;
+        pLifetime.innerText = '
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseM;
+        pYearly.innerText = '
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseL;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = '
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseM;
+        pYearly.innerText = '
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseL;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseM;
+        pYearly.innerText = '
+        pLifetime.innerText = '
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = `${baseL}`;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseL;
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseY;
+        pLifetime.innerText = '
+      }
+    }
+
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      if (curr === 'INR') {
+        document.getElementById('price-free').innerHTML = '&#8377;0';
+        document.getElementById('monthly-interval').innerHTML = '/ month';
+        document.getElementById('yearly-interval').innerHTML = '/ year';
+        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
+      } else {
+        document.getElementById('price-free').innerText = '$0';
+        document.getElementById('monthly-interval').innerText = '/ month';
+        document.getElementById('yearly-interval').innerText = '/ year';
+        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      }
+      updatePrices();
+    }
+
+    function showWebToast(msg) {
+      let t = document.getElementById("web-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "web-toast";
+        t.style.position = "fixed";
+        t.style.bottom = "24px";
+        t.style.right = "24px";
+        t.style.background = "#0f172a";
+        t.style.border = "1px solid #38bdf8";
+        t.style.color = "#fff";
+        t.style.padding = "12px 20px";
+        t.style.borderRadius = "8px";
+        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
+        t.style.zIndex = "9999";
+        t.style.fontSize = "13.5px";
+        document.body.appendChild(t);
+      }
+      t.innerText = msg;
+      t.style.display = "block";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderPublicOffers();
+      updatePrices();
+    });
+  </script>
+</body>
+</html>
+ + baseL;
       }
     }
 
