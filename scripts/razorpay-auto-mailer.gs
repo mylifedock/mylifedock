@@ -112,6 +112,9 @@ function razorpayRequest(method, path, body) {
   }
   var response = UrlFetchApp.fetch("https://api.razorpay.com/v1/" + path, options);
   if (response.getResponseCode() !== 200) {
+    // Shown in Apps Script -> Executions (Razorpay's error text never contains the key secret).
+    console.error("Razorpay " + method.toUpperCase() + " " + path.split("/")[0] + " failed: HTTP " +
+      response.getResponseCode() + " " + truncate(response.getContentText(), 300));
     return null;
   }
   return JSON.parse(response.getContentText());
@@ -338,6 +341,7 @@ function doGet(e) {
       return jsonResponse(createOrder(String(e.parameter.plan || "")));
     }
   } catch (err) {
+    // For example "Missing Script Property: RAZORPAY_KEY_ID" (see Apps Script -> Executions).
     console.error(err);
     return jsonResponse({ ok: false, error: "unavailable" });
   }

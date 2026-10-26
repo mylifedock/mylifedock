@@ -17,17 +17,24 @@ npm audit --omit=dev             # production dependencies
 cd src-tauri; cargo test; cargo audit
 ```
 
-`release:check` fails until the pricing service URL is configured (step 1). Its `NOTE` lines list anything optional
-that is still off (store billing, platforms without Drive backup).
+`release:check` passes (15/15) as of 2026-10-27. Its `NOTE` lines list anything optional that is still off
+(store billing, platforms without Drive backup).
 
 ## 1. Payments and licensing **(you)**
 
 Prices and offers: [PRICING_AND_OFFERS.md](PRICING_AND_OFFERS.md).
 
-- [ ] Apps Script: paste the current `scripts/razorpay-auto-mailer.gs` (not the retired loader), run `setupOrdersSheet`
-      once (prints the Orders sheet link and adds the **Pricing** tab), then Deploy → Manage deployments → Edit →
-      New version. Script Properties: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `MLD_LICENSE_PRIVATE_KEY`.
-      Razorpay webhook: the Web App URL, event `payment.captured`.
+**Status 2026-10-27:** the website is under Razorpay review; live API keys are available only after approval.
+Until then, website checkout falls back to the backup Payment Pages and licences are issued by hand from
+`tools/admin.html` (Issue key → Email customer → Copy row for Orders sheet).
+
+- [x] Apps Script deployed with the pricing service; `setupOrdersSheet` run (Orders sheet + Pricing tab exist,
+      `ORDERS_SHEET_ID` set). `?action=pricing` verified live.
+- [ ] Paste the latest `scripts/razorpay-auto-mailer.gs` (logs Razorpay errors to Executions), Deploy → New version.
+- [ ] Script Properties: `MLD_LICENSE_PRIVATE_KEY` (can be added now), `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET`
+      (live, after Razorpay approves the website).
+- [ ] Razorpay webhook in **Live** mode: the Web App URL, event `payment.captured`.
+- [ ] Check the ₹117 collected before the keys existed: issue licences by hand to any real buyer who got none.
 - [x] Put the Web App URL (`https://script.google.com/macros/s/…/exec`) in `PRICING_API_URL` in both
       `src/config/pricingConfig.ts` and `docs/assets/pricing.js`.
 - [x] Razorpay → Account & Settings → Business website: `https://mylifedock.github.io` (refund and contact pages,
@@ -106,7 +113,7 @@ Full steps: [STORE_BILLING_SETUP.md](STORE_BILLING_SETUP.md).
 
 ## 7. Website (`docs/`)
 
-- [ ] Publish `docs/` (GitHub Pages, branch folder `/docs`): `index.html` (a copy of `landing.html`; keep both identical),
+- [x] Publish `docs/` (GitHub Pages, branch `main`, folder `/docs`; live since 2026-10-27): `index.html` (a copy of `landing.html`; keep both identical),
       `guide.html`, `brochure.html`, `buy.html`, `privacy.html`, `terms.html`, `refunds.html`, `contact.html`, `404.html`, `assets/`.
 - [ ] Upload the signed installer to GitHub Releases; the landing page's Windows button links there.
 - [ ] When the Android/iOS apps are live, replace the "coming soon" buttons on the landing page with the store links.
