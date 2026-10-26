@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Scoped suppressions for Capacitor template files only. Each one was reviewed:
+  - config.xml, package_name, custom_url_scheme: read by Capacitor at runtime by name.
+  - AppTheme.NoActionBar: applied by Capacitor's BridgeActivity (a library class lint does not see).
+  - splash.png: Capacitor's generated launch images; the launch theme scales them.
+-->
+<lint>
+    <issue id="UnusedResources">
+        <ignore path="src/main/res/xml/config.xml" />
+        <ignore regexp="R\.string\.(package_name|custom_url_scheme)" />
+        <ignore regexp="R\.style\.AppTheme_NoActionBar" />
+    </issue>
+    <issue id="IconDipSize">
+        <ignore regexp="splash\.png" />
+    </issue>
+    <issue id="IconDuplicatesConfig">
+        <ignore regexp="splash\.png" />
+    </issue>
+    <issue id="IconLocation">
+        <ignore path="src/main/res/drawable/splash.png" />
+    </issue>
+</lint>

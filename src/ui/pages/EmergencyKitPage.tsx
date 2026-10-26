@@ -1,76 +1,111 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "../components/Toast";
-import { getEmergencyProfile, saveEmergencyProfile, generateEmergencySummaryHtml, type EmergencyProfile } from "../../application/emergencyKitService";
+import {
+  EMPTY_EMERGENCY_PROFILE,
+  getEmergencyProfile,
+  saveEmergencyProfile,
+  generateEmergencySummaryHtml,
+  type EmergencyProfile,
+} from "../../application/emergencyKitService";
+import { saveFile } from "../../platform/fileExport";
+import { FamilyProfileSwitcher } from "../components/FamilyProfileSwitcher";
+import { useActiveProfileFilter } from "../useActiveProfileFilter";
+import { PageHeader } from "../components/PageHeader";
+import { LOCAL_PROFILE_ID } from "../../application/profileService";
+
+function hasKitData(profile: EmergencyProfile): boolean {
+  return Boolean(profile.fullName || profile.bloodGroup || profile.emergencyContactName);
+}
 
 export function EmergencyKitPage() {
-  const [profile, setProfile] = useState<EmergencyProfile>(() => getEmergencyProfile());
-  const hasExistingData = Boolean(profile.fullName || profile.bloodGroup || profile.emergencyContactName);
-  const [isEditing, setIsEditing] = useState<boolean>(!hasExistingData);
+  const [profile, setProfile] = useState<EmergencyProfile>(EMPTY_EMERGENCY_PROFILE);
+  const [loaded, setLoaded] = useState(false);
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { showToast } = useToast();
+  // One kit per family member; "All family" is not meaningful here.
+  const [activeFilter] = useActiveProfileFilter();
+  const profileId = activeFilter === "all" ? LOCAL_PROFILE_ID : activeFilter;
 
-  function handleSave(e: React.FormEvent) {
+  useEffect(() => {
+    let active = true;
+    void getEmergencyProfile(profileId)
+      .then((stored) => {
+        if (!active) return;
+        setProfile(stored);
+        setHasExistingData(hasKitData(stored));
+        setIsEditing(!hasKitData(stored));
+      })
+      .catch(() => {
+        if (active) showToast("Could not load the emergency profile.", "error");
+      })
+      .finally(() => {
+        if (active) setLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [showToast, profileId]);
+
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    saveEmergencyProfile(profile);
-    setIsEditing(false);
-    showToast("Emergency profile saved to secure vault", "success");
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await saveEmergencyProfile(profile, profileId);
+      setHasExistingData(hasKitData(profile));
+      setIsEditing(false);
+      showToast("Emergency profile saved to secure vault", "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Could not save the emergency profile.", "error");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   async function handlePrintOrExport() {
+    if (!window.confirm("The exported kit is a readable (unencrypted) file so your family can open and print it. Keep it somewhere safe. Continue?")) {
+      return;
+    }
     try {
-      const html = await generateEmergencySummaryHtml();
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(html);
-        printWindow.document.close();
-      } else {
-        showToast("Please allow popups to view the printable emergency kit", "info");
-      }
+      const html = await generateEmergencySummaryHtml(profileId);
+      const saved = await saveFile(new Blob([html], { type: "text/html" }), "MyLifeDock_Emergency_Kit.html", {
+        title: "Save or Share Emergency Kit",
+        filterName: "Web page (*.html)",
+      });
+      if (saved) showToast("Emergency kit exported. Open it in a browser to print or save as PDF.", "success");
     } catch {
       showToast("Error generating emergency kit", "error");
     }
   }
 
+  if (!loaded) {
+    return <div className="fade-in" aria-busy="true" />;
+  }
+
   return (
-    <div className="fade-in">
-      <div className="page-header">
-        <div className="page-title-group">
-          <h1 className="page-title">🆘 Emergency Family Kit</h1>
-          <p className="page-subtitle">Lifeboat Protocol: Essential medical & legal summary for your family during critical moments.</p>
-        </div>
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          {!isEditing && (
-            <button 
-              type="button"
-              className="secondary-button"
-              onClick={() => setIsEditing(true)}
-              style={{ display: "flex", alignItems: "center", gap: "6px" }}
-            >
-              <span>✏️</span> Edit Profile
+    <div className="page-container fade-in">
+      <PageHeader
+        title="Emergency Kit"
+        subtitle="Blood group, allergies, medicines and who to call, ready for family or doctors."
+        actions={
+          <div className="header-action-row">
+            {!isEditing && (
+              <button type="button" className="secondary-button" onClick={() => setIsEditing(true)}>
+                ✏️ Edit
+              </button>
+            )}
+            <button type="button" className="primary-button" onClick={handlePrintOrExport}>
+              📄 Export to print
             </button>
-          )}
-          <button 
-            type="button"
-            className="primary-button" 
-            onClick={handlePrintOrExport}
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <span>📄</span> Print / Export Binder
-          </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
-      <div className="card fade-in" style={{ marginBottom: "24px", borderColor: "rgba(239, 68, 68, 0.3)", background: "rgba(239, 68, 68, 0.04)" }}>
-        <div className="card-header">
-          <h3 style={{ color: "#f87171" }}>🛡️ Lifeboat Protocol Active</h3>
-        </div>
-        <div className="card-body">
-          <p style={{ color: "#cbd5e1" }}>
-            In medical or legal emergencies, loved ones often struggle to find insurance policy numbers, blood types, or critical document locations.
-            Keep this summary updated, and you can export a secure offline document to place in your home safe or give to your family.
-          </p>
-        </div>
+      <div className="section-toolbar section-toolbar-start">
+        <FamilyProfileSwitcher allowAll={false} />
       </div>
-
       {!isEditing ? (
         /* Clean Summary Dashboard View */
         <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -167,18 +202,18 @@ export function EmergencyKitPage() {
             <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                 <div className="form-field" style={{ flex: 1, minWidth: "200px" }}>
-                  <label>Full Legal Name</label>
-                  <input
+                  <label htmlFor="emergencyKit-fullLegalName">Full Legal Name</label>
+                  <input id="emergencyKit-fullLegalName"
                     type="text"
                     value={profile.fullName}
                     onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                    placeholder="e.g. John Doe"
+                    placeholder="e.g. Rahul Sharma"
                   />
                 </div>
 
                 <div className="form-field" style={{ flex: 1, minWidth: "150px" }}>
-                  <label>Blood Group</label>
-                  <input
+                  <label htmlFor="emergencyKit-bloodGroup">Blood Group</label>
+                  <input id="emergencyKit-bloodGroup"
                     type="text"
                     value={profile.bloodGroup}
                     onChange={(e) => setProfile({ ...profile, bloodGroup: e.target.value })}
@@ -189,8 +224,8 @@ export function EmergencyKitPage() {
 
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                 <div className="form-field" style={{ flex: 1, minWidth: "200px" }}>
-                  <label>Known Allergies (Penicillin, Peanuts, Latex, etc.)</label>
-                  <input
+                  <label htmlFor="emergencyKit-knownAllergies">Known Allergies (Penicillin, Peanuts, Latex, etc.)</label>
+                  <input id="emergencyKit-knownAllergies"
                     type="text"
                     value={profile.allergies}
                     onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
@@ -199,8 +234,8 @@ export function EmergencyKitPage() {
                 </div>
 
                 <div className="form-field" style={{ flex: 1, minWidth: "200px" }}>
-                  <label>Critical Daily Medications</label>
-                  <input
+                  <label htmlFor="emergencyKit-criticalDailyMedications">Critical Daily Medications</label>
+                  <input id="emergencyKit-criticalDailyMedications"
                     type="text"
                     value={profile.medications}
                     onChange={(e) => setProfile({ ...profile, medications: e.target.value })}
@@ -231,8 +266,8 @@ export function EmergencyKitPage() {
             <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                 <div className="form-field" style={{ flex: 1, minWidth: "180px" }}>
-                  <label>Next of Kin Contact Name</label>
-                  <input
+                  <label htmlFor="emergencyKit-nextOfKinContactName">Next of Kin Contact Name</label>
+                  <input id="emergencyKit-nextOfKinContactName"
                     type="text"
                     value={profile.emergencyContactName}
                     onChange={(e) => setProfile({ ...profile, emergencyContactName: e.target.value })}
@@ -241,8 +276,8 @@ export function EmergencyKitPage() {
                 </div>
 
                 <div className="form-field" style={{ flex: 1, minWidth: "150px" }}>
-                  <label>Relationship</label>
-                  <input
+                  <label htmlFor="emergencyKit-relationship">Relationship</label>
+                  <input id="emergencyKit-relationship"
                     type="text"
                     value={profile.emergencyContactRelation}
                     onChange={(e) => setProfile({ ...profile, emergencyContactRelation: e.target.value })}
@@ -251,20 +286,20 @@ export function EmergencyKitPage() {
                 </div>
 
                 <div className="form-field" style={{ flex: 1, minWidth: "180px" }}>
-                  <label>Emergency Phone Number</label>
-                  <input
+                  <label htmlFor="emergencyKit-emergencyPhoneNumber">Emergency Phone Number</label>
+                  <input id="emergencyKit-emergencyPhoneNumber"
                     type="tel"
                     value={profile.emergencyContactPhone}
                     onChange={(e) => setProfile({ ...profile, emergencyContactPhone: e.target.value })}
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+91 98765 43210"
                   />
                 </div>
               </div>
 
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                 <div className="form-field" style={{ flex: 1, minWidth: "200px" }}>
-                  <label>Primary Physician / Preferred Hospital</label>
-                  <input
+                  <label htmlFor="emergencyKit-primaryPhysicianPreferredHospital">Primary Physician / Preferred Hospital</label>
+                  <input id="emergencyKit-primaryPhysicianPreferredHospital"
                     type="text"
                     value={profile.doctorName}
                     onChange={(e) => setProfile({ ...profile, doctorName: e.target.value })}
@@ -273,8 +308,8 @@ export function EmergencyKitPage() {
                 </div>
 
                 <div className="form-field" style={{ flex: 1, minWidth: "180px" }}>
-                  <label>Doctor / Clinic Phone</label>
-                  <input
+                  <label htmlFor="emergencyKit-doctorClinicPhone">Doctor / Clinic Phone</label>
+                  <input id="emergencyKit-doctorClinicPhone"
                     type="tel"
                     value={profile.doctorPhone}
                     onChange={(e) => setProfile({ ...profile, doctorPhone: e.target.value })}
@@ -292,8 +327,8 @@ export function EmergencyKitPage() {
             </div>
             <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div className="form-field">
-                <label>Where are physical copies of Will, Property Deeds, and Lockbox Keys stored?</label>
-                <input
+                <label htmlFor="emergencyKit-whereArePhysicalCopiesOfWillPropertyDeedsAndLockboxKeysStored">Where are physical copies of Will, Property Deeds, and Lockbox Keys stored?</label>
+                <input id="emergencyKit-whereArePhysicalCopiesOfWillPropertyDeedsAndLockboxKeysStored"
                   type="text"
                   value={profile.willLocation}
                   onChange={(e) => setProfile({ ...profile, willLocation: e.target.value })}
@@ -302,8 +337,8 @@ export function EmergencyKitPage() {
               </div>
 
               <div className="form-field">
-                <label>Additional Emergency Notes / Instructions</label>
-                <textarea
+                <label htmlFor="emergencyKit-additionalEmergencyNotesInstructions">Additional Emergency Notes / Instructions</label>
+                <textarea id="emergencyKit-additionalEmergencyNotesInstructions"
                   rows={3}
                   value={profile.notes}
                   onChange={(e) => setProfile({ ...profile, notes: e.target.value })}
@@ -323,8 +358,8 @@ export function EmergencyKitPage() {
                 Cancel
               </button>
             )}
-            <button type="submit" className="primary-button" style={{ minWidth: "160px" }}>
-              ✓ Save Emergency Profile
+            <button type="submit" className="primary-button" style={{ minWidth: "160px" }} disabled={isSaving}>
+              {isSaving ? "Saving..." : "✓ Save Emergency Profile"}
             </button>
           </div>
         </form>

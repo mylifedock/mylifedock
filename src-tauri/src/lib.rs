@@ -8,14 +8,12 @@ use tauri::{
     tray::TrayIconBuilder,
 };
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! Welcome to MyLifeDock.", name)
-}
+mod oauth;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(oauth::OAuthState::default())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -60,7 +58,11 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            oauth::oauth_loopback_start,
+            oauth::oauth_loopback_wait,
+            oauth::oauth_loopback_cancel
+        ])
         .run(tauri::generate_context!())
         .expect("error while running MyLifeDock");
 }

@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import { getDocuments } from "../../application/documentService";
 import { getProducts } from "../../application/productService";
 import { getUpcomingReminders } from "../../application/reminderService";
 import { getMedicalRecords } from "../../application/medicalService";
-import { getVaultQuotaStatus, type VaultQuotaStatus } from "../../application/vaultLimitService";
-import { ProUpgradeModal } from "../components/ProUpgradeModal";
+import { getVaultQuotaStatus } from "../../application/vaultLimitService";
+import { getExpiringCoverages } from "../../application/coverageService";
+import { getLocalDateString } from "../../utils/dateUtils";
 
 import StatCard from "../components/StatCard";
 import QuickAction from "../components/QuickAction";
@@ -14,11 +14,13 @@ import QuickAction from "../components/QuickAction";
 type DashboardPageProps = {
   displayName: string;
   onNavigate: (page: string) => void;
+  onUpgrade: () => void;
 };
 
 function DashboardPage({
   displayName,
   onNavigate,
+  onUpgrade,
 }: DashboardPageProps) {
   const documents = useLiveQuery(
     () => getDocuments(),
@@ -44,20 +46,22 @@ function DashboardPage({
     [],
   );
 
-  const sensitiveCount =
-    documents.filter(
-      (d) => d.sensitivity !== "normal",
-    ).length +
-    products.filter(
-      (p) => p.sensitivity !== "normal",
-    ).length;
+  // Policies, warranties and documents that expire within 30 days.
+  const expiringCount = useLiveQuery(
+    async () => {
+      const today = getLocalDateString();
+      const in30 = new Date();
+      in30.setDate(in30.getDate() + 30);
+      const limit = getLocalDateString(in30);
+      const docs = documents.filter((d) => d.expiryDate && d.expiryDate >= today && d.expiryDate <= limit).length;
+      return docs + (await getExpiringCoverages(30)).length;
+    },
+    [documents],
+    0,
+  );
 
-  const [quota, setQuota] = useState<VaultQuotaStatus | null>(null);
-  const [showProModal, setShowProModal] = useState(false);
-
-  useEffect(() => {
-    void getVaultQuotaStatus().then(setQuota);
-  }, [documents, products, medicalRecords]);
+  // Live: re-counts whenever any counted section changes (accounts, policies, subscriptions...).
+  const quota = useLiveQuery(() => getVaultQuotaStatus(), [], null);
 
   return (
     <div className="page">
@@ -138,7 +142,7 @@ function DashboardPage({
               cursor: "pointer",
               boxShadow: "0 2px 8px rgba(234, 179, 8, 0.25)",
             }}
-            onClick={() => setShowProModal(true)}
+            onClick={onUpgrade}
           >
             ⭐ Upgrade to Pro
           </button>
@@ -202,16 +206,17 @@ function DashboardPage({
         <StatCard
           icon={
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              <path d="M12 9v4" />
+              <path d="M12 17h.01" />
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
             </svg>
           }
-          label="Protected"
-          value={sensitiveCount}
-          description="Sensitive records"
+          label="Expiring soon"
+          value={expiringCount}
+          description={expiringCount === 0 ? "Nothing in the next 30 days" : "Policies, warranties & documents in 30 days"}
           accentColor="#34d399"
           accentBg="rgba(16, 185, 129, 0.12)"
-          onClick={() => onNavigate("secrets")}
+          onClick={() => onNavigate("reminders")}
         />
       </section>
 
@@ -358,31 +363,6 @@ function DashboardPage({
         </div>
       </section>
 
-      <section className="privacy-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <div className="privacy-card-icon">🛡️</div>
-          <div>
-            <strong>Zero-Knowledge Security Active</strong>
-            <p>
-              Your vault is encrypted locally with AES-256-GCM. The developer and cloud providers cannot read your records.
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="secondary-button"
-          style={{ fontSize: "13.5px", padding: "8px 16px", border: "1px solid rgba(56, 189, 248, 0.3)", color: "#38bdf8" }}
-          onClick={() => onNavigate("settings")}
-        >
-          Vault Backups &rarr;
-        </button>
-      </section>
-
-      <ProUpgradeModal
-        isOpen={showProModal}
-        onClose={() => setShowProModal(false)}
-        currentCount={quota?.totalItems ?? 0}
-      />
     </div>
   );
 }

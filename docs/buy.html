@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Buy MyLifeDock Pro</title>
+  <meta name="description" content="Buy MyLifeDock Pro with UPI, cards or netbanking. Your licence key arrives by email.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#090b10">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html" aria-label="MyLifeDock home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>MyLife<b>Dock</b></span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a class="nav-secondary" href="index.html#pricing">Pricing</a>
+        <a href="guide.html">Guide</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <div class="checkout">
+      <span class="eyebrow">MyLifeDock Pro for Windows</span>
+      <h1>Buy MyLifeDock Pro</h1>
+      <p class="lead">Pay with UPI, cards or netbanking through Razorpay. Your licence key arrives by email within minutes.</p>
+
+      <form class="checkout-card" id="checkout-form" novalidate>
+        <fieldset class="plan-choices">
+          <legend class="muted" style="margin-bottom:10px;font-size:14px;">Choose a plan</legend>
+          <label class="plan-choice">
+            <input type="radio" name="plan" value="pro_monthly">
+            <span class="choice-name">Monthly Pro<span class="choice-offer" data-choice-offer="pro_monthly" hidden></span></span>
+            <span class="choice-price" data-choice-price="pro_monthly">₹25</span>
+          </label>
+          <label class="plan-choice">
+            <input type="radio" name="plan" value="pro_yearly">
+            <span class="choice-name">Yearly Pro<span class="choice-offer" data-choice-offer="pro_yearly" hidden></span></span>
+            <span class="choice-price" data-choice-price="pro_yearly">₹250</span>
+          </label>
+          <label class="plan-choice">
+            <input type="radio" name="plan" value="pro_lifetime" checked>
+            <span class="choice-name">Lifetime<span class="choice-offer" data-choice-offer="pro_lifetime" hidden></span></span>
+            <span class="choice-price" data-choice-price="pro_lifetime">₹999</span>
+          </label>
+        </fieldset>
+
+        <div class="field">
+          <label for="buyer-name">Your name</label>
+          <input type="text" id="buyer-name" autocomplete="name" maxlength="80" required>
+        </div>
+        <label class="agree">
+          <input type="checkbox" id="agree" required>
+          <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and the <a href="refunds.html" target="_blank" rel="noopener">Refund &amp; delivery policy</a>.</span>
+        </label>
+
+        <button type="submit" class="btn btn-primary" id="pay-btn">Pay securely</button>
+        <p class="checkout-status" id="checkout-status" role="status" aria-live="polite"></p>
+        <p class="muted" style="margin:12px 0 0;font-size:13px;">Razorpay asks for your email and mobile number; the licence key is sent to that email. Prices are in Indian rupees.</p>
+      </form>
+
+      <div class="checkout-success" id="checkout-success" hidden>
+        <h2 style="margin-top:0;">Payment received. Thank you!</h2>
+        <p>Your licence key is on its way to the email you entered in Razorpay. It usually arrives within a few minutes; please check your spam folder too.</p>
+        <p>Then open MyLifeDock → <strong>Settings &amp; Backup → Plan</strong>, paste the key and choose <strong>Activate Key</strong>.</p>
+        <p class="muted" style="margin-bottom:0;">Payment ID: <code id="payment-id"></code>. No email after an hour? Write to <a href="mailto:mylifedock@gmail.com">mylifedock@gmail.com</a> with this payment ID.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <nav class="footer-links" aria-label="Footer">
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="terms.html">Terms of service</a>
+        <a href="refunds.html">Refunds &amp; delivery</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <p>© 2026 MyLifeDock Technologies. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="assets/pricing.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var P = window.MLDPricing;
+      var CHECKOUT_JS = "https://checkout.razorpay.com/v1/checkout.js";
+      var form = document.getElementById("checkout-form");
+      var payBtn = document.getElementById("pay-btn");
+      var status = document.getElementById("checkout-status");
+      var live = null;
+      var busy = false;
+
+      function selectedPlan() {
+        var checked = form.querySelector('input[name="plan"]:checked');
+        return checked ? checked.value : "pro_lifetime";
+      }
+
+      function regularPrice(plan) {
+        return document.querySelector('[data-choice-price="' + plan + '"]').getAttribute("data-regular") ||
+          document.querySelector('[data-choice-price="' + plan + '"]').textContent;
+      }
+
+      function setStatus(message, isError) {
+        status.textContent = message;
+        status.className = "checkout-status" + (isError ? " error" : "");
+      }
+
+      function updateButton() {
+        var plan = selectedPlan();
+        var p = live && live[plan];
+        payBtn.textContent = "Pay " + (p ? P.inr(p.offer ? p.offer.priceINR : p.priceINR) : regularPrice(plan)) + " securely";
+      }
+
+      function renderLive() {
+        P.PLAN_IDS.forEach(function (id) {
+          var p = live[id];
+          var priceEl = document.querySelector('[data-choice-price="' + id + '"]');
+          var offerEl = document.querySelector('[data-choice-offer="' + id + '"]');
+          if (!p) return;
+          priceEl.setAttribute("data-regular", P.inr(p.priceINR));
+          priceEl.textContent = "";
+          if (p.offer) {
+            var was = document.createElement("s");
+            was.textContent = P.inr(p.priceINR);
+            priceEl.appendChild(was);
+            priceEl.appendChild(document.createTextNode(P.inr(p.offer.priceINR)));
+            var ends = P.day(p.offer.endsOn);
+            offerEl.textContent = p.offer.text + (ends ? " · ends " + ends : "");
+            offerEl.hidden = false;
+          } else {
+            priceEl.textContent = P.inr(p.priceINR);
+            offerEl.hidden = true;
+          }
+        });
+        updateButton();
+      }
+
+      function loadCheckoutScript() {
+        if (window.Razorpay) return Promise.resolve();
+        return new Promise(function (resolve, reject) {
+          var s = document.createElement("script");
+          s.src = CHECKOUT_JS;
+          s.onload = function () { resolve(); };
+          s.onerror = function () { reject(new Error("checkout")); };
+          document.head.appendChild(s);
+        });
+      }
+
+      function showBackup(plan) {
+        var page = P.paymentPage(plan);
+        status.textContent = "";
+        status.className = "checkout-status error";
+        status.appendChild(document.createTextNode("Our checkout is unavailable right now. "));
+        var offerOn = live && live[plan] && live[plan].offer;
+        if (page) {
+          var a = document.createElement("a");
+          a.href = page;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = "Pay the regular price (" + regularPrice(plan) + ") on Razorpay";
+          status.appendChild(a);
+          status.appendChild(document.createTextNode(offerOn ? ", or try again in a few minutes for the offer price." : ", or try again in a few minutes."));
+        } else {
+          status.appendChild(document.createTextNode("Please try again in a few minutes."));
+        }
+      }
+
+      function succeeded(paymentId) {
+        document.getElementById("payment-id").textContent = paymentId || "—";
+        form.hidden = true;
+        document.getElementById("checkout-success").hidden = false;
+        document.getElementById("checkout-success").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      form.addEventListener("change", updateButton);
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (busy) return;
+        var plan = selectedPlan();
+        var name = document.getElementById("buyer-name").value.trim();
+        if (!name) {
+          setStatus("Please enter your name.", true);
+          document.getElementById("buyer-name").focus();
+          return;
+        }
+        if (!document.getElementById("agree").checked) {
+          setStatus("Please accept the Terms and the Refund & delivery policy.", true);
+          return;
+        }
+        if (!P.isLive()) {
+          showBackup(plan);
+          return;
+        }
+
+        busy = true;
+        payBtn.disabled = true;
+        setStatus("Opening secure checkout…", false);
+        Promise.all([P.createOrder(plan), loadCheckoutScript()])
+          .then(function (results) {
+            var order = results[0];
+            var rzp = new window.Razorpay({
+              key: order.keyId,
+              order_id: order.orderId,
+              amount: order.amount,
+              currency: order.currency,
+              name: "MyLifeDock",
+              description: order.description,
+              prefill: { name: name },
+              notes: { name: name },
+              theme: { color: "#7c3aed" },
+              handler: function (response) {
+                succeeded(response && response.razorpay_payment_id);
+              },
+              modal: {
+                ondismiss: function () {
+                  setStatus("Payment cancelled. You can try again.", false);
+                }
+              }
+            });
+            rzp.on("payment.failed", function (response) {
+              var reason = response && response.error && response.error.description;
+              setStatus("Payment failed" + (reason ? ": " + reason : "") + ". No money was taken; please try again.", true);
+            });
+            rzp.open();
+            setStatus("", false);
+          })
+          .catch(function () {
+            showBackup(plan);
+          })
+          .finally(function () {
+            busy = false;
+            payBtn.disabled = false;
+          });
+      });
+
+      // Plan from ?plan=… (links from the home page and the Windows app).
+      var requested = new URLSearchParams(location.search).get("plan");
+      var radio = requested && form.querySelector('input[name="plan"][value="' + requested.replace(/[^a-z_]/g, "") + '"]');
+      if (radio) radio.checked = true;
+      updateButton();
+
+      P.loadPricing().then(function (plans) {
+        if (!plans) return;
+        live = plans;
+        renderLive();
+      });
+    })();
+  </script>
+</body>
+</html>

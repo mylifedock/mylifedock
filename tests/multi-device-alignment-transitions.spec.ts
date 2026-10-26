@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 
 async function setupAndUnlock(page: Page) {
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
   // Dismiss onboarding slides if present on fresh run
@@ -58,48 +58,32 @@ test.describe('Multi-Device UI/UX, Alignment & Navigation Transitions Suite', ()
     await expect(page.locator('.mobile-bottom-nav')).not.toBeVisible();
 
     // 2. Desktop Navigation across all pages & verify zero overflow
-    const pagesToTest = [
-      { name: 'Products', selector: 'button.nav-item:has-text("Products")', header: 'Products & Warranties' },
-      { name: 'Medical', selector: 'button.nav-item:has-text("Medical")', header: 'Medical & Health Records' },
-      { name: 'Documents', selector: 'button.nav-item:has-text("Documents")', header: 'Document Locker' },
-      { name: 'Settings', selector: 'button.nav-item:has-text("Settings")', header: 'Settings & Security' },
-      { name: 'About', selector: 'button.nav-item:has-text("About")', header: 'About MyLifeDock' },
+    // Every sidebar section: its header renders under the shared title and nothing overflows.
+    const sections = [
+      'Documents', 'Products & Warranties', 'Reminders', 'Insurance', 'Money', 'Vehicles & Property',
+      'Medical & Health', 'Secrets', 'Emergency Kit', 'Settings & Backup', 'Help & Feedback',
     ];
 
-    for (const p of pagesToTest) {
-      const navBtn = page.locator(p.selector);
-      if (await navBtn.isVisible()) {
-        await navBtn.click();
-        await page.waitForTimeout(200); // Allow smooth transition
+    for (const name of sections) {
+      await page.locator(`button.nav-item:has-text("${name}")`).click();
+      await expect(page.locator('h1.page-title').first()).toContainText(name.split(' ')[0]);
 
-        // Verify page content mounts
-        const pageEl = page.locator('.page, .page-container, .page-header').first();
-        await expect(pageEl).toBeVisible();
-
-        // Verify Zero Horizontal Overflow
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-        expect(overflow, `Desktop overflow detected on page: ${p.name}`).toBe(false);
-      }
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+      expect(overflow, `Desktop overflow detected on page: ${name}`).toBe(false);
     }
 
-    // 3. Test Desktop Modal: Open Add Dependent Modal from Settings
-    await page.locator('button.nav-item:has-text("Settings")').click();
-    const addDependentBtn = page.locator('button:has-text("Add Family Member")');
-    if (await addDependentBtn.isVisible()) {
-      await addDependentBtn.click();
+    // 3. Desktop modal: Add family member from Settings › Family
+    await page.locator('button.nav-item:has-text("Settings & Backup")').click();
+    await page.getByRole('tab', { name: 'Family' }).click();
+    await page.locator('button:has-text("Add family member")').click();
 
-      const modalOverlay = page.locator('.product-detail-overlay');
-      await expect(modalOverlay).toBeVisible();
+    const modalOverlay = page.locator('.product-detail-overlay');
+    await expect(modalOverlay).toBeVisible();
+    const zIndex = await modalOverlay.evaluate((el) => window.getComputedStyle(el).zIndex);
+    expect(parseInt(zIndex, 10)).toBeGreaterThanOrEqual(3000);
 
-      // Check z-index is properly elevated (>= 4000)
-      const zIndex = await modalOverlay.evaluate((el) => window.getComputedStyle(el).zIndex);
-      expect(parseInt(zIndex, 10)).toBeGreaterThanOrEqual(3000);
-
-      // Close modal
-      const closeBtn = modalOverlay.locator('button.secondary-button:has-text("Cancel")');
-      await closeBtn.click();
-      await expect(modalOverlay).toHaveCount(0);
-    }
+    await modalOverlay.locator('button.secondary-button:has-text("Cancel")').click();
+    await expect(modalOverlay).toHaveCount(0);
   });
 
   test('Android Standard Viewport (390x844): Mobile Topbar, Drawer, Hidden Dock & Back Navigation', async ({ page }) => {
@@ -135,8 +119,9 @@ test.describe('Multi-Device UI/UX, Alignment & Navigation Transitions Suite', ()
     expect(overflow, 'Android overflow on Medical page').toBe(false);
 
     // 4. Test Family Profile Switcher Dropdown on Mobile
-    const switcherBtn = page.locator('button:has-text("Family View"), button:has-text("Self")').first();
-    if (await switcherBtn.isVisible()) {
+    const switcherBtn = page.locator('button.family-switcher-pill');
+    await expect(switcherBtn).toBeVisible();
+    {
       await switcherBtn.click();
       const dropdownMenu = page.locator('text="SWITCH PROFILE"');
       await expect(dropdownMenu).toBeVisible();

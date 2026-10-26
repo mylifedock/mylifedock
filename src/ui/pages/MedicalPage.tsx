@@ -7,8 +7,11 @@ import {
   deleteMedicalRecord,
   COMMON_DEPARTMENTS,
   parseMedicalOcrText,
+  getMedicalRecordById,
   type CreateMedicalRecordInput,
 } from "../../application/medicalService";
+import { profileAvatar } from "../profileAvatar";
+import { getLocalDateString } from "../../utils/dateUtils";
 import type { MedicalRecord, MedicalRecordType, ProfileRecord } from "../../infrastructure/database/db";
 import {
   getAllProfiles,
@@ -22,8 +25,9 @@ import { AttachmentManager } from "../components/AttachmentManager";
 import { addAttachment } from "../../application/attachmentService";
 import { getVaultQuotaStatus } from "../../application/vaultLimitService";
 import { ProUpgradeModal } from "../components/ProUpgradeModal";
+import { PageHeader } from "../components/PageHeader";
 
-export function MedicalPage() {
+export function MedicalPage({ focusId }: { focusId?: string }) {
   const [selectedProfileId, setSelectedProfileId] = useState<string>(() => getActiveProfileFilter());
   const profiles = useLiveQuery(() => getAllProfiles(), [], []) as ProfileRecord[];
   const records = useLiveQuery(() => getMedicalRecords({ ownerId: selectedProfileId }), [selectedProfileId], []);
@@ -40,6 +44,7 @@ export function MedicalPage() {
     return () => window.removeEventListener(ACTIVE_PROFILE_CHANGE_EVENT, handleProfileChange);
   }, []);
 
+
   // Sub-module filter: 'all' | 'prescription' | 'lab_report'
   const [activeSubModule, setActiveSubModule] = useState<"all" | MedicalRecordType>("all");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -55,11 +60,21 @@ export function MedicalPage() {
   const [editingRecord, setEditingRecord] = useState<MedicalRecord | null>(null);
   const [selectedRecordForDetail, setSelectedRecordForDetail] = useState<MedicalRecord | null>(null);
 
+  // A search result opens that record's details, whichever family member it belongs to.
+  const handledFocus = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!focusId || handledFocus.current === focusId) return;
+    handledFocus.current = focusId;
+    void getMedicalRecordById(focusId).then((record) => {
+      if (record) setSelectedRecordForDetail(record);
+    });
+  }, [focusId]);
+
   // Form fields
   const [formData, setFormData] = useState<CreateMedicalRecordInput>({
     type: "prescription",
     title: "",
-    date: new Date().toISOString().slice(0, 10),
+    date: getLocalDateString(),
     department: "General",
     doctorOrClinic: "",
     diagnosis: "",
@@ -103,7 +118,7 @@ export function MedicalPage() {
       ownerId: selectedProfileId !== "all" ? selectedProfileId : LOCAL_PROFILE_ID,
       type: initialType,
       title: "",
-      date: new Date().toISOString().slice(0, 10),
+      date: getLocalDateString(),
       department: "General",
       doctorOrClinic: "",
       diagnosis: "",
@@ -123,7 +138,7 @@ export function MedicalPage() {
       ownerId: record.ownerId || LOCAL_PROFILE_ID,
       type: record.type,
       title: record.title,
-      date: record.date || new Date().toISOString().slice(0, 10),
+      date: record.date || getLocalDateString(),
       department: record.department || "General",
       doctorOrClinic: record.doctorOrClinic || "",
       diagnosis: record.diagnosis || "",
@@ -262,39 +277,28 @@ export function MedicalPage() {
   const prescriptionCount = records.filter((r) => r.type === "prescription").length;
   const labReportCount = records.filter((r) => r.type === "lab_report").length;
   const activeFollowUpsCount = records.filter(
-    (r) => r.followUpDate && new Date(r.followUpDate) >= new Date(new Date().toISOString().slice(0, 10))
+    (r) => r.followUpDate && new Date(r.followUpDate) >= new Date(getLocalDateString())
   ).length;
 
   return (
-    <div className="fade-in">
-      {/* Page Header */}
-      <div className="page-header">
-        <div className="page-title-group">
-          <h1 className="page-title">🩺 Medical & Health Records</h1>
-          <p className="page-subtitle">
-            Securely preserve doctor prescriptions, diagnostic lab reports, and follow-up schedules date-wise.
-          </p>
-        </div>
+    <div className="page-container fade-in">
+      <PageHeader
+        title="Medical & Health"
+        subtitle="Prescriptions, lab reports and follow-ups for every family member."
+        actions={
+          <div className="header-action-row">
+            <button type="button" className="secondary-button" onClick={() => openCreateForm("lab_report")}>
+              🔬 + Add Lab Report
+            </button>
+            <button type="button" className="primary-button" onClick={() => openCreateForm("prescription")}>
+              💊 + Add Prescription
+            </button>
+          </div>
+        }
+      />
 
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
-          <FamilyProfileSwitcher onProfileSelect={(id) => setSelectedProfileId(id)} />
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => openCreateForm("lab_report")}
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <span>🔬</span> + Add Lab Report
-          </button>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => openCreateForm("prescription")}
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <span>💊</span> + Add Prescription
-          </button>
-        </div>
+      <div className="section-toolbar section-toolbar-start">
+        <FamilyProfileSwitcher onProfileSelect={(id) => setSelectedProfileId(id)} />
       </div>
 
       {/* Health Overview Stats */}
@@ -397,7 +401,7 @@ export function MedicalPage() {
               style={{
                 width: "100%",
                 padding: "10px 14px 10px 36px",
-                background: "rgba(15, 23, 42, 0.8)",
+                background: "#121a2b",
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 borderRadius: "8px",
                 color: "#fff",
@@ -426,7 +430,7 @@ export function MedicalPage() {
               style={{
                 width: "100%",
                 padding: "10px 14px",
-                background: "rgba(15, 23, 42, 0.8)",
+                background: "#121a2b",
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 borderRadius: "8px",
                 color: "#fff",
@@ -878,7 +882,7 @@ export function MedicalPage() {
                   style={{
                     width: "100%",
                     padding: "10px 14px",
-                    background: "rgba(15, 23, 42, 0.8)",
+                    background: "#121a2b",
                     border: "1px solid rgba(255, 255, 255, 0.15)",
                     borderRadius: "8px",
                     color: "#fff",
@@ -887,7 +891,7 @@ export function MedicalPage() {
                 >
                   {profiles.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.avatarIcon || (p.role === "dependent_child" ? "��" : "��")} {p.displayName} {p.id === LOCAL_PROFILE_ID ? "(Self / Primary)" : p.role === "dependent_child" ? "(Child)" : ""}
+                      {profileAvatar(p)} {p.displayName} {p.id === LOCAL_PROFILE_ID ? "(Self / Primary)" : p.role === "dependent_child" ? "(Child)" : ""}
                     </option>
                   ))}
                 </select>
@@ -908,7 +912,7 @@ export function MedicalPage() {
                     style={{
                       width: "100%",
                       padding: "10px 12px",
-                      background: "rgba(15, 23, 42, 0.8)",
+                      background: "#121a2b",
                       border: "1px solid rgba(255,255,255,0.15)",
                       borderRadius: "8px",
                       color: "#fff",
@@ -931,7 +935,7 @@ export function MedicalPage() {
                     style={{
                       width: "100%",
                       padding: "10px 12px",
-                      background: "rgba(15, 23, 42, 0.8)",
+                      background: "#121a2b",
                       border: "1px solid rgba(255,255,255,0.15)",
                       borderRadius: "8px",
                       color: "#fff",
@@ -964,7 +968,7 @@ export function MedicalPage() {
                   style={{
                     width: "100%",
                     padding: "10px 12px",
-                    background: "rgba(15, 23, 42, 0.8)",
+                    background: "#121a2b",
                     border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: "8px",
                     color: "#fff",
@@ -987,7 +991,7 @@ export function MedicalPage() {
                   style={{
                     width: "100%",
                     padding: "10px 12px",
-                    background: "rgba(15, 23, 42, 0.8)",
+                    background: "#121a2b",
                     border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: "8px",
                     color: "#fff",
@@ -1014,7 +1018,7 @@ export function MedicalPage() {
                   style={{
                     width: "100%",
                     padding: "10px 12px",
-                    background: "rgba(15, 23, 42, 0.8)",
+                    background: "#121a2b",
                     border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: "8px",
                     color: "#fff",
@@ -1041,7 +1045,7 @@ export function MedicalPage() {
                   style={{
                     width: "100%",
                     padding: "10px 12px",
-                    background: "rgba(15, 23, 42, 0.8)",
+                    background: "#121a2b",
                     border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: "8px",
                     color: "#fff",
@@ -1073,7 +1077,7 @@ export function MedicalPage() {
                   style={{
                     width: "100%",
                     padding: "10px 12px",
-                    background: "rgba(15, 23, 42, 0.8)",
+                    background: "#121a2b",
                     border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: "8px",
                     color: "#fff",
@@ -1299,7 +1303,7 @@ export function MedicalPage() {
                   </small>
                   <div
                     style={{
-                      background: "rgba(15, 23, 42, 0.8)",
+                      background: "#121a2b",
                       padding: "14px",
                       borderRadius: "8px",
                       border: "1px solid rgba(255,255,255,0.08)",

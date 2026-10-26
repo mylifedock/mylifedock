@@ -2,6 +2,7 @@ import { db, type SecretRecord } from "../infrastructure/database/db";
 import { getLocalProfile } from "./profileService";
 import { getUnlockedVaultKey } from "../security/vaultKeyService";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "./backupService";
+import { assertCanAddItem } from "./vaultLimitService";
 
 export async function getSecrets(): Promise<SecretRecord[]> {
   const profile = await getLocalProfile();
@@ -40,6 +41,7 @@ export async function createSecret(
 ): Promise<string> {
   const profile = await getLocalProfile();
   if (!profile) throw new Error("No active profile.");
+  await assertCanAddItem();
 
   let finalValue = data.value;
   const vaultKey = getUnlockedVaultKey();

@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 
 async function ensureUnlocked(page: Page) {
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
   // Dismiss onboarding slides if present on fresh run
@@ -44,7 +44,7 @@ test.describe('Mobile UI/UX Precision & Adaptability Suite', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
   test('Verifies Mobile UI/UX Overhaul: Button Spacing, Hidden Bottom Nav on Inner Pages, Back Button & Responsive Layout', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
     await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
     // Onboarding Button Styling Verification
@@ -98,9 +98,9 @@ test.describe('Mobile UI/UX Precision & Adaptability Suite', () => {
 
     // Verify Bottom Nav contains the 5 deduplicated dock items
     await expect(bottomNav.locator('button[aria-label="Home"]')).toBeVisible();
-    await expect(bottomNav.locator('button[aria-label="Universal Search"]')).toBeVisible();
-    await expect(bottomNav.locator('button[aria-label="Vault Directory"]')).toBeVisible();
-    await expect(bottomNav.locator('button[aria-label="Emergency Kit"]')).toBeVisible();
+    await expect(bottomNav.locator('button[aria-label="Search"]')).toBeVisible();
+    await expect(bottomNav.locator('button[aria-label="Sections"]')).toBeVisible();
+    await expect(bottomNav.locator('button[aria-label="Emergency"]')).toBeVisible();
     await expect(bottomNav.locator('button[aria-label="Settings"]')).toBeVisible();
 
     // Verify No Horizontal Scroll / Overflow on mobile
@@ -108,7 +108,7 @@ test.describe('Mobile UI/UX Precision & Adaptability Suite', () => {
     expect(hasHorizontalOverflow).toBe(false);
 
     // 5. Navigate to an Inner Page (e.g. Universal Search)
-    await bottomNav.locator('button[aria-label="Universal Search"]').click();
+    await bottomNav.locator('button[aria-label="Search"]').click();
 
     // On Inner Page:
     // a) Bottom Nav MUST BE HIDDEN (unmounted)
@@ -119,7 +119,7 @@ test.describe('Mobile UI/UX Precision & Adaptability Suite', () => {
     await expect(innerTopbar).toBeVisible();
     const backBtn = innerTopbar.locator('.mobile-back-btn');
     await expect(backBtn).toBeVisible();
-    await expect(innerTopbar.locator('.mobile-page-title')).toHaveText('Universal Search');
+    await expect(innerTopbar.locator('.mobile-page-title')).toHaveText('Search');
 
     // 6. Test Back Button returns to Dashboard
     await backBtn.click();
@@ -127,21 +127,21 @@ test.describe('Mobile UI/UX Precision & Adaptability Suite', () => {
     await expect(page.locator('.mobile-bottom-nav')).toBeVisible();
 
     // 7. Open Directory Drawer from Bottom Nav
-    await page.locator('button[aria-label="Vault Directory"]').click();
+    await page.locator('button[aria-label="Sections"]').click();
     const drawer = page.locator('.sidebar-wrapper.open');
     await expect(drawer).toBeVisible();
 
     // Verify grouped navigation in drawer
-    await expect(page.locator('text="VAULT ESSENTIALS"')).toBeVisible();
-    await expect(page.locator('text="FINANCIAL & ASSETS"')).toBeVisible();
-    await expect(page.locator('text="SECURITY & RECOVERY"')).toBeVisible();
+    await expect(page.locator('text="VAULT"')).toBeVisible();
+    await expect(page.locator('text="LIFE & MONEY"')).toBeVisible();
+    await expect(page.locator('text="SAFETY"')).toBeVisible();
 
     // Close drawer via close button
     await page.locator('.sidebar-close-btn').click();
     await expect(page.locator('.sidebar-wrapper.open')).toHaveCount(0);
 
     // 8. Test Virtual Keyboard behavior: Focusing input hides bottom nav
-    const searchNav = page.locator('.mobile-bottom-nav button[aria-label="Universal Search"]');
+    const searchNav = page.locator('.mobile-bottom-nav button[aria-label="Search"]');
     await searchNav.click();
 
     // Find search input and focus it

@@ -1,7 +1,9 @@
 import { BiometricAuth, BiometryType } from "@aparajita/capacitor-biometric-auth";
+import { KeychainAccess, SecureStorage } from "@aparajita/capacitor-secure-storage";
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
-import { isTauri, desktopStorageSet, desktopStorageGet, desktopStorageDelete } from "../platform/desktopBridge";
+import { isTauri, desktopStorageDelete } from "../platform/desktopBridge";
+import { withExternalActivity } from "../platform/externalActivity";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "./backupService";
 
 const BIOMETRIC_ENABLED_KEY = "mylifedock_biometric_enabled";
@@ -14,17 +16,105 @@ export interface BiometricStatus {
 }
 
 /**
+ * Biometric unlock is only offered where the OS shows a real biometric
+ * prompt (Capacitor Android/iOS). Web and desktop builds have no such prompt,
+ * so storing an unlock secret there would let anyone with access to the
+ * browser profile unlock the vault.
+ */
+function supportsBiometricUnlock(): boolean {
+  return Capacitor.isNativePlatform();
+}
+
+/*
+ * The unlock secret lives in hardware-backed secure storage: an Android
+ * Keystore key encrypts it on Android, and on iOS it is a Keychain item that
+ * is readable only while the device is unlocked and never synced to iCloud.
+ */
+async function secureSet(key: string, value: string): Promise<void> {
+  await SecureStorage.set(key, value, false, false, KeychainAccess.whenUnlockedThisDeviceOnly);
+}
+
+async function secureGet(key: string): Promise<string | null> {
+  const value = await SecureStorage.get(key, false, false);
+  return typeof value === "string" ? value : null;
+}
+
+async function secureRemove(key: string): Promise<void> {
+  try {
+    await SecureStorage.remove(key, false);
+  } catch {
+    // Nothing stored under this key.
+  }
+}
+
+/**
+ * Builds before secure storage kept the secret in plain app Preferences.
+ * Move it into secure storage once, then delete the Preferences copy.
+ */
+async function migratePreferencesCredentials(): Promise<void> {
+  try {
+    const legacyCred = (await Preferences.get({ key: BIOMETRIC_CRED_KEY })).value;
+    const legacyWrap = (await Preferences.get({ key: BIOMETRIC_WRAP_KEY })).value;
+    if (legacyCred && legacyWrap && !(await secureGet(BIOMETRIC_CRED_KEY))) {
+      await secureSet(BIOMETRIC_CRED_KEY, legacyCred);
+      await secureSet(BIOMETRIC_WRAP_KEY, legacyWrap);
+    }
+    if (legacyCred || legacyWrap) {
+      await Preferences.remove({ key: BIOMETRIC_CRED_KEY });
+      await Preferences.remove({ key: BIOMETRIC_WRAP_KEY });
+    }
+  } catch (error) {
+    console.warn("Could not migrate biometric credentials to secure storage:", error);
+  }
+}
+
+let insecureStoragePurged = false;
+
+/**
+ * Earlier builds also kept the encrypted passphrase *and its key* in
+ * localStorage and the Tauri store. Remove those copies.
+ */
+async function purgeInsecureBiometricStorage(): Promise<void> {
+  if (insecureStoragePurged) return;
+  insecureStoragePurged = true;
+
+  try {
+    localStorage.removeItem(BIOMETRIC_CRED_KEY);
+    localStorage.removeItem(BIOMETRIC_WRAP_KEY);
+    localStorage.removeItem(BIOMETRIC_ENABLED_KEY);
+  } catch {
+    // Storage unavailable: nothing to purge.
+  }
+
+  if (isTauri()) {
+    try {
+      await desktopStorageDelete(BIOMETRIC_CRED_KEY);
+      await desktopStorageDelete(BIOMETRIC_WRAP_KEY);
+      await desktopStorageDelete(BIOMETRIC_ENABLED_KEY);
+    } catch (error) {
+      console.warn("Could not clear legacy desktop biometric data:", error);
+    }
+  }
+
+  if (!supportsBiometricUnlock()) {
+    try {
+      await Preferences.remove({ key: BIOMETRIC_CRED_KEY });
+      await Preferences.remove({ key: BIOMETRIC_WRAP_KEY });
+      await Preferences.remove({ key: BIOMETRIC_ENABLED_KEY });
+    } catch {
+      // Preferences unavailable on this platform.
+    }
+  }
+}
+
+/**
  * Check if the current device has biometric hardware (Fingerprint, Face ID, etc.)
  */
 export async function checkBiometrics(): Promise<BiometricStatus> {
-  if (!Capacitor.isNativePlatform()) {
-    const hasWebAuthn = Boolean(
-      window.PublicKeyCredential && 
-      typeof window.PublicKeyCredential === "function"
-    );
+  if (!supportsBiometricUnlock()) {
     return {
-      isAvailable: hasWebAuthn,
-      biometryType: "WebAuthn / Windows Hello / Touch ID",
+      isAvailable: false,
+      biometryType: "Available in the Android and iOS apps",
     };
   }
 
@@ -56,20 +146,15 @@ export async function checkBiometrics(): Promise<BiometricStatus> {
  * Check if the user has enabled biometric unlock for MyLifeDock
  */
 export async function isBiometricEnabled(): Promise<boolean> {
-  if (isTauri()) {
-    const desktopVal = await desktopStorageGet<string>(BIOMETRIC_ENABLED_KEY);
-    if (desktopVal === "true") return true;
+  await purgeInsecureBiometricStorage();
+
+  if (!supportsBiometricUnlock()) {
+    return false;
   }
 
   try {
     const { value } = await Preferences.get({ key: BIOMETRIC_ENABLED_KEY });
-    if (value === "true") return true;
-  } catch {
-    // fallback
-  }
-
-  try {
-    return localStorage.getItem(BIOMETRIC_ENABLED_KEY) === "true";
+    return value === "true";
   } catch {
     return false;
   }
@@ -79,8 +164,8 @@ export async function isBiometricEnabled(): Promise<boolean> {
  * Prompt biometric sensor to authenticate user
  */
 export async function promptBiometricAuth(reason = "Unlock your MyLifeDock vault"): Promise<boolean> {
-  if (!Capacitor.isNativePlatform()) {
-    return true;
+  if (!supportsBiometricUnlock()) {
+    throw new Error("Biometric unlock is not supported on this platform.");
   }
 
   try {
@@ -89,12 +174,15 @@ export async function promptBiometricAuth(reason = "Unlock your MyLifeDock vault
       throw new Error(check.reason || "Biometric sensor is not available on this device.");
     }
 
-    await BiometricAuth.authenticate({
-      reason,
-      allowDeviceCredential: true,
-      androidTitle: "MyLifeDock Vault Unlock",
-      androidSubtitle: "Scan fingerprint to unlock",
-    });
+    // The Face ID / device-credential prompt briefly backgrounds the app on iOS.
+    await withExternalActivity(() =>
+      BiometricAuth.authenticate({
+        reason,
+        allowDeviceCredential: true,
+        androidTitle: "MyLifeDock Vault Unlock",
+        androidSubtitle: "Scan fingerprint to unlock",
+      }),
+    );
     return true;
   } catch (error) {
     console.error("Biometric authentication error:", error);
@@ -103,11 +191,12 @@ export async function promptBiometricAuth(reason = "Unlock your MyLifeDock vault
 }
 
 /**
- * Enable biometric unlock and securely store the vault unlock secret
+ * Enable biometric unlock and store the vault unlock secret in app-private
+ * native storage.
  */
 export async function enableBiometricUnlock(passphrase: string): Promise<boolean> {
   try {
-    // 1. Prompt biometric sensor to authorize
+    // 1. Prompt biometric sensor to authorize (throws on unsupported platforms)
     await promptBiometricAuth("Confirm biometric setup for MyLifeDock");
 
     const wrapKey = await crypto.subtle.generateKey(
@@ -127,29 +216,11 @@ export async function enableBiometricUnlock(passphrase: string): Promise<boolean
       iv: arrayBufferToBase64(iv.buffer)
     });
 
-    // 2. Desktop storage if on Tauri
-    if (isTauri()) {
-      await desktopStorageSet(BIOMETRIC_CRED_KEY, encryptedPassStr);
-      await desktopStorageSet(BIOMETRIC_WRAP_KEY, wrapKeyStr);
-      await desktopStorageSet(BIOMETRIC_ENABLED_KEY, "true");
-    }
-
-    // 3. Persist in Preferences and LocalStorage fallback
-    try {
-      await Preferences.set({ key: BIOMETRIC_CRED_KEY, value: encryptedPassStr });
-      await Preferences.set({ key: BIOMETRIC_WRAP_KEY, value: wrapKeyStr });
-      await Preferences.set({ key: BIOMETRIC_ENABLED_KEY, value: "true" });
-    } catch (prefErr) {
-      console.warn("Preferences.set error:", prefErr);
-    }
-
-    try {
-      localStorage.setItem(BIOMETRIC_CRED_KEY, encryptedPassStr);
-      localStorage.setItem(BIOMETRIC_WRAP_KEY, wrapKeyStr);
-      localStorage.setItem(BIOMETRIC_ENABLED_KEY, "true");
-    } catch (lsErr) {
-      console.warn("localStorage.setItem error:", lsErr);
-    }
+    // 2. Persist the secret in hardware-backed secure storage; only the
+    //    enabled flag stays in Preferences.
+    await secureSet(BIOMETRIC_CRED_KEY, encryptedPassStr);
+    await secureSet(BIOMETRIC_WRAP_KEY, wrapKeyStr);
+    await Preferences.set({ key: BIOMETRIC_ENABLED_KEY, value: "true" });
 
     return true;
   } catch (error) {
@@ -162,24 +233,20 @@ export async function enableBiometricUnlock(passphrase: string): Promise<boolean
  * Disable biometric unlock and clear credentials
  */
 export async function disableBiometricUnlock(): Promise<void> {
-  if (isTauri()) {
-    await desktopStorageDelete(BIOMETRIC_CRED_KEY);
-    await desktopStorageSet(BIOMETRIC_ENABLED_KEY, "false");
+  if (supportsBiometricUnlock()) {
+    await secureRemove(BIOMETRIC_CRED_KEY);
+    await secureRemove(BIOMETRIC_WRAP_KEY);
   }
-
   try {
     await Preferences.remove({ key: BIOMETRIC_CRED_KEY });
+    await Preferences.remove({ key: BIOMETRIC_WRAP_KEY });
     await Preferences.set({ key: BIOMETRIC_ENABLED_KEY, value: "false" });
   } catch (error) {
     console.error("Failed to disable biometric unlock in preferences:", error);
   }
 
-  try {
-    localStorage.removeItem(BIOMETRIC_CRED_KEY);
-    localStorage.setItem(BIOMETRIC_ENABLED_KEY, "false");
-  } catch {
-    // fallback
-  }
+  insecureStoragePurged = false;
+  await purgeInsecureBiometricStorage();
 }
 
 /**
@@ -191,32 +258,19 @@ export async function getPassphraseViaBiometrics(): Promise<string | null> {
     throw new Error("Biometric unlock is not enabled in Settings.");
   }
 
+  await migratePreferencesCredentials();
+
   let storedPass: string | null = null;
   let storedWrapKey: string | null = null;
-  
-  if (isTauri()) {
-    storedPass = await desktopStorageGet<string>(BIOMETRIC_CRED_KEY);
-    storedWrapKey = await desktopStorageGet<string>(BIOMETRIC_WRAP_KEY);
+
+  try {
+    storedPass = await secureGet(BIOMETRIC_CRED_KEY);
+    storedWrapKey = await secureGet(BIOMETRIC_WRAP_KEY);
+  } catch (e) {
+    console.warn("Secure storage read error:", e);
   }
 
   if (!storedPass || !storedWrapKey) {
-    try {
-      const res = await Preferences.get({ key: BIOMETRIC_CRED_KEY });
-      if (res && res.value) storedPass = res.value;
-      
-      const resWrap = await Preferences.get({ key: BIOMETRIC_WRAP_KEY });
-      if (resWrap && resWrap.value) storedWrapKey = resWrap.value;
-    } catch (e) {
-      console.warn("Preferences.get error:", e);
-    }
-  }
-
-  if (!storedPass || !storedWrapKey) {
-    storedPass = storedPass || localStorage.getItem(BIOMETRIC_CRED_KEY);
-    storedWrapKey = storedWrapKey || localStorage.getItem(BIOMETRIC_WRAP_KEY);
-  }
-
-  if (!storedPass) {
     throw new Error("No biometric credentials stored. Please re-enable in Settings.");
   }
 
@@ -225,25 +279,21 @@ export async function getPassphraseViaBiometrics(): Promise<string | null> {
 
   try {
     const parsed = JSON.parse(storedPass);
-    if (parsed.ct && parsed.iv && storedWrapKey) {
-      const wrapKeyRaw = base64ToArrayBuffer(storedWrapKey);
-      const wrapKey = await crypto.subtle.importKey(
-        "raw",
-        wrapKeyRaw,
-        { name: "AES-GCM" },
-        false,
-        ["decrypt"]
-      );
-      
-      const iv = base64ToArrayBuffer(parsed.iv);
-      const ct = base64ToArrayBuffer(parsed.ct);
-      
-      const plainBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, wrapKey, ct);
-      return new TextDecoder().decode(plainBuffer);
-    }
-  } catch {
-    // If it's old unencrypted format, just return storedPass (fallback)
-  }
+    const wrapKey = await crypto.subtle.importKey(
+      "raw",
+      base64ToArrayBuffer(storedWrapKey),
+      { name: "AES-GCM" },
+      false,
+      ["decrypt"]
+    );
 
-  return storedPass;
+    const plainBuffer = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: base64ToArrayBuffer(parsed.iv) },
+      wrapKey,
+      base64ToArrayBuffer(parsed.ct),
+    );
+    return new TextDecoder().decode(plainBuffer);
+  } catch {
+    throw new Error("Stored biometric credentials are unreadable. Please re-enable in Settings.");
+  }
 }

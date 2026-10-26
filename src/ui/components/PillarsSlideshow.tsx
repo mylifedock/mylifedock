@@ -31,7 +31,7 @@ const PILLARS: PillarSlide[] = [
     description:
       "Every document, prescription, and secret is encrypted in RAM using AES-256-GCM before touching disk. Only your master passphrase or 24-word recovery key holds the decryption math.",
     highlights: [
-      "PBKDF2 with 100,000 hash iterations",
+      "PBKDF2 with 600,000 hash iterations",
       "Unique 12-byte cryptographic IV per entity",
       "Unreadable to cloud providers & developers",
     ],

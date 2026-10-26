@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 
 async function ensureUnlocked(page: Page) {
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
   // Dismiss onboarding slides if present on fresh run
@@ -43,7 +43,7 @@ async function ensureUnlocked(page: Page) {
 test.describe('Freemium 10-Item Gate & 3 Core Pillars Suite', () => {
   test('Pillars Slideshow: Displays 3 Core Pillars with Zero-Knowledge Details', async ({ page }) => {
     // Clear storage to view fresh onboarding
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
     await page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
@@ -69,23 +69,24 @@ test.describe('Freemium 10-Item Gate & 3 Core Pillars Suite', () => {
   test('Vault Quota: Displays Free Core Vault Slots and Pro Upgrade Modal', async ({ page }) => {
     await ensureUnlocked(page);
 
-    // Dashboard quota banner should be visible
-    const quotaBanner = page.locator('text="Free Core Vault"');
-    if (await quotaBanner.isVisible()) {
-      await expect(quotaBanner).toContainText('Slots Used');
+    // Dashboard quota banner is always shown on the free vault.
+    await expect(page.locator('text=/Free Core Vault: \\d+ \\/ 10 Slots Used/')).toBeVisible();
 
-      // Click Upgrade to Pro button
-      const upgradeBtn = page.locator('button:has-text("Upgrade to Pro")').first();
-      await upgradeBtn.click();
+    // The banner's Upgrade button opens the shared upgrade screen.
+    await page.locator('main button:has-text("Upgrade to Pro")').first().click();
+    const dialog = page.getByRole('dialog', { name: 'Upgrade to MyLifeDock Pro' });
+    await expect(dialog).toBeVisible();
 
-      // Pro Upgrade Modal should open
-      await expect(page.locator('text="Choose your MyLifeDock PRO Plan"')).toBeVisible();
-      await expect(page.locator('text="Pay with UPI / Cards via Razorpay"')).toBeVisible();
+    // Desktop/browser build: Razorpay checkout and plan choice; no store buttons.
+    await expect(dialog.locator('button:has-text("Pay with UPI / Cards via Razorpay")')).toBeVisible();
+    await expect(dialog.getByRole('radio')).toHaveCount(3);
+    await dialog.getByRole('radio', { name: /Yearly Pro/ }).click();
+    await expect(dialog.getByRole('radio', { name: /Yearly Pro/ })).toHaveAttribute('aria-checked', 'true');
+    await expect(dialog.locator('button:has-text("Restore purchases")')).toHaveCount(0);
 
-      // Close modal
-      await page.click('button:has-text("✕")');
-      await expect(page.locator('text="Choose your MyLifeDock PRO Plan"')).not.toBeVisible();
-    }
+    // Close
+    await dialog.getByRole('button', { name: 'Close' }).first().click();
+    await expect(dialog).toHaveCount(0);
   });
 
   test('License Activation: Test Key Unlocks Pro Lifetime & Unlimited Vault', async ({ page }) => {
@@ -93,11 +94,15 @@ test.describe('Freemium 10-Item Gate & 3 Core Pillars Suite', () => {
 
     // Navigate to Settings
     await page.click('button:has-text("Settings & Backup")');
+    await page.getByRole('tab', { name: 'Plan' }).click();
     await expect(page.locator('h3:has-text("MyLifeDock")')).toBeVisible();
 
     // Click Fill Sample Test Key
     const testKeyBtn = page.locator('button:has-text("Test Sample Key")').or(page.locator('button:has-text("Fill Sample Test Key")')).first();
     await testKeyBtn.click();
+
+    // The dev key is RSA-signed asynchronously; wait until it is filled in.
+    await expect(page.locator('input[placeholder^="Paste your License Key"]')).toHaveValue(/^MLD-PRO-/, { timeout: 10000 });
 
     // Click Activate Key
     await page.click('button:has-text("Activate Key")');

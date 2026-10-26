@@ -23,23 +23,26 @@ export const SUPPORTED_CURRENCIES: Record<SupportedCurrency, CurrencyConfig> = {
   JPY: { code: "JPY", symbol: "¥", label: "Japanese Yen (¥ JPY)", locale: "ja-JP" }
 };
 
-const STORAGE_KEY = "mld_preferred_currency";
+export const PREFERRED_CURRENCY_STORAGE_KEY = "mld_preferred_currency";
+const STORAGE_KEY = PREFERRED_CURRENCY_STORAGE_KEY;
+
+export function isSupportedCurrency(value: unknown): value is SupportedCurrency {
+  return typeof value === "string" && Object.hasOwn(SUPPORTED_CURRENCIES, value);
+}
+
+/** INR is the default for every new vault (USD is listed second); users can change it in Settings. */
+export const DEFAULT_CURRENCY: SupportedCurrency = "INR";
 
 export function getPreferredCurrency(): SupportedCurrency {
-  const saved = localStorage.getItem(STORAGE_KEY) as SupportedCurrency | null;
-  if (saved && SUPPORTED_CURRENCIES[saved]) {
-    return saved;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (isSupportedCurrency(saved)) {
+      return saved;
+    }
+  } catch {
+    // Storage unavailable: use the default.
   }
-  // Auto-detect based on browser locale
-  const lang = typeof navigator !== "undefined" ? navigator.language : "en-US";
-  if (lang.includes("IN")) return "INR";
-  if (lang.includes("GB")) return "GBP";
-  if (lang.includes("AE")) return "AED";
-  if (lang.includes("CA")) return "CAD";
-  if (lang.includes("AU")) return "AUD";
-  if (lang.includes("JP")) return "JPY";
-  if (/de|fr|es|it|nl|pt|eu/i.test(lang)) return "EUR";
-  return "INR"; // Default to INR as founder base
+  return DEFAULT_CURRENCY;
 }
 
 export function setPreferredCurrency(currency: SupportedCurrency): void {
@@ -47,10 +50,14 @@ export function setPreferredCurrency(currency: SupportedCurrency): void {
   window.dispatchEvent(new Event("mld_currency_changed"));
 }
 
+export function getCurrencyConfig(code: SupportedCurrency): CurrencyConfig {
+  return Object.values(SUPPORTED_CURRENCIES).find((config) => config.code === code) ?? SUPPORTED_CURRENCIES.INR;
+}
+
 export function formatCurrency(amount: number | undefined | null, currencyOverride?: SupportedCurrency): string {
   if (amount === undefined || amount === null || isNaN(amount)) return "";
   const currCode = currencyOverride || getPreferredCurrency();
-  const config = SUPPORTED_CURRENCIES[currCode] || SUPPORTED_CURRENCIES.INR;
+  const config = getCurrencyConfig(currCode);
 
   try {
     return new Intl.NumberFormat(config.locale, {

@@ -3,16 +3,9 @@ import {
   db,
   type ReminderRecord,
 } from "../infrastructure/database/db";
+import { getLocalDateString } from "../utils/dateUtils";
 
 const LOCAL_PROFILE_ID = "local-profile";
-
-function getLocalDateString(d?: Date): string {
-  const date = d || new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 export type CreateReminderInput = Omit<
   ReminderRecord,
@@ -315,7 +308,7 @@ export async function syncCoverageReminders(): Promise<
      * endDate - reminderDaysBefore
      */
     const endDate = new Date(
-      coverage.endDate,
+      `${coverage.endDate}T00:00:00`,
     );
 
     const reminderDate = new Date(
@@ -371,10 +364,8 @@ export async function syncCoverageReminders(): Promise<
 export async function syncDocumentReminders(): Promise<
   number
 > {
-  const documents = await db.documents
-    .where("ownerId")
-    .equals(LOCAL_PROFILE_ID)
-    .toArray();
+  // Family members' documents (passports, school IDs) expire too.
+  const documents = await db.documents.toArray();
 
   const existingReminders =
     await db.reminders
@@ -419,7 +410,7 @@ export async function syncDocumentReminders(): Promise<
      * by default.
      */
     const expiryDate = new Date(
-      doc.expiryDate,
+      `${doc.expiryDate}T00:00:00`,
     );
 
     const reminderDate = new Date(

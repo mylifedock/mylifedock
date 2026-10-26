@@ -1,14 +1,82 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import { VitePWA } from "vite-plugin-pwa";
+import { createReadStream, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
 
-// Detect if we're being run inside Tauri dev mode.
-// Tauri sets this env var when running `tauri dev`.
-const isTauriBuild = process.env.TAURI_ENV_TARGET_TRIPLE !== undefined;
+/**
+ * Self-hosts the Tesseract OCR worker, WASM cores and English language data
+ * under /tesseract/. By default tesseract.js downloads these from jsdelivr,
+ * which the app's CSP blocks (and which would break offline use).
+ */
+function selfHostedOcrAssets(): Plugin {
+  const require = createRequire(import.meta.url);
+  const tesseractDir = path.dirname(require.resolve("tesseract.js/package.json"));
+  const coreDir = path.dirname(require.resolve("tesseract.js-core/package.json"));
+  const langDir = path.dirname(require.resolve("@tesseract.js-data/eng/package.json"));
+
+  // Served path (under /tesseract/) -> source file. Only the LSTM cores are
+  // needed because the worker runs with OEM 1 (LSTM only).
+  // The source paths are fixed files inside node_modules, never request input.
+  const assets = new Map<string, string>([
+    ["worker.min.js", path.join(tesseractDir, "dist", "worker.min.js")],
+    ["core/tesseract-core-lstm.wasm.js", path.join(coreDir, "tesseract-core-lstm.wasm.js")],
+    ["core/tesseract-core-simd-lstm.wasm.js", path.join(coreDir, "tesseract-core-simd-lstm.wasm.js")],
+    ["core/tesseract-core-relaxedsimd-lstm.wasm.js", path.join(coreDir, "tesseract-core-relaxedsimd-lstm.wasm.js")],
+    ["lang/eng.traineddata.gz", path.join(langDir, "4.0.0_best_int", "eng.traineddata.gz")],
+  ]);
+
+  return {
+    name: "mld-self-hosted-ocr-assets",
+    configureServer(server) {
+      server.middlewares.use("/tesseract/", (req, res, next) => {
+        const key = decodeURIComponent((req.url ?? "").split("?")[0].replace(/^\//, ""));
+        const source = assets.get(key);
+        if (!source) return next();
+        res.setHeader("Content-Type", key.endsWith(".gz") ? "application/gzip" : "text/javascript");
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- fixed path from the allow-list above
+        createReadStream(source).pipe(res);
+      });
+    },
+    generateBundle() {
+      for (const [servedPath, source] of assets) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- fixed path from the allow-list above
+        this.emitFile({ type: "asset", fileName: `tesseract/${servedPath}`, source: readFileSync(source) });
+      }
+    },
+  };
+}
+
+/**
+ * The shipped apps sign in to Google natively (mobile) or in the system browser
+ * (desktop), so production builds drop the Google Identity Services script,
+ * style and frame allowances that only the browser development build uses.
+ */
+function productionCsp(): Plugin {
+  return {
+    name: "mld-production-csp",
+    apply: "build",
+    transformIndexHtml(html) {
+      const tightened = html.replace(/ https:\/\/accounts\.google\.com/g, "");
+      if (!tightened.includes('http-equiv="Content-Security-Policy"')) {
+        throw new Error("index.html must keep its Content-Security-Policy meta tag");
+      }
+      return tightened;
+    },
+  };
+}
+
+// eslint-disable-next-line security/detect-non-literal-fs-filename -- this project's own package.json
+const appVersion: string = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
 
 export default defineConfig({
   // Prevent vite from hiding Rust compile errors in Tauri builds
   clearScreen: false,
+
+  // package.json is the single source of truth for the app version.
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
 
   server: {
     // Tauri expects a fixed port — do not change
@@ -24,9 +92,9 @@ export default defineConfig({
   envPrefix: ["VITE_", "TAURI_ENV_"],
 
   build: {
-    // Produce source maps for tauri builds (helps debug Rust ↔ JS boundary)
-    sourcemap: isTauriBuild ? true : false,
-    // Modern ECMAScript target supported by all modern browsers, Android/iOS WebViews, and desktop WebView2/WebKit
+    // No source maps in shipped apps: they would publish the readable source inside every installer.
+    sourcemap: false,
+    // Supported by Android System WebView, iOS WKWebView (iOS 15+) and Windows WebView2.
     target: "es2022",
     rollupOptions: {
       output: {
@@ -37,11 +105,8 @@ export default defineConfig({
           if (id.includes("node_modules/dexie") || id.includes("node_modules/dexie-react-hooks")) {
             return "vendor-dexie";
           }
-          if (id.includes("node_modules/@capacitor/") || id.includes("node_modules/@aparajita/")) {
+          if (id.includes("node_modules/@capacitor/") || id.includes("node_modules/@aparajita/") || id.includes("node_modules/@capgo/")) {
             return "vendor-capacitor";
-          }
-          if (id.includes("node_modules/@react-oauth/") || id.includes("node_modules/@codetrix-studio/")) {
-            return "vendor-google";
           }
         },
       },
@@ -51,66 +116,7 @@ export default defineConfig({
 
   plugins: [
     react(),
-    // Only enable PWA plugin for web/mobile builds, not Tauri desktop
-    ...(isTauriBuild
-      ? []
-      : [
-          VitePWA({
-            registerType: "autoUpdate",
-            includeAssets: [
-              "favicon.svg",
-            ],
-            manifest: {
-              name: "MyLifeDock",
-              short_name: "MyLifeDock",
-              description:
-                "Privacy-first personal and family life management vault",
-              theme_color: "#0a0e1a",
-              background_color: "#0a0e1a",
-              display: "standalone",
-              orientation: "portrait",
-              scope: "/",
-              start_url: "/",
-              icons: [
-                {
-                  src: "pwa-192x192.png",
-                  sizes: "192x192",
-                  type: "image/png",
-                },
-                {
-                  src: "pwa-512x512.png",
-                  sizes: "512x512",
-                  type: "image/png",
-                },
-                {
-                  src: "pwa-512x512.png",
-                  sizes: "512x512",
-                  type: "image/png",
-                  purpose: "any maskable",
-                },
-              ],
-            },
-            workbox: {
-              globPatterns: [
-                "**/*.{js,css,html,ico,png,svg}",
-              ],
-              runtimeCaching: [
-                {
-                  urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-                  handler: "CacheFirst",
-                  options: {
-                    cacheName: "google-fonts-cache",
-                    expiration: {
-                      maxEntries: 10,
-                      maxAgeSeconds:
-                        60 * 60 * 24 * 365,
-                    },
-                  },
-                },
-              ],
-            },
-          }),
-        ]),
+    selfHostedOcrAssets(),
+    productionCsp(),
   ],
 });
-

@@ -12,9 +12,19 @@ export interface ParsedReceiptData {
 // Persistent worker to avoid re-loading language data on every scan
 let workerPromise: Promise<Worker> | null = null;
 
+// OCR assets are self-hosted (see selfHostedOcrAssets in vite.config.ts) so
+// they load under the app's CSP, work offline, and never touch a CDN.
+function ocrAssetUrl(relativePath: string): string {
+  return new URL(`${import.meta.env.BASE_URL}tesseract/${relativePath}`, window.location.href).href;
+}
+
 async function getOcrWorker(onProgress?: (p: number) => void): Promise<Worker> {
   if (!workerPromise) {
     workerPromise = Tesseract.createWorker("eng", 1, {
+      workerPath: ocrAssetUrl("worker.min.js"),
+      corePath: ocrAssetUrl("core"),
+      langPath: ocrAssetUrl("lang"),
+      workerBlobURL: false,
       logger: (m) => {
         if (m.status === "recognizing text" && onProgress) {
           onProgress(Math.round(m.progress * 100));
@@ -92,15 +102,11 @@ export function parseReceiptData(text: string): ParsedReceiptData {
           const p1 = parseInt(parts[0], 10);
           const p2 = parseInt(parts[1], 10);
           const y = parts[2];
-          if (p1 > 12 && p2 <= 12) {
-            // Definitively DD-MM-YYYY
-            result.date = `${y}-${String(p2).padStart(2, "0")}-${String(p1).padStart(2, "0")}`;
-          } else {
-            // Try standard parse
-            const d = new Date(rawDateStr);
-            if (!isNaN(d.getTime())) {
-              result.date = d.toISOString().slice(0, 10);
-            }
+          // Indian receipts write day first. Only a second part above 12 means
+          // month-first (US style). No Date/UTC conversion, so the day never shifts.
+          const [day, month] = p2 > 12 && p1 <= 12 ? [p2, p1] : [p1, p2];
+          if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+            result.date = `${y}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           }
         }
       }

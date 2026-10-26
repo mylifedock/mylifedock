@@ -7,6 +7,8 @@ interface DocumentCardProps {
   onDelete: (id: string) => void;
   onView?: () => void;
   onEdit?: () => void;
+  /** Shown when the document belongs to a family member. */
+  ownerName?: string;
 }
 
 function DocumentCard({
@@ -14,6 +16,7 @@ function DocumentCard({
   onDelete,
   onView,
   onEdit,
+  ownerName,
 }: DocumentCardProps) {
   const attachments = useLiveQuery(
     () => getAttachmentsForDocument(document.id),
@@ -68,7 +71,7 @@ function DocumentCard({
               {document.title}
             </strong>
             <small style={{ color: "#94a3b8", fontSize: "13px" }}>
-              {document.category.toUpperCase()} {document.issuer ? `• ${document.issuer}` : ""}
+              {document.category.toUpperCase()} {document.issuer ? `• ${document.issuer}` : ""} {ownerName ? `• ${ownerName}` : ""}
             </small>
           </div>
         </div>

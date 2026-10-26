@@ -1,5 +1,7 @@
 import { db, type MedicalRecord, type MedicalRecordType, type ReminderRecord } from "../infrastructure/database/db";
 import { LOCAL_PROFILE_ID } from "./profileService";
+import { assertCanAddItem } from "./vaultLimitService";
+import { getLocalDateString } from "../utils/dateUtils";
 
 export interface CreateMedicalRecordInput {
   ownerId?: string; // "local-profile" (self) or child/dependent profile ID
@@ -50,6 +52,7 @@ export const COMMON_DEPARTMENTS = [
 ] as const;
 
 export async function createMedicalRecord(input: CreateMedicalRecordInput): Promise<string> {
+  await assertCanAddItem();
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   const department = input.department?.trim() ? input.department.trim() : "General";
@@ -59,7 +62,7 @@ export async function createMedicalRecord(input: CreateMedicalRecordInput): Prom
     ownerId: input.ownerId || LOCAL_PROFILE_ID,
     type: input.type,
     title: input.title.trim() || (input.type === "prescription" ? `Consultation - ${department}` : `Lab Report - ${department}`),
-    date: input.date || now.split("T")[0],
+    date: input.date || getLocalDateString(),
     department,
     doctorOrClinic: input.doctorOrClinic?.trim() || undefined,
     diagnosis: input.diagnosis?.trim() || undefined,

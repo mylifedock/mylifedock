@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 
 async function ensureUnlocked(page: Page) {
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
   // Dismiss onboarding slides if present on fresh run
@@ -46,11 +46,12 @@ test.describe('Kids & Family Dependent Multi-Profile Suite (Model A)', () => {
 
     // 1. Go to Settings
     await page.click('button:has-text("Settings & Backup")');
-    await expect(page.locator('h3:has-text("Family & Kids Profiles")')).toBeVisible();
+    await page.getByRole('tab', { name: 'Family' }).click();
+    await expect(page.locator('h3:has-text("Family members")')).toBeVisible();
 
-    // 2. Open Add Child / Dependent Modal
-    await page.click('button:has-text("Add Child / Dependent")');
-    await expect(page.locator('text="Add Child / Dependent Profile"')).toBeVisible();
+    // 2. Open the Add family member dialog
+    await page.click('button:has-text("Add family member")');
+    await expect(page.locator('#add-family-title')).toHaveText('Add family member');
 
     // 3. Fill Child Information
     await page.fill('input#depName', 'Aarav Sharma');
@@ -60,11 +61,11 @@ test.describe('Kids & Family Dependent Multi-Profile Suite (Model A)', () => {
     await page.fill('input#depDoctor', 'Dr. Mehra (+91 98111 22233)');
 
     // 4. Submit
-    await page.click('button:has-text("Create Profile →")');
+    await page.click('[role="dialog"] button[type="submit"]');
 
     // 5. Verify child profile card appears in Settings
     await expect(page.locator('text="Aarav Sharma"').first()).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('text="Dependent Child"').first()).toBeVisible();
+    await expect(page.locator('text="Child"').first()).toBeVisible();
     await expect(page.locator('text="Blood Group: O+"').or(page.locator('text="O+"')).first()).toBeVisible();
   });
 
@@ -72,16 +73,16 @@ test.describe('Kids & Family Dependent Multi-Profile Suite (Model A)', () => {
     await ensureUnlocked(page);
 
     // 1. Navigate to Medical Records
-    await page.click('button:has-text("Medical & Health Records")');
-    await expect(page.locator('h1:has-text("Medical & Health Records")')).toBeVisible();
+    await page.click('aside button:has-text("Medical & Health")');
+    await expect(page.locator('h1:has-text("Medical & Health")')).toBeVisible();
 
     // 2. Add Child Profile via Header Switcher
     await page.click('button:has-text("All Family")');
-    await page.click('button:has-text("Add Child / Dependent")');
+    await page.click('button:has-text("Add family member")');
     await page.fill('input#depName', 'Aarav Sharma');
     await page.selectOption('select#depBlood', 'O+');
     await page.fill('input#depAllergies', 'Peanut allergy');
-    await page.click('button:has-text("Create Profile →")');
+    await page.click('[role="dialog"] button[type="submit"]');
 
     // 3. Click Add Prescription
     await page.click('button:has-text("+ Add Prescription")');

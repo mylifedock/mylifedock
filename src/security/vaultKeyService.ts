@@ -1,4 +1,15 @@
 import { db } from "../infrastructure/database/db";
+import {
+  ENCRYPTED_TABLES,
+  isLegacyPlaintextRow,
+} from "../infrastructure/database/recordEncryptionMiddleware";
+import {
+  clearRecordKey,
+  generateRecordKey,
+  setRecordKey,
+  unwrapRecordKey,
+  wrapRecordKey,
+} from "./recordEncryption";
 
 const VAULT_SECURITY_ID = "local-vault";
 
@@ -115,6 +126,7 @@ function decodeRecoveryKey(
 async function deriveWrappingKey(
   passphrase: string,
   salt: ArrayBuffer,
+  iterations = PBKDF2_ITERATIONS,
 ): Promise<CryptoKey> {
   const passwordKey =
     await crypto.subtle.importKey(
@@ -131,7 +143,7 @@ async function deriveWrappingKey(
     {
       name: "PBKDF2",
       salt,
-      iterations: PBKDF2_ITERATIONS,
+      iterations,
       hash: "SHA-256",
     },
     passwordKey,
@@ -215,6 +227,61 @@ async function getVaultRecord() {
   return db.vaultSecurity.get(
     VAULT_SECURITY_ID,
   );
+}
+
+/**
+ * Encrypts any rows still stored in plaintext: records created before the
+ * vault existed (the onboarding profile) and data from versions before
+ * record encryption.
+ */
+async function migrateLegacyRecords(): Promise<void> {
+  const tables = ENCRYPTED_TABLES.map((name) => db.table(name));
+  await db.transaction("rw", tables, async () => {
+    for (const table of tables) {
+      const rows = await table.toArray();
+      const legacy = rows.filter(isLegacyPlaintextRow);
+      if (legacy.length > 0) {
+        await table.bulkPut(legacy);
+      }
+    }
+  });
+}
+
+/**
+ * Loads the record encryption key for an unlocked vault key, creating and
+ * persisting one for vaults from earlier versions, then migrates plaintext rows.
+ */
+async function activateRecordEncryption(vaultKey: CryptoKey): Promise<void> {
+  const record = await getVaultRecord();
+  if (!record) {
+    throw new Error("The MyLifeDock vault has not been initialized.");
+  }
+
+  if (record.wrappedRecordKey && record.recordKeyIv) {
+    setRecordKey(await unwrapRecordKey(vaultKey, record.wrappedRecordKey, record.recordKeyIv));
+  } else {
+    const recordKey = generateRecordKey();
+    const wrapped = await wrapRecordKey(vaultKey, recordKey);
+    await db.vaultSecurity.put({
+      ...record,
+      ...wrapped,
+      updatedAt: new Date().toISOString(),
+    });
+    setRecordKey(recordKey);
+  }
+
+  await migrateLegacyRecords();
+}
+
+/** Sets the in-memory vault key and its record key, or clears both on failure. */
+async function activateVaultKey(vaultKey: CryptoKey): Promise<void> {
+  unlockedVaultKey = vaultKey;
+  try {
+    await activateRecordEncryption(vaultKey);
+  } catch (error) {
+    lockVault();
+    throw error;
+  }
 }
 
 export async function isVaultConfigured(): Promise<boolean> {
@@ -376,7 +443,20 @@ export async function initializeVault(
     const now =
       new Date().toISOString();
 
+    const runtimeVaultKey =
+      await makeVaultKeyNonExtractable(
+        vaultKey,
+      );
+
+    const recordKey = generateRecordKey();
+    const wrappedRecord = await wrapRecordKey(
+      runtimeVaultKey,
+      recordKey,
+    );
+
     await db.vaultSecurity.add({
+      ...wrappedRecord,
+
       id: VAULT_SECURITY_ID,
 
       keyVersion: KEY_VERSION,
@@ -407,10 +487,9 @@ export async function initializeVault(
      * only because Web Crypto requires that for
      * wrapKey().
      */
-    unlockedVaultKey =
-      await makeVaultKeyNonExtractable(
-        vaultKey,
-      );
+    unlockedVaultKey = runtimeVaultKey;
+    setRecordKey(recordKey);
+    await migrateLegacyRecords();
 
     return encodeRecoveryKey(
       recoveryBytes,
@@ -438,10 +517,12 @@ export async function unlockVault(
     await deriveWrappingKey(
       passphrase,
       record.salt,
+      record.kdfIterations || PBKDF2_ITERATIONS,
     );
 
+  let vaultKey: CryptoKey;
   try {
-    const vaultKey =
+    vaultKey =
       await crypto.subtle.unwrapKey(
         "raw",
         record.wrappedVaultKey,
@@ -457,17 +538,15 @@ export async function unlockVault(
           "decrypt",
         ],
       );
-
-    unlockedVaultKey =
-      vaultKey;
   } catch {
-    unlockedVaultKey =
-      null;
+    lockVault();
 
     throw new Error(
       "Unable to unlock the vault. Check your passphrase.",
     );
   }
+
+  await activateVaultKey(vaultKey);
 }
 
 export async function recoverVault(
@@ -595,6 +674,9 @@ export async function recoverVault(
     await db.vaultSecurity.put({
       ...record,
 
+      kdfIterations:
+        PBKDF2_ITERATIONS,
+
       salt: newSalt,
 
       wrappedVaultKey:
@@ -608,13 +690,13 @@ export async function recoverVault(
      * Convert the temporarily extractable key
      * into the normal non-extractable runtime key.
      */
-    unlockedVaultKey =
+    await activateVaultKey(
       await makeVaultKeyNonExtractable(
         recoveredVaultKey,
-      );
+      ),
+    );
   } catch (error) {
-    unlockedVaultKey =
-      null;
+    lockVault();
 
     throw new Error(
       "Recovery succeeded, but setting the new passphrase failed.",
@@ -649,6 +731,7 @@ export async function getRecoveryCapabilities() {
 export function lockVault(): void {
   unlockedVaultKey =
     null;
+  clearRecordKey();
 }
 
 export function isVaultUnlocked(): boolean {
@@ -667,8 +750,12 @@ export function getUnlockedVaultKey(): CryptoKey {
   return unlockedVaultKey;
 }
 
-export function setUnlockedVaultKey(key: CryptoKey): void {
-  unlockedVaultKey = key;
+/**
+ * Activates a vault key obtained outside the normal unlock flow (backup
+ * restore). The vault security record must already be stored.
+ */
+export async function setUnlockedVaultKey(key: CryptoKey): Promise<void> {
+  await activateVaultKey(key);
 }
 
 export function isRecoveryKeyFormat(value: string): boolean {

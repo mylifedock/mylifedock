@@ -5,10 +5,16 @@ const config: CapacitorConfig = {
   appName: 'MyLifeDock',
   webDir: 'dist',
   plugins: {
-    GoogleAuth: {
-      scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.appdata'],
-      serverClientId: '350340206913-cka41qrr5efnqbi2i353c7mnb68so1hk.apps.googleusercontent.com',
-      forceCodeForRefreshToken: true,
+    SocialLogin: {
+      // Only Google sign-in (for Drive backup) is bundled; the other providers'
+      // SDKs, including Facebook's, are left out of the Android and iOS apps.
+      providers: {
+        google: true,
+        facebook: false,
+        apple: false,
+        twitter: false,
+      },
+      logLevel: 1,
     },
   },
 };

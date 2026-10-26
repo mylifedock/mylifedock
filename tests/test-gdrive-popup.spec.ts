@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('Google Drive Backup button triggers OAuth popup', async ({ page, context }) => {
   page.on('console', msg => console.log('BROWSER LOG:', msg.type(), msg.text()));
 
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
   const skipBtn = page.locator('button:has-text("Skip")').first();

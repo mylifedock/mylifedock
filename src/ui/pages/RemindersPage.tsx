@@ -8,6 +8,8 @@ import type {
 } from "react";
 
 import { useLiveQuery } from "dexie-react-hooks";
+import { PageHeader } from "../components/PageHeader";
+import { getLocalDateString } from "../../utils/dateUtils";
 
 import {
   createReminder,
@@ -34,9 +36,7 @@ function reminderStatus(
     return "dismissed";
   }
 
-  const todayStr = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const todayStr = getLocalDateString();
 
   if (reminder.dueDate < todayStr) {
     return "overdue";
@@ -331,12 +331,19 @@ type ReminderFilter =
   | "overdue"
   | "dismissed";
 
-function RemindersPage() {
+function RemindersPage({ focusId }: { focusId?: string }) {
   const reminders = useLiveQuery(
     () => getReminders(),
     [],
     [],
   );
+
+  // A search result scrolls to and highlights that reminder.
+  useEffect(() => {
+    if (!focusId) return;
+    const el = document.getElementById(`reminder-${focusId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusId, reminders]);
 
   const [showForm, setShowForm] =
     useState(false);
@@ -448,42 +455,18 @@ function RemindersPage() {
   }
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <span className="eyebrow">
-            STAY ON TOP OF THINGS
-          </span>
-
-          <h1>
-            Reminders
-            <br />
-            <span>
-              never miss a deadline.
-            </span>
-          </h1>
-
-          <p>
-            Track warranty expiries,
-            document renewals, and anything
-            important with automatic and
-            manual reminders.
-          </p>
-        </div>
-
-        {!showForm && (
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() =>
-              setShowForm(true)
-            }
-          >
-            Add Reminder
-            <span>+</span>
-          </button>
-        )}
-      </header>
+    <div className="page-container fade-in">
+      <PageHeader
+        title="Reminders"
+        subtitle="Renewals and expiries from your policies, warranties, documents and subscriptions, plus your own."
+        actions={
+          !showForm && (
+            <button type="button" className="primary-button" onClick={() => setShowForm(true)}>
+              + Add Reminder
+            </button>
+          )
+        }
+      />
 
       {syncMessage && (
         <div className="reminder-sync-message">
@@ -605,20 +588,25 @@ function RemindersPage() {
               <div className="reminders-list">
                 {filteredReminders.map(
                   (reminder) => (
-                    <ReminderCard
+                    <div
                       key={reminder.id}
-                      reminder={reminder}
-                      onDismiss={() =>
-                        void handleDismiss(
-                          reminder.id,
-                        )
-                      }
-                      onDelete={() =>
-                        void handleDelete(
-                          reminder,
-                        )
-                      }
-                    />
+                      id={`reminder-${reminder.id}`}
+                      className={reminder.id === focusId ? "focus-highlight" : undefined}
+                    >
+                      <ReminderCard
+                        reminder={reminder}
+                        onDismiss={() =>
+                          void handleDismiss(
+                            reminder.id,
+                          )
+                        }
+                        onDelete={() =>
+                          void handleDelete(
+                            reminder,
+                          )
+                        }
+                      />
+                    </div>
                   ),
                 )}
               </div>

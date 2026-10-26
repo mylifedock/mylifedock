@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Unit Tests: Cryptographic Engine, Key Derivation & Currency Services', () => {
   test('Cryptographic AES-256-GCM Roundtrip, Authenticity & Tamper Resistance', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const cryptoVerification = await page.evaluate(async () => {
       // 1. Generate an AES-GCM key
@@ -56,7 +56,7 @@ test.describe('Unit Tests: Cryptographic Engine, Key Derivation & Currency Servi
   });
 
   test('PBKDF2 Key Derivation with High Iterations & Salt Separation', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const pbkdf2Verification = await page.evaluate(async () => {
       const pass = 'TestMasterPassphrase123!';
@@ -106,10 +106,7 @@ test.describe('Unit Tests: Cryptographic Engine, Key Derivation & Currency Servi
       const u2 = new Uint8Array(rawKey2);
 
       // Different salts MUST produce completely different derived keys
-      let diffCount = 0;
-      for (let i = 0; i < u1.length; i++) {
-        if (u1[i] !== u2[i]) diffCount++;
-      }
+      const diffCount = u1.reduce((count, byte, i) => count + (byte !== u2.at(i) ? 1 : 0), 0);
 
       return {
         distinctKeys: diffCount > 10,
@@ -122,12 +119,11 @@ test.describe('Unit Tests: Cryptographic Engine, Key Derivation & Currency Servi
   });
 
   test('Recovery Key 256-bit Format Validation & Grouping', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const recoveryKeyValidation = await page.evaluate(() => {
       // 32 random bytes
-      const bytes = new Uint8Array(32);
-      for (let i = 0; i < 32; i++) bytes[i] = i;
+      const bytes = Uint8Array.from({ length: 32 }, (_, i) => i);
 
       let hex = '';
       for (const b of bytes) {
@@ -137,8 +133,8 @@ test.describe('Unit Tests: Cryptographic Engine, Key Derivation & Currency Servi
       const formatted = hex.match(/.{1,4}/g)?.join('-') ?? hex;
 
       // Validate format: 16 groups of 4 hex digits separated by 15 dashes
-      const regex = /^([0-9A-F]{4}-){15}[0-9A-F]{4}$/;
-      const isValid = regex.test(formatted);
+      const groups = formatted.split('-');
+      const isValid = groups.length === 16 && groups.every((group) => /^[0-9A-F]{4}$/.test(group));
 
       // Normalization back to raw hex
       const normalized = formatted.replace(/-/g, '');
@@ -156,7 +152,7 @@ test.describe('Unit Tests: Cryptographic Engine, Key Derivation & Currency Servi
   });
 
   test('Global Currency Engine Formatting (INR Lakh/Crore, USD, EUR, GBP, JPY)', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const currencyResults = await page.evaluate(() => {
       const inrFormatted = new Intl.NumberFormat('en-IN', {

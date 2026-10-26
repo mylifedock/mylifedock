@@ -3,7 +3,9 @@ import { Capacitor } from '@capacitor/core';
 import type { ReminderRecord } from '../infrastructure/database/db';
 import { isTauri, showDesktopNotification } from '../platform/desktopBridge';
 
-const CHANNEL_ID = 'reminders_channel';
+// Android channel settings are immutable once created, so the private channel
+// gets a new ID rather than reusing the old public 'reminders_channel'.
+const CHANNEL_ID = 'reminders_private';
 
 /**
  * Hash a UUID string to a 32-bit integer for the Local Notification ID
@@ -30,7 +32,7 @@ export async function initializeNotificationChannels(): Promise<void> {
       name: 'Vault Reminders & Expirations',
       description: 'Alerts for upcoming document expirations, product warranties, and tasks',
       importance: 5, // High priority (heads-up notification + sound)
-      visibility: 1, // Public on lock screen
+      visibility: 0, // Private: secure lock screens hide reminder titles (e.g. medical/passport details)
       vibration: true,
       sound: undefined,
     });

@@ -1,3 +1,21 @@
+import { isGoogleSignInAvailable } from "./googleAuthService";
+
+/**
+ * Drive sync is offered only where Google sign-in is configured for the
+ * platform (an OAuth client ID per platform, set at build time).
+ */
+export function isDriveSyncAvailable(): boolean {
+  return isGoogleSignInAvailable();
+}
+
+export const DRIVE_UNAVAILABLE_MESSAGE =
+  "Google Drive backup is not available in this version of the app yet. Use the encrypted file export instead.";
+
+/** Drive file IDs are opaque base64url-like strings; reject anything else before building a URL. */
+function assertDriveFileId(fileId: string): void {
+  if (!/^[A-Za-z0-9_-]{10,200}$/.test(fileId)) throw new Error("Invalid backup file reference.");
+}
+
 export interface DriveFile {
   id: string;
   name: string;
@@ -73,6 +91,7 @@ export async function uploadBackup(accessToken: string, fileBlob: Blob, filename
  * Downloads a backup file as a Blob.
  */
 export async function downloadBackup(accessToken: string, fileId: string): Promise<Blob> {
+  assertDriveFileId(fileId);
   const response = await fetch(`${DRIVE_API_URL}/files/${fileId}?alt=media`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,

@@ -7,6 +7,7 @@ import {
   unlockVault,
 } from "./vaultKeyService";
 import { getPassphraseViaBiometrics, isBiometricEnabled } from "../application/biometricService";
+import { recordUnlockFailure, remainingCooldownSeconds, resetUnlockThrottle } from "./unlockThrottle";
 
 type GateMode =
   | "unlock"
@@ -52,16 +53,8 @@ function VaultGate({
   const [hasBiometrics, setHasBiometrics] =
     useState(false);
 
-  const [failedAttempts, setFailedAttempts] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem("mld_failed_passphrase_attempts");
-      return saved ? parseInt(saved, 10) || 0 : 0;
-    } catch {
-      return 0;
-    }
-  });
-
-  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  // A lockout started before a reload or restart still applies.
+  const [cooldownRemaining, setCooldownRemaining] = useState(() => remainingCooldownSeconds());
 
   useEffect(() => {
     if (cooldownRemaining <= 0) return;
@@ -182,30 +175,11 @@ function VaultGate({
         return;
       }
 
+      resetUnlockThrottle();
       onUnlocked();
-      try {
-        sessionStorage.removeItem("mld_failed_passphrase_attempts");
-      } catch {
-        // ignore storage errors
-      }
-      setFailedAttempts(0);
     } catch (error) {
-      const newAttempts = failedAttempts + 1;
-      setFailedAttempts(newAttempts);
-      try {
-        sessionStorage.setItem("mld_failed_passphrase_attempts", newAttempts.toString());
-      } catch {
-        // ignore storage errors
-      }
-
-      let cooldown = 0;
-      if (newAttempts >= 6) {
-        cooldown = 30;
-      } else if (newAttempts >= 5) {
-        cooldown = 15;
-      } else if (newAttempts >= 3) {
-        cooldown = 5;
-      }
+      // Only failed unlocks count; vault creation errors are not attempts.
+      const cooldown = isSetup ? 0 : recordUnlockFailure();
 
       if (cooldown > 0) {
         setCooldownRemaining(cooldown);
@@ -269,19 +243,10 @@ function VaultGate({
       setNewPassphrase("");
       setConfirmPassphrase("");
 
-      try {
-        sessionStorage.removeItem("mld_failed_passphrase_attempts");
-      } catch {
-        // ignore
-      }
-      setFailedAttempts(0);
+      resetUnlockThrottle();
       onUnlocked();
     } catch (error) {
-      const newAttempts = failedAttempts + 1;
-      setFailedAttempts(newAttempts);
-      let cooldown = 0;
-      if (newAttempts >= 5) cooldown = 30;
-      else if (newAttempts >= 3) cooldown = 10;
+      const cooldown = recordUnlockFailure();
       if (cooldown > 0) {
         setCooldownRemaining(cooldown);
         setError(`Recovery verification failed. Rate-limit active: wait ${cooldown}s.`);

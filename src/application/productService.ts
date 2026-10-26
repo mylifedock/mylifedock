@@ -2,6 +2,7 @@ import {
   db,
   type ProductRecord,
 } from "../infrastructure/database/db";
+import { assertCanAddItem } from "./vaultLimitService";
 
 const LOCAL_PROFILE_ID = "local-profile";
 
@@ -101,6 +102,8 @@ export async function createProduct(
   validateProductInput(
     normalized,
   );
+
+  await assertCanAddItem();
 
   const now =
     new Date().toISOString();

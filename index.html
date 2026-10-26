@@ -2,17 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <title>MyLifeDock</title>
     <meta name="description" content="Privacy-first personal and family life management vault" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://accounts.google.com https://www.googleapis.com blob:; frame-src 'self' blob: https://accounts.google.com; object-src 'none'; base-uri 'self';" />
+    <!--
+      Shipped in the Android, iOS and Windows apps. Production builds remove the
+      accounts.google.com entries (used only by the browser development sign-in);
+      ipc: and ipc.localhost are the desktop app's bridge to Rust. Tauri adds the
+      policy from src-tauri/tauri.conf.json as well, and both are enforced.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://script.google.com https://script.googleusercontent.com blob:; frame-src 'self' blob: https://accounts.google.com; object-src 'none'; base-uri 'self';" />
 
-    <!-- PWA meta -->
     <meta name="theme-color" content="#0a0e1a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="MyLifeDock" />
+    <meta name="color-scheme" content="dark" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />

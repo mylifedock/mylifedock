@@ -1,34 +1,51 @@
 import { useState, useRef, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useGoogleLogin } from "@react-oauth/google";
-import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
-import { isCapacitor } from "../../platform/desktopBridge";
+import { isTauri } from "../../platform/desktopBridge";
+import { Capacitor } from "@capacitor/core";
 import { useToast } from "../components/Toast";
-import { exportVault, importVault, createBackupBlob } from "../../application/backupService";
-import { listBackups, uploadBackup, downloadBackup } from "../../application/googleDriveService";
+import { PageHeader, SectionTabs } from "../components/PageHeader";
+import { profileAvatar } from "../profileAvatar";
+import { withDriveAccess, cancelGoogleSignIn, preloadGoogleSignIn, GoogleSignInCancelledError } from "../../application/googleAuthService";
+import { exportVault, importVault, createBackupBlob, PassphraseRequiredError } from "../../application/backupService";
+import { PassphrasePromptModal } from "../components/PassphrasePromptModal";
+import { listBackups, uploadBackup, downloadBackup, isDriveSyncAvailable, DRIVE_UNAVAILABLE_MESSAGE } from "../../application/googleDriveService";
 import { sendTestNotification, requestNotificationPermissions } from "../../application/notificationService";
 import { checkBiometrics, isBiometricEnabled, enableBiometricUnlock, disableBiometricUnlock, type BiometricStatus } from "../../application/biometricService";
 import { unlockVault } from "../../security/vaultKeyService";
-import { getLicenseStatus, activateLicense, removeLicense, __generateDevLicense } from "../../application/licenseService";
-import { getPreferredCurrency, setPreferredCurrency, SUPPORTED_CURRENCIES, type SupportedCurrency } from "../../application/currencyService";
+import { getLicenseStatus, getStoredLicenseKey, activateLicense, removeLicense, isProLicense, __generateDevLicense, LICENSE_CHANGED_EVENT, type LicenseStatus } from "../../application/licenseService";
+import { getVaultTotalItemCount } from "../../application/vaultLimitService";
+import { PRICING_CONFIG } from "../../config/pricingConfig";
+import { isExternalCheckoutAllowed } from "../../config/storePolicy";
+import { isStoreBillingAvailable, manageStoreSubscription, restoreStorePurchases } from "../../application/storeBillingService";
+import { getCurrencyConfig, getPreferredCurrency, setPreferredCurrency, SUPPORTED_CURRENCIES, type SupportedCurrency } from "../../application/currencyService";
 import { getAllProfiles, deleteDependentProfile, LOCAL_PROFILE_ID } from "../../application/profileService";
 import { AddDependentModal } from "../components/FamilyProfileSwitcher";
 import { ProUpgradeModal } from "../components/ProUpgradeModal";
 
-export function SettingsPage() {
+type SettingsTab = "backup" | "security" | "family" | "preferences" | "plan";
+
+const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
+  { id: "backup", label: "Backup & Sync" },
+  { id: "security", label: "Security" },
+  { id: "family", label: "Family" },
+  { id: "preferences", label: "Preferences" },
+  { id: "plan", label: "Plan" },
+];
+
+function isSettingsTab(value: string | undefined): value is SettingsTab {
+  return SETTINGS_TABS.some((t) => t.id === value);
+}
+
+export function SettingsPage({ initialTab }: { initialTab?: string }) {
   const { showToast } = useToast();
+  const [tab, setTab] = useState<SettingsTab>(isSettingsTab(initialTab) ? initialTab : "backup");
+  const isAndroid = Capacitor.getPlatform() === "android";
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  // Safety timeout: Reset syncing state if an auth window is dismissed or hangs
-  useEffect(() => {
-    if (!isSyncing) return;
-    const timer = setTimeout(() => {
-      setIsSyncing(false);
-    }, 45000);
-    return () => clearTimeout(timer);
-  }, [isSyncing]);
+  const [driveAction, setDriveAction] = useState<"backup" | "restore" | null>(null);
+  const isSyncing = driveAction !== null;
+  // One progress label on the button instead of a toast per step.
+  const [driveStatus, setDriveStatus] = useState("");
   const [isTestingNotif, setIsTestingNotif] = useState(false);
   const [bioStatus, setBioStatus] = useState<BiometricStatus | null>(null);
   const [bioEnabled, setBioEnabled] = useState(false);
@@ -36,8 +53,10 @@ export function SettingsPage() {
   const [showBioModal, setShowBioModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [licenseStatus, setLicenseStatus] = useState(() => getLicenseStatus());
+  const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>({ tier: "free_core", isValid: true, message: "" });
   const [licenseKeyInput, setLicenseKeyInput] = useState("");
+  const [isActivatingLicense, setIsActivatingLicense] = useState(false);
+  const [vaultItemCount, setVaultItemCount] = useState<number>();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [currentCurrency, setCurrentCurrency] = useState<SupportedCurrency>(() => getPreferredCurrency());
   const familyProfiles = useLiveQuery(() => getAllProfiles(), [], []);
@@ -50,21 +69,66 @@ export function SettingsPage() {
     return localStorage.getItem("mld_lock_on_background") !== "false";
   });
 
-  useState(() => {
+  const [passphrasePrompt, setPassphrasePrompt] = useState<{ resolve: (value: string | null) => void } | null>(null);
+
+  function askForBackupPassphrase(): Promise<string | null> {
+    return new Promise((resolve) => setPassphrasePrompt({ resolve }));
+  }
+
+  /** Imports with the unlocked key, asking for the backup's passphrase only if needed. */
+  async function importWithPassphraseFallback(file: File | Blob): Promise<boolean> {
+    try {
+      await importVault(file);
+      return true;
+    } catch (err) {
+      if (!(err instanceof PassphraseRequiredError)) throw err;
+    }
+    const pass = await askForBackupPassphrase();
+    if (!pass) return false;
+    await importVault(file, pass);
+    return true;
+  }
+
+  async function refreshLicenseStatus() {
+    setLicenseStatus(await getLicenseStatus());
+  }
+
+  // A store purchase, renewal or refund can change Pro while this page is open.
+  useEffect(() => {
+    function onChange() {
+      void getLicenseStatus().then(setLicenseStatus);
+    }
+    window.addEventListener(LICENSE_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(LICENSE_CHANGED_EVENT, onChange);
+  }, []);
+
+  useEffect(() => {
     void (async () => {
-      const status = await checkBiometrics();
-      const enabled = await isBiometricEnabled();
+      const [status, enabled, license, itemCount] = await Promise.all([
+        checkBiometrics(),
+        isBiometricEnabled(),
+        getLicenseStatus(),
+        getVaultTotalItemCount(),
+      ]);
       setBioStatus(status);
       setBioEnabled(enabled);
+      setLicenseStatus(license);
+      setVaultItemCount(itemCount);
     })();
-  });
+  }, []);
+
+  const isPro = isProLicense(licenseStatus);
+  const driveAvailable = isDriveSyncAvailable();
+  const externalCheckout = isExternalCheckoutAllowed();
+  const storeBilling = isStoreBillingAvailable();
 
   // --- LOCAL BACKUP HANDLERS ---
   async function handleExport() {
     try {
       setIsExporting(true);
-      await exportVault();
-      showToast("Vault backup exported successfully", "success");
+      if (await exportVault()) {
+        showToast("Vault backup exported successfully", "success");
+      }
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Export failed", "error");
     } finally {
@@ -83,15 +147,9 @@ export function SettingsPage() {
 
     try {
       setIsImporting(true);
-      try {
-        await importVault(file);
-      } catch {
-        const pass = window.prompt("Enter your Master Passphrase or Recovery Key to decrypt this backup:");
-        if (!pass) {
-          showToast("Import cancelled.", "info");
-          return;
-        }
-        await importVault(file, pass);
+      if (!(await importWithPassphraseFallback(file))) {
+        showToast("Import cancelled.", "info");
+        return;
       }
       showToast("Vault restored successfully from backup!", "success");
       setTimeout(() => window.location.reload(), 1500);
@@ -104,266 +162,168 @@ export function SettingsPage() {
   }
 
   // --- CLOUD SYNC HANDLERS ---
-  async function performDriveBackupWithToken(token: string) {
-    try {
-      setIsSyncing(true);
-      showToast("Generating local encrypted backup...", "info");
-      const { blob, filename } = await createBackupBlob();
-      showToast("Uploading encrypted vault to Google Drive...", "info");
-      await uploadBackup(token, blob, filename);
-      showToast("🎉 Google Drive Cloud Sync Complete!", "success");
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Cloud backup failed.", "error");
-    } finally {
-      setIsSyncing(false);
+  useEffect(() => {
+    if (driveAvailable) preloadGoogleSignIn();
+  }, [driveAvailable]);
+
+  function showDriveError(err: unknown, fallback: string) {
+    if (err instanceof GoogleSignInCancelledError) {
+      showToast(err.message, "info");
+    } else {
+      showToast(err instanceof Error ? err.message : fallback, "error");
     }
   }
-
-  async function performDriveRestoreWithToken(token: string) {
-    try {
-      setIsSyncing(true);
-      showToast("Connecting to Google Drive...", "info");
-      const files = await listBackups(token);
-      if (files.length === 0) {
-        showToast("No backups found in Google Drive.", "error");
-        return;
-      }
-      const latestBackup = files[0];
-      if (!window.confirm(`Found backup from ${new Date(latestBackup.createdTime || "").toLocaleString()}. Restoring this will overwrite your current vault. Proceed?`)) {
-        return;
-      }
-      showToast("Downloading encrypted backup...", "info");
-      const blob = await downloadBackup(token, latestBackup.id);
-      showToast("Decrypting and Restoring...", "info");
-      try {
-        await importVault(blob);
-      } catch {
-        const pass = window.prompt("Enter your Master Passphrase or Recovery Key to decrypt this backup:");
-        if (!pass) {
-          showToast("Restore cancelled.", "info");
-          return;
-        }
-        await importVault(blob, pass);
-      }
-      showToast("Vault restored successfully from Cloud!", "success");
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Restore failed", "error");
-    } finally {
-      setIsSyncing(false);
-    }
-  }
-
-  // Web OAuth Hooks
-  const triggerWebSync = useGoogleLogin({
-    scope: "https://www.googleapis.com/auth/drive.appdata",
-    onSuccess: (tokenResponse) => performDriveBackupWithToken(tokenResponse.access_token),
-    onError: () => {
-      showToast("Google authentication cancelled or failed.", "error");
-      setIsSyncing(false);
-    },
-    onNonOAuthError: () => {
-      setIsSyncing(false);
-    },
-  });
-
-  const triggerWebRestore = useGoogleLogin({
-    scope: "https://www.googleapis.com/auth/drive.appdata",
-    onSuccess: (tokenResponse) => performDriveRestoreWithToken(tokenResponse.access_token),
-    onError: () => {
-      showToast("Google authentication cancelled or failed.", "error");
-      setIsSyncing(false);
-    },
-    onNonOAuthError: () => {
-      setIsSyncing(false);
-    },
-  });
 
   async function handleCloudSync() {
-    setIsSyncing(true);
-    if (isCapacitor()) {
-      try {
-        showToast("Connecting with Google Account...", "info");
-        await GoogleAuth.initialize();
-        const user = await GoogleAuth.signIn();
-        const token = user.authentication.accessToken;
-        await performDriveBackupWithToken(token);
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : "Android Google Sign-In failed", "error");
-        setIsSyncing(false);
-      }
-    } else {
-      triggerWebSync();
+    if (isSyncing) return;
+    setDriveAction("backup");
+    try {
+      setDriveStatus(isTauri() ? "Continue in your browser..." : "Signing in...");
+      await withDriveAccess(async (token) => {
+        setDriveStatus("Encrypting...");
+        const { blob, filename } = await createBackupBlob();
+        setDriveStatus("Uploading...");
+        await uploadBackup(token, blob, filename);
+      });
+      showToast("Backed up to Google Drive.", "success");
+    } catch (err) {
+      showDriveError(err, "Cloud backup failed.");
+    } finally {
+      setDriveAction(null);
+      setDriveStatus("");
     }
   }
 
   async function handleCloudRestore() {
-    setIsSyncing(true);
-    if (isCapacitor()) {
-      try {
-        showToast("Connecting with Google Account...", "info");
-        await GoogleAuth.initialize();
-        const user = await GoogleAuth.signIn();
-        const token = user.authentication.accessToken;
-        await performDriveRestoreWithToken(token);
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : "Android Google Sign-In failed", "error");
-        setIsSyncing(false);
+    if (isSyncing) return;
+    setDriveAction("restore");
+    try {
+      setDriveStatus(isTauri() ? "Continue in your browser..." : "Signing in...");
+      const blob = await withDriveAccess(async (token) => {
+        setDriveStatus("Looking for backups...");
+        const files = await listBackups(token);
+        if (files.length === 0) {
+          showToast("No backups found in Google Drive.", "error");
+          return null;
+        }
+        const latestBackup = files[0];
+        if (!window.confirm(`Found backup from ${new Date(latestBackup.createdTime || "").toLocaleString()}. Restoring this will overwrite your current vault. Proceed?`)) {
+          return null;
+        }
+        setDriveStatus("Downloading...");
+        return downloadBackup(token, latestBackup.id);
+      });
+      if (!blob) return;
+
+      setDriveStatus("Restoring...");
+      if (!(await importWithPassphraseFallback(blob))) {
+        showToast("Restore cancelled.", "info");
+        return;
       }
-    } else {
-      triggerWebRestore();
+      showToast("Vault restored successfully from Cloud!", "success");
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      showDriveError(err, "Restore failed");
+    } finally {
+      setDriveAction(null);
+      setDriveStatus("");
     }
   }
 
 
   return (
     <div className="page-container fade-in">
-      <div className="page-header">
-        <div className="page-title-group">
-          <h1 className="page-title">Settings</h1>
-          <p className="page-subtitle">Preferences, security, and backups.</p>
-        </div>
-      </div>
+      <PageHeader title="Settings & Backup" subtitle="Backups, security, family members and your plan." />
+      <SectionTabs<SettingsTab>
+        label="Settings sections"
+        active={tab}
+        onChange={setTab}
+        tabs={SETTINGS_TABS}
+      />
 
-      {/* Family & Kids Profiles Management */}
+      {tab === "backup" && (
+        <>
       <div className="card fade-in" style={{ marginBottom: "24px" }}>
-        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
-          <div>
-            <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>👨‍👩‍👧‍👦</span> Family & Kids Profiles
-            </h3>
-            <small style={{ color: "#94a3b8" }}>
-              Manage dependents, pediatric records, and emergency health profiles in your vault.
-            </small>
-          </div>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setShowAddDependent(true)}
-            style={{ fontSize: "13px", padding: "6px 14px", display: "flex", alignItems: "center", gap: "6px", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.3)" }}
-          >
-            <span>➕</span> Add Child / Dependent
-          </button>
-        </div>
-        <div className="card-body">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
-            {familyProfiles?.map((p) => {
-              const isPrimary = p.id === LOCAL_PROFILE_ID;
-              const isChild = p.role === "dependent_child";
-              return (
-                <div
-                  key={p.id}
-                  style={{
-                    background: "#0b0f19",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    borderRadius: "10px",
-                    padding: "16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "24px" }}>{p.avatarIcon || (isChild ? "👶" : "👤")}</span>
-                        <div>
-                          <strong style={{ color: "#f8fafc", fontSize: "15px" }}>{p.displayName}</strong>
-                          <div style={{ fontSize: "11px", color: isPrimary ? "#38bdf8" : isChild ? "#f472b6" : "#cbd5e1" }}>
-                            {isPrimary ? "Primary Vault Holder" : isChild ? "Dependent Child" : "Family Dependent"}
-                          </div>
-                        </div>
-                      </div>
-                      {!isPrimary && (
-                        <button
-                          type="button"
-                          className="text-button"
-                          onClick={async () => {
-                            if (window.confirm(`Are you sure you want to remove ${p.displayName}? Records will be preserved under your primary vault.`)) {
-                              await deleteDependentProfile(p.id);
-                              showToast(`Profile ${p.displayName} removed. Records preserved.`, "info");
-                            }
-                          }}
-                          style={{ color: "#f87171", fontSize: "12px", padding: "4px 8px" }}
-                          title="Delete profile"
-                        >
-                          ✕ Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <div style={{ fontSize: "12.5px", color: "#94a3b8", display: "flex", flexDirection: "column", gap: "4px", marginTop: "10px" }}>
-                      {p.birthDate && <div>🎂 Born: {p.birthDate}</div>}
-                      {p.bloodGroup && <div>🩸 Blood Group: <strong style={{ color: "#f8fafc" }}>{p.bloodGroup}</strong></div>}
-                      {p.allergies && <div>⚠️ Allergies: <strong style={{ color: "#fca5a5" }}>{p.allergies}</strong></div>}
-                      {p.pediatricianOrDoctor && <div>🩺 Doctor: {p.pediatricianOrDoctor}</div>}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {showAddDependent && (
-        <AddDependentModal
-          onClose={() => setShowAddDependent(false)}
-          onCreated={() => {
-            setShowAddDependent(false);
-            showToast("Child / Dependent profile created successfully!", "success");
-          }}
-        />
-      )}
-
-      {/* Regional & Currency Preference */}
-      <div className="card fade-in" style={{ marginBottom: "24px" }}>
-        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3>🌐 Vault Currency & Regional Settings</h3>
-          <span style={{ fontSize: "12px", color: "#38bdf8", fontWeight: 600 }}>
-            {SUPPORTED_CURRENCIES[currentCurrency].symbol} {currentCurrency}
-          </span>
+        <div className="card-header">
+          <h3>Google Drive backup</h3>
         </div>
         <div className="card-body">
           <p>
-            Choose your preferred currency for product values, warranties, subscriptions, and financial tracking across MyLifeDock.
+            Securely back up your vault to your personal Google Drive. 
+            The file is encrypted <strong>before</strong> it leaves your device, so Google cannot read your data.
           </p>
-          <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-            <label htmlFor="currencySelect" style={{ fontSize: "13px", fontWeight: 600, color: "#e2e8f0" }}>
-              Display Currency:
-            </label>
-            <select
-              id="currencySelect"
-              value={currentCurrency}
-              onChange={(e) => {
-                const val = e.target.value as SupportedCurrency;
-                setPreferredCurrency(val);
-                setCurrentCurrency(val);
-                showToast(`Currency updated to ${SUPPORTED_CURRENCIES[val].label}`, "success");
-              }}
-              style={{
-                padding: "8px 12px",
-                background: "#1e293b",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                borderRadius: "6px",
-                color: "#f8fafc",
-                fontSize: "14px",
-                cursor: "pointer"
-              }}
+          <div style={{ marginTop: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => handleCloudSync()}
+              disabled={isSyncing || !driveAvailable}
             >
-              {Object.values(SUPPORTED_CURRENCIES).map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <small style={{ color: "#94a3b8" }}>
-              Formats automatically to local standards (e.g. Lakh/Crore for INR, K/M for USD/EUR).
-            </small>
+              {driveAction === "backup" ? driveStatus || "Backing up..." : "Backup to Google Drive"}
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => handleCloudRestore()}
+              disabled={isSyncing || !driveAvailable}
+            >
+              {driveAction === "restore" ? driveStatus || "Restoring..." : "Restore from Drive"}
+            </button>
+            {isSyncing && isTauri() && (
+              <button type="button" className="text-button" onClick={() => void cancelGoogleSignIn()}>
+                Cancel sign-in
+              </button>
+            )}
+          </div>
+          {!driveAvailable && (
+            <p role="note" style={{ marginTop: "10px", fontSize: "13px", color: "#fbbf24" }}>{DRIVE_UNAVAILABLE_MESSAGE}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="card fade-in" style={{ marginBottom: "24px" }}>
+        <div className="card-header">
+          <h3>Local Backup & Export</h3>
+        </div>
+        <div className="card-body">
+          <p>
+            Export your entire vault to an encrypted backup file (<strong>.mldv</strong>). 
+            This file is secured using your AES-256-GCM vault key and cannot be opened without your passphrase.
+          </p>
+          <div style={{ marginTop: "16px", display: "flex", gap: "12px" }}>
+            <button 
+              className="secondary-button" 
+              onClick={handleExport}
+              disabled={isExporting || isImporting}
+            >
+              {isExporting ? "Exporting..." : "Export File"}
+            </button>
+            <button 
+              className="secondary-button" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isExporting || isImporting}
+            >
+              {isImporting ? "Restoring..." : "Import File"}
+            </button>
+            <input 
+              type="file" 
+              accept=".mldv" 
+              ref={fileInputRef} 
+              style={{ display: "none" }} 
+              onChange={handleFileSelect}
+            />
           </div>
         </div>
       </div>
 
+          <p className="muted-text settings-footnote">
+            Your vault lives only on this device. Uninstalling the app deletes it, so keep a recent backup.
+          </p>
+        </>
+      )}
+
+      {tab === "security" && (
+        <>
       {/* Biometric Unlock Card */}
       <div className="card fade-in" style={{ marginBottom: "24px" }}>
         <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -395,6 +355,7 @@ export function SettingsPage() {
                 type="button"
                 className="primary-button"
                 onClick={() => setShowBioModal(true)}
+                disabled={!bioStatus?.isAvailable}
               >
                 Enable Biometric Unlock
               </button>
@@ -427,6 +388,7 @@ export function SettingsPage() {
                 <small style={{ color: "#94a3b8", fontSize: "13px" }}>Automatically locks your vault when no clicks or touches are detected.</small>
               </div>
               <select
+                aria-label="Inactivity auto-lock timeout"
                 value={autoLockTimeout}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -478,232 +440,157 @@ export function SettingsPage() {
               </label>
             </div>
 
-            {/* Built-in Security Badges */}
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "4px" }}>
-              <span style={{ background: "rgba(34, 197, 94, 0.12)", color: "#4ade80", border: "1px solid rgba(34, 197, 94, 0.25)", padding: "5px 12px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600 }}>
-                ✓ Android FLAG_SECURE Active (Screen capture & carousel thumbnail blocked)
-              </span>
-              <span style={{ background: "rgba(56, 189, 248, 0.12)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.25)", padding: "5px 12px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600 }}>
-                ✓ Brute-Force Rate Limiting Active (Exponential cooldown after failed attempts)
-              </span>
-              <span style={{ background: "rgba(168, 85, 247, 0.12)", color: "#c084fc", border: "1px solid rgba(168, 85, 247, 0.25)", padding: "5px 12px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600 }}>
-                ✓ Zero-Knowledge Client Memory Isolation
-              </span>
-            </div>
+            {isAndroid && (
+              <p className="muted-text">Screenshots and the Recent Apps preview are blocked while MyLifeDock is open.</p>
+            )}
+          </div>
+        </div>
+      </div>
+        </>
+      )}
+
+      {tab === "family" && (
+        <>
+      {/* Family & Kids Profiles Management */}
+      <div className="card fade-in" style={{ marginBottom: "24px" }}>
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>👨‍👩‍👧‍👦</span> Family members
+            </h3>
+            <small style={{ color: "#94a3b8" }}>
+              Keep documents, medical records and an emergency kit for each person.
+            </small>
+          </div>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setShowAddDependent(true)}
+            style={{ fontSize: "13px", padding: "6px 14px", display: "flex", alignItems: "center", gap: "6px", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.3)" }}
+          >
+            <span>➕</span> Add family member
+          </button>
+        </div>
+        <div className="card-body">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
+            {familyProfiles?.map((p) => {
+              const isPrimary = p.id === LOCAL_PROFILE_ID;
+              const isChild = p.role === "dependent_child";
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    background: "#0b0f19",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontSize: "24px" }}>{profileAvatar(p)}</span>
+                        <div>
+                          <strong style={{ color: "#f8fafc", fontSize: "15px" }}>{p.displayName}</strong>
+                          <div style={{ fontSize: "11px", color: isPrimary ? "#38bdf8" : isChild ? "#f472b6" : "#cbd5e1" }}>
+                            {isPrimary ? "You (vault owner)" : isChild ? "Child" : p.role === "spouse" ? "Spouse" : "Parent / elder"}
+                          </div>
+                        </div>
+                      </div>
+                      {!isPrimary && (
+                        <button
+                          type="button"
+                          className="text-button"
+                          onClick={async () => {
+                            if (window.confirm(`Are you sure you want to remove ${p.displayName}? Records will be preserved under your primary vault.`)) {
+                              await deleteDependentProfile(p.id);
+                              showToast(`Profile ${p.displayName} removed. Records preserved.`, "info");
+                            }
+                          }}
+                          style={{ color: "#f87171", fontSize: "12px", padding: "4px 8px" }}
+                          title="Delete profile"
+                        >
+                          ✕ Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={{ fontSize: "12.5px", color: "#94a3b8", display: "flex", flexDirection: "column", gap: "4px", marginTop: "10px" }}>
+                      {p.birthDate && <div>🎂 Born: {p.birthDate}</div>}
+                      {p.bloodGroup && <div>🩸 Blood Group: <strong style={{ color: "#f8fafc" }}>{p.bloodGroup}</strong></div>}
+                      {p.allergies && <div>⚠️ Allergies: <strong style={{ color: "#fca5a5" }}>{p.allergies}</strong></div>}
+                      {p.pediatricianOrDoctor && <div>🩺 Doctor: {p.pediatricianOrDoctor}</div>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {showBioModal && (
-        <div className="product-detail-overlay">
-          <div className="card" style={{ maxWidth: "420px", width: "100%", margin: "auto", padding: "24px", background: "#111827" }}>
-            <h3 style={{ marginTop: 0 }}>Enable Biometric Unlock</h3>
-            <p style={{ fontSize: "13px", color: "#94a3b8" }}>
-              Please enter your master vault passphrase once to authorize your biometric hardware.
-            </p>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              if (!bioPassphrase.trim()) return;
-              try {
-                await unlockVault(bioPassphrase.trim());
-              } catch {
-                showToast("Incorrect master passphrase. Please try again.", "error");
-                return;
-              }
-              const success = await enableBiometricUnlock(bioPassphrase.trim());
-              if (success) {
-                setBioEnabled(true);
-                setShowBioModal(false);
-                setBioPassphrase("");
-                showToast("Fingerprint / Face ID unlock enabled!", "success");
-              } else {
-                showToast("Biometric authorization cancelled or failed.", "error");
-              }
-            }}>
-              <div className="form-field" style={{ marginBottom: "16px" }}>
-                <label>Master Passphrase</label>
-                <input
-                  type="password"
-                  required
-                  value={bioPassphrase}
-                  onChange={(e) => setBioPassphrase(e.target.value)}
-                  placeholder="Your vault passphrase"
-                  autoFocus
-                />
-              </div>
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-                <button type="button" className="secondary-button" onClick={() => { setShowBioModal(false); setBioPassphrase(""); }}>
-                  Cancel
-                </button>
-                <button type="submit" className="primary-button">
-                  Confirm & Scan Fingerprint
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {showAddDependent && (
+        <AddDependentModal
+          onClose={() => setShowAddDependent(false)}
+          onCreated={() => {
+            setShowAddDependent(false);
+            showToast("Family member added.", "success");
+          }}
+        />
       )}
 
-      {/* --- MYLIFEDOCK PRO UPGRADE SECTION --- */}
-      <div className="card fade-in" style={{ marginBottom: "24px", border: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "1px solid #eab308" : "1px solid rgba(255, 255, 255, 0.1)", background: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "linear-gradient(to right, rgba(234, 179, 8, 0.05), transparent)" : undefined }}>
+        </>
+      )}
+
+      {tab === "preferences" && (
+        <>
+      {/* Regional & Currency Preference */}
+      <div className="card fade-in" style={{ marginBottom: "24px" }}>
         <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            MyLifeDock <span style={{ padding: "3px 8px", background: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "#eab308" : "#94a3b8", color: "#111827", borderRadius: "4px", fontSize: "12.5px", fontWeight: "bold" }}>PRO</span>
-          </h3>
-          <span style={{ fontSize: "12.5px", color: licenseStatus.tier !== "free_core" && licenseStatus.isValid ? "#eab308" : "#94a3b8", fontWeight: 600 }}>
-            {licenseStatus.tier !== "free_core" && licenseStatus.isValid ? `● ${licenseStatus.tier.toUpperCase()} ACTIVE` : "○ FREE CORE VERSION"}
+          <h3>🌐 Vault Currency & Regional Settings</h3>
+          <span style={{ fontSize: "12px", color: "#38bdf8", fontWeight: 600 }}>
+            {getCurrencyConfig(currentCurrency).symbol} {currentCurrency}
           </span>
         </div>
         <div className="card-body">
-          {licenseStatus.tier !== "free_core" && licenseStatus.isValid ? (
-            <div>
-              <p style={{ color: "#eab308", fontWeight: 600 }}>✓ {licenseStatus.message}</p>
-              {licenseStatus.email && (
-                <small style={{ color: "#94a3b8", display: "block", marginTop: "4px" }}>
-                  Licensed to: {licenseStatus.email}
-                </small>
-              )}
-              <div style={{ marginTop: "14px", display: "flex", gap: "10px" }}>
-                <button 
-                  type="button" 
-                  className="secondary-button" 
-                  style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)", fontSize: "13px" }}
-                  onClick={() => {
-                    if (window.confirm("Remove this license key and downgrade to Free Core?")) {
-                      removeLicense();
-                      setLicenseStatus(getLicenseStatus());
-                      showToast("License removed.", "info");
-                    }
-                  }}
-                >
-                  Remove License
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <p style={{ marginBottom: "16px" }}>
-                The <strong>Free Core</strong> version includes 100% Zero-Knowledge security and offline access for up to 15 products and 20 documents. Upgrade to <strong>PRO</strong> for Unlimited Vault Storage, Automated Google Drive Sync, and all future updates.
-              </p>
-
-              {/* Dedicated Upgrade to Pro Button */}
-              <div style={{ marginBottom: "18px" }}>
-                <button 
-                  type="button" 
-                  className="primary-button"
-                  style={{ 
-                    background: "linear-gradient(135deg, #eab308, #ca8a04)", 
-                    color: "#0f172a", 
-                    fontWeight: "bold",
-                    fontSize: "15px",
-                    padding: "13px 20px",
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 15px rgba(234, 179, 8, 0.25)",
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    cursor: "pointer"
-                  }}
-                  onClick={() => setShowUpgradeModal(true)}
-                >
-                  <span>👑 Upgrade to PRO (Unlimited Storage & Cloud Sync)</span>
-                  <span>&rarr;</span>
-                </button>
-              </div>
-
-              <div style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px", letterSpacing: "0.05em" }}>
-                Already Purchased? Activate Your License Key:
-              </div>
-              <div style={{ marginTop: "16px", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-                <input 
-                  type="text" 
-                  value={licenseKeyInput} 
-                  onChange={(e) => setLicenseKeyInput(e.target.value)} 
-                  placeholder="Paste your License Key (MLD-PRO-...)" 
-                  style={{ flex: 1, minWidth: "240px", padding: "8px 12px", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff" }}
-                />
-                <button 
-                  type="button" 
-                  className="primary-button"
-                  style={{ background: "#eab308", color: "#111827", fontWeight: "bold" }}
-                  onClick={() => {
-                    const success = activateLicense(licenseKeyInput);
-                    if (success) {
-                      setLicenseStatus(getLicenseStatus());
-                      setLicenseKeyInput("");
-                      showToast("MyLifeDock PRO Successfully Activated!", "success");
-                    } else {
-                      showToast("Invalid cryptographic signature or expired key.", "error");
-                    }
-                  }}
-                >
-                  Activate Key
-                </button>
-              </div>
-              <div style={{ marginTop: "12px", display: "flex", gap: "14px", alignItems: "center", flexWrap: "wrap" }}>
-                <button 
-                  type="button"
-                  className="text-button" 
-                  style={{ color: "#38bdf8", padding: 0, fontWeight: 600 }}
-                  onClick={() => setShowUpgradeModal(true)}
-                >
-                  💎 View Plans & Pricing Options &rarr;
-                </button>
-                <button
-                  type="button"
-                  className="text-button"
-                  style={{ color: "#a78bfa", padding: 0, fontSize: "13px" }}
-                  onClick={() => {
-                    const sampleKey = __generateDevLicense("mylifedock@gmail.com", "pro_yearly");
-                    setLicenseKeyInput(sampleKey);
-                    showToast("Sample 1-Year Pro key populated! Click 'Activate Key' to test.", "info");
-                  }}
-                >
-                  🧪 Fill Sample Test Key
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Pro Upgrade & Pricing Modal */}
-      <ProUpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        onSuccess={() => {
-          setLicenseStatus(getLicenseStatus());
-          setShowUpgradeModal(false);
-        }}
-      />
-
-      <div className="card fade-in" style={{ marginBottom: "24px" }}>
-        <div className="card-header">
-          <h3>Cloud Sync (Google Drive)</h3>
-        </div>
-        <div className="card-body">
           <p>
-            Securely back up your vault to your personal Google Drive. 
-            The file is encrypted <strong>before</strong> it leaves your device, so Google cannot read your data.
+            Choose your preferred currency for product values, warranties, subscriptions, and financial tracking across MyLifeDock.
           </p>
-          <div style={{ marginTop: "16px", display: "flex", gap: "12px" }}>
-            <button 
-              className="primary-button" 
-              onClick={() => handleCloudSync()}
-              disabled={isSyncing}
+          <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <label htmlFor="currencySelect" style={{ fontSize: "13px", fontWeight: 600, color: "#e2e8f0" }}>
+              Display Currency:
+            </label>
+            <select
+              id="currencySelect"
+              value={currentCurrency}
+              onChange={(e) => {
+                const val = e.target.value as SupportedCurrency;
+                setPreferredCurrency(val);
+                setCurrentCurrency(val);
+                showToast(`Currency updated to ${getCurrencyConfig(val).label}`, "success");
+              }}
+              style={{
+                padding: "8px 12px",
+                background: "#1e293b",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: "6px",
+                color: "#f8fafc",
+                fontSize: "14px",
+                cursor: "pointer"
+              }}
             >
-              {isSyncing ? "Syncing..." : "Backup to Google Drive"}
-            </button>
-            <button 
-              className="secondary-button" 
-              onClick={() => handleCloudRestore()}
-              disabled={isSyncing}
-            >
-              {isSyncing ? "Restoring..." : "Restore from Drive"}
-            </button>
+              {Object.values(SUPPORTED_CURRENCIES).map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <small style={{ color: "#94a3b8" }}>
+              Formats automatically to local standards (e.g. Lakh/Crore for INR, K/M for USD/EUR).
+            </small>
           </div>
         </div>
       </div>
@@ -757,77 +644,248 @@ export function SettingsPage() {
         </div>
       </div>
 
-      <div className="card fade-in">
-        <div className="card-header">
-          <h3>Local Backup & Export</h3>
+        </>
+      )}
+
+      {tab === "plan" && (
+        <>
+      {/* --- MYLIFEDOCK PRO UPGRADE SECTION --- */}
+      <div className="card fade-in" style={{ marginBottom: "24px", border: isPro ? "1px solid #eab308" : "1px solid rgba(255, 255, 255, 0.1)", background: isPro ? "linear-gradient(to right, rgba(234, 179, 8, 0.05), transparent)" : undefined }}>
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            MyLifeDock <span style={{ padding: "3px 8px", background: isPro ? "#eab308" : "#94a3b8", color: "#111827", borderRadius: "4px", fontSize: "12.5px", fontWeight: "bold" }}>PRO</span>
+          </h3>
+          <span style={{ fontSize: "12.5px", color: isPro ? "#eab308" : "#94a3b8", fontWeight: 600 }}>
+            {isPro ? `● ${licenseStatus.tier.replace("_", " ").toUpperCase()} ACTIVE` : "○ FREE CORE VERSION"}
+          </span>
         </div>
         <div className="card-body">
-          <p>
-            Export your entire vault to an encrypted backup file (<strong>.mldv</strong>). 
-            This file is secured using your AES-256-GCM vault key and cannot be opened without your passphrase.
-          </p>
-          <div style={{ marginTop: "16px", display: "flex", gap: "12px" }}>
-            <button 
-              className="secondary-button" 
-              onClick={handleExport}
-              disabled={isExporting || isImporting}
-            >
-              {isExporting ? "Exporting..." : "Export File"}
-            </button>
-            <button 
-              className="secondary-button" 
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isExporting || isImporting}
-            >
-              {isImporting ? "Restoring..." : "Import File"}
-            </button>
-            <input 
-              type="file" 
-              accept=".mldv" 
-              ref={fileInputRef} 
-              style={{ display: "none" }} 
-              onChange={handleFileSelect}
-            />
+          {isPro ? (
+            <div>
+              <p style={{ color: "#eab308", fontWeight: 600 }}>✓ {licenseStatus.message}</p>
+              {licenseStatus.email && (
+                <small style={{ color: "#94a3b8", display: "block", marginTop: "4px" }}>
+                  Licensed to: {licenseStatus.email}
+                </small>
+              )}
+              <div style={{ marginTop: "14px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                {storeBilling && licenseStatus.tier !== "pro_lifetime" && !getStoredLicenseKey() && (
+                  <button type="button" className="secondary-button" onClick={() => void manageStoreSubscription()}>
+                    Manage subscription
+                  </button>
+                )}
+                {getStoredLicenseKey() && (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)", fontSize: "13px" }}
+                    onClick={() => {
+                      if (window.confirm("Remove this license key from this device?")) {
+                        removeLicense();
+                        void refreshLicenseStatus();
+                        showToast("License key removed.", "info");
+                      }
+                    }}
+                  >
+                    Remove License Key
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p style={{ marginBottom: "16px" }}>
+                The free vault has every feature, including Google Drive backup, for up to {PRICING_CONFIG.freeItemLimit} items. <strong>Pro</strong> removes the item limit.
+              </p>
+              {storeBilling && (
+                <button
+                  type="button"
+                  className="text-button"
+                  style={{ margin: "0 0 14px", padding: 0 }}
+                  onClick={async () => {
+                    const restored = await restoreStorePurchases().catch(() => null);
+                    await refreshLicenseStatus();
+                    showToast(restored ? "Your Pro purchase was restored." : "No Pro purchase found for this store account.", restored ? "success" : "info");
+                  }}
+                >
+                  Restore purchases
+                </button>
+              )}
+
+              {/* Dedicated Upgrade to Pro Button */}
+              <div style={{ marginBottom: "18px" }}>
+                <button 
+                  type="button" 
+                  className="primary-button"
+                  style={{ 
+                    background: "linear-gradient(135deg, #eab308, #ca8a04)", 
+                    color: "#0f172a", 
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    padding: "13px 20px",
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 15px rgba(234, 179, 8, 0.25)",
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    cursor: "pointer"
+                  }}
+                  onClick={() => setShowUpgradeModal(true)}
+                >
+                  <span>{externalCheckout ? "👑 Upgrade to Pro (unlimited items)" : "👑 Activate MyLifeDock Pro"}</span>
+                  <span>&rarr;</span>
+                </button>
+              </div>
+
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px", letterSpacing: "0.05em" }}>
+                Already Purchased? Activate Your License Key:
+              </div>
+              <div style={{ marginTop: "16px", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                <input 
+                  type="text" 
+                  value={licenseKeyInput} 
+                  onChange={(e) => setLicenseKeyInput(e.target.value)} 
+                  placeholder="Paste your License Key (MLD-PRO-...)"
+                  aria-label="License key"
+                  style={{ flex: 1, minWidth: "240px", padding: "8px 12px", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff" }}
+                />
+                <button
+                  type="button"
+                  className="primary-button"
+                  style={{ background: "#eab308", color: "#111827", fontWeight: "bold" }}
+                  disabled={isActivatingLicense}
+                  onClick={async () => {
+                    setIsActivatingLicense(true);
+                    try {
+                      const status = await activateLicense(licenseKeyInput);
+                      if (isProLicense(status)) {
+                        setLicenseStatus(status);
+                        setLicenseKeyInput("");
+                        showToast("MyLifeDock PRO Successfully Activated!", "success");
+                      } else {
+                        showToast(status.message || "Invalid cryptographic signature or expired key.", "error");
+                      }
+                    } finally {
+                      setIsActivatingLicense(false);
+                    }
+                  }}
+                >
+                  {isActivatingLicense ? "Verifying..." : "Activate Key"}
+                </button>
+              </div>
+              <div style={{ marginTop: "12px", display: "flex", gap: "14px", alignItems: "center", flexWrap: "wrap" }}>
+                {externalCheckout && (
+                <button
+                  type="button"
+                  className="text-button"
+                  style={{ color: "#38bdf8", padding: 0, fontWeight: 600 }}
+                  onClick={() => setShowUpgradeModal(true)}
+                >
+                  💎 View Plans & Pricing Options &rarr;
+                </button>
+                )}
+                {import.meta.env.DEV && (
+                <button
+                  type="button"
+                  className="text-button"
+                  style={{ color: "#a78bfa", padding: 0, fontSize: "13px" }}
+                  onClick={async () => {
+                    const sampleKey = await __generateDevLicense("mylifedock@gmail.com", "pro_yearly");
+                    setLicenseKeyInput(sampleKey);
+                    showToast("Sample 1-Year Pro key populated! Click 'Activate Key' to test.", "info");
+                  }}
+                >
+                  🧪 Fill Sample Test Key
+                </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+        </>
+      )}
+
+      {showBioModal && (
+        <div className="product-detail-overlay">
+          <div className="card" style={{ maxWidth: "420px", width: "100%", margin: "auto", padding: "24px", background: "#111827" }}>
+            <h3 style={{ marginTop: 0 }}>Enable Biometric Unlock</h3>
+            <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+              Please enter your master vault passphrase once to authorize your biometric hardware.
+            </p>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!bioPassphrase.trim()) return;
+              try {
+                await unlockVault(bioPassphrase.trim());
+              } catch {
+                showToast("Incorrect master passphrase. Please try again.", "error");
+                return;
+              }
+              try {
+                await enableBiometricUnlock(bioPassphrase.trim());
+                setBioEnabled(true);
+                setShowBioModal(false);
+                setBioPassphrase("");
+                showToast("Fingerprint / Face ID unlock enabled!", "success");
+              } catch (err) {
+                showToast(err instanceof Error ? err.message : "Biometric authorization cancelled or failed.", "error");
+              }
+            }}>
+              <div className="form-field" style={{ marginBottom: "16px" }}>
+                <label htmlFor="settings-masterPassphrase">Master Passphrase</label>
+                <input id="settings-masterPassphrase"
+                  type="password"
+                  required
+                  value={bioPassphrase}
+                  onChange={(e) => setBioPassphrase(e.target.value)}
+                  placeholder="Your vault passphrase"
+                  autoFocus
+                />
+              </div>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                <button type="button" className="secondary-button" onClick={() => { setShowBioModal(false); setBioPassphrase(""); }}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary-button">
+                  Confirm & Scan Fingerprint
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* User Feedback & Suggestions Card */}
-      <div className="card fade-in" style={{ marginTop: "24px", border: "1px solid rgba(56, 189, 248, 0.25)", background: "linear-gradient(135deg, rgba(56, 189, 248, 0.04) 0%, rgba(15, 23, 42, 0.6) 100%)" }}>
-        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
-          <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-            <span>💬</span> Share Feedback & Feature Requests
-          </h3>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => window.dispatchEvent(new CustomEvent("open-feedback-modal"))}
-            style={{ fontSize: "13px", padding: "8px 16px", background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)" }}
-          >
-            Submit Feedback &rarr;
-          </button>
-        </div>
-        <div className="card-body">
-          <p style={{ fontSize: "13.5px", color: "#cbd5e1", lineHeight: "1.6" }}>
-            Have a suggestion, found a bug, or want a new feature? Your message is delivered directly to our founder (<strong style={{ color: "#38bdf8" }}>mylifedock@gmail.com</strong>) with a tagged subject line for prompt review.
-          </p>
-        </div>
-      </div>
+      {passphrasePrompt && (
+        <PassphrasePromptModal
+          title="Enter Backup Passphrase"
+          description="This backup was made with a different vault key. Enter the Master Passphrase or 64-character Recovery Key used for that vault."
+          onSubmit={(value) => {
+            passphrasePrompt.resolve(value);
+            setPassphrasePrompt(null);
+          }}
+          onCancel={() => {
+            passphrasePrompt.resolve(null);
+            setPassphrasePrompt(null);
+          }}
+        />
+      )}
 
-      {/* Zero-Knowledge & Uninstallation Safety Alert */}
-      <div className="card fade-in" style={{ marginTop: "24px", background: "rgba(56, 189, 248, 0.04)", border: "1px solid rgba(56, 189, 248, 0.2)" }}>
-        <div className="card-header" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <h3>🛡️ Zero-Knowledge & App Uninstallation Safety</h3>
-        </div>
-        <div className="card-body">
-          <p style={{ fontSize: "13.5px", lineHeight: "1.6", color: "#cbd5e1" }}>
-            Because MyLifeDock is a 100% Zero-Knowledge sovereign vault, your data is stored locally on this device. Operating systems (Android, iOS, Windows) clear local app storage when you uninstall the app.
-          </p>
-          <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "8px" }}>
-            💡 <strong>Best Practice:</strong> Keep your <strong>Google Drive Cloud Sync</strong> enabled or export an <strong>.mldv backup file</strong> before uninstalling the app or switching devices. You can restore your entire vault anytime upon reinstalling with your Master Passphrase.
-          </p>
-        </div>
-      </div>
+      {/* Pro Upgrade & Pricing Modal */}
+      <ProUpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentCount={vaultItemCount}
+        onSuccess={() => {
+          void refreshLicenseStatus();
+          setShowUpgradeModal(false);
+        }}
+      />
+
     </div>
   );
 }

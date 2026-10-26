@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useToast } from "../components/Toast";
 
 import {
   createDocumentWithAttachment,
   deleteDocument,
+  getDocument,
   getDocuments,
   updateDocument,
 } from "../../application/documentService";
@@ -14,6 +15,7 @@ import { validateAttachment } from "../../application/attachmentService";
 import type {
   DocumentCategory,
   DocumentRecord,
+  ProfileRecord,
   SensitivityLevel,
   StoragePolicy,
 } from "../../infrastructure/database/db";
@@ -22,6 +24,10 @@ import DocumentCard from "../components/DocumentCard";
 import { AttachmentManager } from "../components/AttachmentManager";
 import { getVaultQuotaStatus } from "../../application/vaultLimitService";
 import { ProUpgradeModal } from "../components/ProUpgradeModal";
+import { PageHeader } from "../components/PageHeader";
+import { FamilyProfileSwitcher } from "../components/FamilyProfileSwitcher";
+import { useActiveProfileFilter } from "../useActiveProfileFilter";
+import { getAllProfiles, LOCAL_PROFILE_ID } from "../../application/profileService";
 
 const CATEGORIES: {
   value: DocumentCategory;
@@ -48,16 +54,24 @@ const CATEGORIES: {
 
 type DocumentFormProps = {
   initialDocument?: DocumentRecord;
+  /** Family member a new document belongs to by default. */
+  defaultOwnerId: string;
+  profiles: ProfileRecord[];
   onSaved: () => void;
   onCancel: () => void;
 };
 
 function DocumentForm({
   initialDocument,
+  defaultOwnerId,
+  profiles,
   onSaved,
   onCancel,
 }: DocumentFormProps) {
   const isEditing = Boolean(initialDocument);
+  const [ownerId, setOwnerId] = useState(initialDocument?.ownerId ?? defaultOwnerId);
+  // Insurance policies have their own section; the category stays only for older documents.
+  const categoryOptions = CATEGORIES.filter((c) => c.value !== "insurance" || initialDocument?.category === "insurance");
 
   const [title, setTitle] = useState(
     initialDocument?.title ?? "",
@@ -190,6 +204,7 @@ function DocumentForm({
             tags,
             notes:
               notes.trim() || undefined,
+            ownerId,
           },
         );
       } else {
@@ -210,6 +225,7 @@ function DocumentForm({
           notes:
             notes.trim() || undefined,
           file: selectedFile,
+          ownerId,
         });
       }
 
@@ -317,7 +333,7 @@ function DocumentForm({
                 )
               }
             >
-              {CATEGORIES.map((c) => (
+              {categoryOptions.map((c) => (
                 <option
                   key={c.value}
                   value={c.value}
@@ -326,7 +342,21 @@ function DocumentForm({
                 </option>
               ))}
             </select>
+            <small className="field-hint">Insurance policies go in the Insurance section.</small>
           </div>
+
+          {profiles.length > 1 && (
+            <div className="form-field">
+              <label htmlFor="docOwner">Belongs to</label>
+              <select id="docOwner" value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="form-field">
             <label htmlFor="docType">
@@ -791,12 +821,15 @@ function DocumentDetailModal({
  * Documents Page
  * ────────────────────────────────────────── */
 
-function DocumentsPage() {
+function DocumentsPage({ focusId }: { focusId?: string }) {
+  const [ownerFilter] = useActiveProfileFilter();
+  const profiles = useLiveQuery(() => getAllProfiles(), [], []);
   const documents = useLiveQuery(
-    () => getDocuments(),
-    [],
+    () => getDocuments(ownerFilter),
+    [ownerFilter],
     [],
   );
+  const ownerName = new Map(profiles.map((p) => [p.id, p.displayName]));
 
   const { showToast } = useToast();
 
@@ -822,6 +855,16 @@ function DocumentsPage() {
 
   const [showProUpgrade, setShowProUpgrade] = useState(false);
   const [vaultItemCount, setVaultItemCount] = useState(0);
+
+  // A search result opens that document, whoever it belongs to.
+  const handledFocus = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!focusId || handledFocus.current === focusId) return;
+    handledFocus.current = focusId;
+    void getDocument(focusId).then((doc) => {
+      if (doc) setSelectedDocument(doc);
+    });
+  }, [focusId]);
 
   async function openCreateForm() {
     setPageError("");
@@ -929,39 +972,18 @@ function DocumentsPage() {
   }
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <span className="eyebrow">
-            YOUR PRIVATE RECORDS
-          </span>
-
-          <h1>
-            Documents
-            <br />
-            <span>
-              safe and organized.
-            </span>
-          </h1>
-
-          <p>
-            Keep your important documents
-            organized, searchable, and
-            easy to find.
-          </p>
-        </div>
-
-        {!showForm && (
-          <button
-            type="button"
-            className="primary-button"
-            onClick={openCreateForm}
-          >
-            Add Document
-            <span>+</span>
-          </button>
-        )}
-      </header>
+    <div className="page-container fade-in">
+      <PageHeader
+        title="Documents"
+        subtitle="ID cards, certificates, bills and papers for you and your family."
+        actions={
+          !showForm && (
+            <button type="button" className="primary-button" onClick={() => void openCreateForm()}>
+              + Add Document
+            </button>
+          )
+        }
+      />
 
       {pageError && (
         <div className="vault-error">
@@ -972,6 +994,8 @@ function DocumentsPage() {
       {showForm && (
         <DocumentForm
           initialDocument={editingDocument}
+          defaultOwnerId={ownerFilter === "all" ? LOCAL_PROFILE_ID : ownerFilter}
+          profiles={profiles}
           onSaved={closeForm}
           onCancel={closeForm}
         />
@@ -981,6 +1005,7 @@ function DocumentsPage() {
         <>
           {/* Search + Filter */}
           <div className="documents-toolbar">
+            <FamilyProfileSwitcher />
             <input
               className="search-input"
               type="text"
@@ -995,6 +1020,7 @@ function DocumentsPage() {
 
             <select
               className="category-filter"
+              aria-label="Filter documents by category"
               value={filterCategory}
               onChange={(e) =>
                 setFilterCategory(
@@ -1081,6 +1107,7 @@ function DocumentsPage() {
                     <DocumentCard
                       key={doc.id}
                       document={doc}
+                      ownerName={doc.ownerId !== LOCAL_PROFILE_ID ? ownerName.get(doc.ownerId) : undefined}
                       onView={() =>
                         setSelectedDocument(
                           doc,

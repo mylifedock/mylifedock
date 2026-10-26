@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'" />
+  <title>Privacy Policy · MyLifeDock</title>
+  <style>
+    :root { --bg: #0a0e1a; --card: #111827; --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --border: rgba(255,255,255,0.08); }
+    @media (prefers-color-scheme: light) { :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #475569; --accent: #0369a1; --border: rgba(15,23,42,0.1); } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+    h1 { font-size: 28px; margin: 0 0 4px; }
+    h2 { font-size: 19px; margin: 32px 0 8px; color: var(--accent); }
+    p, li { color: var(--text); }
+    .muted { color: var(--muted); font-size: 14px; }
+    ul { padding-left: 20px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin: 16px 0; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Privacy Policy</h1>
+  <p class="muted">MyLifeDock · Effective 26 October 2026</p>
+
+  <div class="card">
+    <strong>In short:</strong> MyLifeDock has no user accounts and no servers that store your vault. Your vault stays on your device,
+    encrypted with a key that only your passphrase (or recovery key) can unlock. We cannot see, recover or reset your data.
+  </div>
+
+  <h2>1. Who we are</h2>
+  <p>MyLifeDock ("we", "us") is a personal and family records vault for Android, iOS and Windows, provided by MyLifeDock Technologies.
+    Contact: <a href="mailto:mylifedock@gmail.com">mylifedock@gmail.com</a>.</p>
+
+  <h2>2. Your vault data</h2>
+  <ul>
+    <li><strong>Where it is stored:</strong> only on your device, in the app's private storage.</li>
+    <li><strong>How it is protected:</strong> a vault key derived from your passphrase (PBKDF2-SHA-256, 600,000 iterations) protects
+      AES-256-GCM encryption of your attachments, secrets and record contents (titles, notes, medical, financial and profile details).
+      A small amount of technical metadata (record IDs, the profile a record belongs to, and created/updated times) is kept unencrypted so the app can organise records.</li>
+    <li><strong>We never receive it.</strong> Your passphrase and recovery key are never stored or sent anywhere.</li>
+    <li><strong>On-device features:</strong> text recognition (OCR) of receipts and documents runs entirely on your device. Reminders are local notifications;
+      on Android, reminder text is hidden on secure lock screens.</li>
+  </ul>
+
+  <h2>3. Optional Google Drive backup</h2>
+  <p>If you choose to back up to Google Drive, you sign in with Google and grant access to a hidden app-specific folder
+    (<code>drive.appdata</code> scope). The backup file is encrypted on your device before upload, so Google cannot read it.
+    On Android and iOS, Google sign-in also shares your basic profile and email address with the app to complete sign-in; on Windows you sign in through your web browser. We do not store or transmit your Google account details, and the app signs out of Google after each backup or restore.
+    You can delete the backup at any time from your Google Drive settings ("Manage apps"). Google's use of data is governed by Google's privacy policy.</p>
+
+  <h2>4. Purchases (MyLifeDock Pro)</h2>
+  <p><strong>Android and iOS apps:</strong> Pro is bought through Google Play or the Apple App Store. Google or Apple processes the payment under their own privacy policies;
+    we do not receive your payment details, name or email. The app only asks the store which MyLifeDock Pro products your store account owns, on your device.</p>
+  <p><strong>Prices:</strong> our website and the Windows app's Upgrade screen load current prices and offers from our pricing service (a Google Apps Script web app).
+    This is a plain request for prices: no vault data or personal information is sent, though Google, which runs the service, receives your IP address as with any web request.</p>
+  <p><strong>Windows app and website:</strong> Payments are processed by Razorpay. Razorpay collects the name, email address, phone number and payment details you enter on its checkout page.
+    We receive the payment confirmation, your name, email address, amount and payment ID so we can email you a license key, and we keep a record of
+    the order (including the license key, which contains your email address) for support, refunds and legal and tax obligations.
+    We never receive your card or UPI credentials. Razorpay's use of data is governed by Razorpay's privacy policy.</p>
+
+  <h2>5. Feedback and support</h2>
+  <p>If you send feedback, the app opens your own email app with a pre-filled message to us. It may include optional diagnostics you can turn off
+    (app version, platform, screen size, online status and time). It never includes vault contents or keys. We use your email only to reply.</p>
+
+  <h2>6. What we do not do</h2>
+  <ul>
+    <li>No analytics, advertising, tracking or data selling.</li>
+    <li>No access to your contacts, location or files beyond what you choose to attach.</li>
+    <li>The camera is used only when you take a photo of a document or receipt. The app does not use the microphone.</li>
+  </ul>
+
+  <h2>7. Children and family profiles</h2>
+  <p>The app is intended for adults. Family and child profiles are records that you, as the adult vault holder, choose to keep on your own device.</p>
+
+  <h2>8. Retention and deletion</h2>
+  <ul>
+    <li>Vault data: delete it by removing items in the app, clearing the app's data, or uninstalling. Uninstalling deletes the on-device vault.</li>
+    <li>Google Drive backups: delete them from your Google Drive app settings.</li>
+    <li>Purchase records: kept as long as needed for support and as required by law. You can ask us to delete or correct your details by emailing us.</li>
+  </ul>
+
+  <h2>9. Your rights</h2>
+  <p>Depending on where you live (for example under India's Digital Personal Data Protection Act, 2023 or the EU/UK GDPR), you may have rights to access,
+    correct or delete personal data we hold (purchase and support records) and to withdraw consent. Email us to exercise them. Because your vault never
+    reaches us, we hold no vault data to access or delete.</p>
+
+  <h2>10. Security</h2>
+  <p>If you lose both your passphrase and your recovery key, your vault cannot be recovered by anyone, including us. Keep your recovery key safe and
+    make regular encrypted backups.</p>
+
+  <h2>11. Changes</h2>
+  <p>We will update this page and its effective date if our practices change, and highlight significant changes in the app.</p>
+</main>
+</body>
+</html>

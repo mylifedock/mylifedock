@@ -3,6 +3,9 @@ import {
   type CoverageRecord,
   type CoverageType,
 } from "../infrastructure/database/db";
+import { assertCanAddItem } from "./vaultLimitService";
+import { deleteAttachmentsFor } from "./attachmentService";
+import { getLocalDateString } from "../utils/dateUtils";
 
 const LOCAL_PROFILE_ID = "local-profile";
 
@@ -84,7 +87,9 @@ function normalizeCoverageInput(
   return {
     ...input,
 
-    productId: input.productId?.trim(),
+    productId: input.productId?.trim() || undefined,
+    vehicleId: input.vehicleId?.trim() || undefined,
+    propertyId: input.propertyId?.trim() || undefined,
 
     provider: normalizeOptionalText(
       input.provider,
@@ -127,9 +132,7 @@ export function coverageTypeLabel(
 export function coverageStatus(
   coverage: CoverageRecord,
 ): "active" | "expiring-soon" | "expired" {
-  const today = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const today = getLocalDateString();
 
   if (coverage.endDate < today) {
     return "expired";
@@ -137,7 +140,7 @@ export function coverageStatus(
 
   if (coverage.reminderEnabled) {
     const endDate = new Date(
-      coverage.endDate,
+      `${coverage.endDate}T00:00:00`,
     );
 
     const warningDate = new Date(
@@ -149,9 +152,7 @@ export function coverageStatus(
         coverage.reminderDaysBefore,
     );
 
-    const warningDateStr = warningDate
-      .toISOString()
-      .slice(0, 10);
+    const warningDateStr = getLocalDateString(warningDate);
 
     if (today >= warningDateStr) {
       return "expiring-soon";
@@ -161,13 +162,20 @@ export function coverageStatus(
   return "active";
 }
 
+/** `id` lets a form attach files before the coverage is saved. */
 export async function createCoverage(
   input: CreateCoverageInput,
+  id: string = crypto.randomUUID(),
 ): Promise<CoverageRecord> {
   const normalized =
     normalizeCoverageInput(input);
 
   validateCoverageInput(normalized);
+
+  // Insurance policies count toward the free vault; warranties belong to their product.
+  if (normalized.type === "insurance") {
+    await assertCanAddItem();
+  }
 
   /*
    * Verify the product exists and belongs
@@ -198,7 +206,7 @@ export async function createCoverage(
   const coverage: CoverageRecord = {
     ...normalized,
 
-    id: crypto.randomUUID(),
+    id,
     ownerId: LOCAL_PROFILE_ID,
 
     createdAt: now,
@@ -247,13 +255,9 @@ export async function getExpiringCoverages(
     futureDate.getDate() + withinDays,
   );
 
-  const todayStr = today
-    .toISOString()
-    .slice(0, 10);
+  const todayStr = getLocalDateString(today);
 
-  const futureStr = futureDate
-    .toISOString()
-    .slice(0, 10);
+  const futureStr = getLocalDateString(futureDate);
 
   const allCoverages =
     await db.coverages
@@ -296,9 +300,22 @@ export async function updateCoverage(
     );
   }
 
+  // Insurance can be re-linked to another product, vehicle or property; other
+  // coverage types stay attached to the product they were created for.
+  const relink = existing.type === "insurance";
   const merged: CreateCoverageInput = {
     productId:
-      existing.productId,
+      relink && "productId" in input ? input.productId : existing.productId,
+
+    vehicleId:
+      relink && "vehicleId" in input ? input.vehicleId : existing.vehicleId,
+
+    propertyId:
+      relink && "propertyId" in input ? input.propertyId : existing.propertyId,
+
+    policyKind:
+      input.policyKind ??
+      existing.policyKind,
 
     type:
       input.type ??
@@ -368,5 +385,6 @@ export async function deleteCoverage(
     );
   }
 
+  await deleteAttachmentsFor(id);
   await db.coverages.delete(id);
 }

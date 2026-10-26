@@ -1,6 +1,7 @@
 import Dexie, {
   type EntityTable,
 } from "dexie";
+import { recordEncryptionMiddleware } from "./recordEncryptionMiddleware";
 
 export type SensitivityLevel =
   | "normal"
@@ -96,10 +97,17 @@ export type CoverageType =
   | "insurance"
   | "membership";
 
+export type InsurancePolicyKind = "health" | "life" | "vehicle" | "home" | "travel" | "device" | "other";
+
 export interface CoverageRecord {
   id: string;
   ownerId: string;
   productId?: string; // Optional: Health/Life insurance might not tie to a physical product
+  /** Insurance only: the vehicle or property the policy covers. */
+  vehicleId?: string;
+  propertyId?: string;
+  /** Insurance only: what kind of policy it is. */
+  policyKind?: InsurancePolicyKind;
   type: CoverageType;
   provider?: string;
   policyNumber?: string;
@@ -130,14 +138,51 @@ export interface ProfileRecord {
   id: string;
   displayName: string;
   role?: ProfileRole;
-  avatarIcon?: string; // e.g. "��", "��", "��", "��", "��", "��"
+  avatarIcon?: string; // an emoji, e.g. "👶"; shown through ui/profileAvatar.ts
   birthDate?: string;
   bloodGroup?: string;
   allergies?: string;
   pediatricianOrDoctor?: string;
   emergencyNotes?: string;
+  /** Emergency Kit for this person; encrypted with the rest of the profile. */
+  emergencyKit?: EmergencyKitData;
+  /** Recurring bills (local profile only); encrypted with the rest of the profile. */
+  subscriptions?: SubscriptionData[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SubscriptionData {
+  id: string;
+  name: string;
+  category: "entertainment" | "utilities" | "software" | "health" | "finance" | "other";
+  amount: number;
+  currency: string;
+  billingCycle: "monthly" | "yearly" | "quarterly";
+  nextBillingDate: string;
+  paymentMethod?: string;
+  autoRenew: boolean;
+  notes?: string;
+}
+
+/**
+ * Emergency Kit fields kept on each person's profile. Blood group, allergies,
+ * doctor and notes live on the profile itself (one place for health details).
+ */
+export interface EmergencyKitData {
+  fullName: string;
+  medications: string;
+  organDonor: boolean;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelation: string;
+  doctorPhone: string;
+  willLocation: string;
+  /** Older builds stored these in the kit; they are read once and moved to the profile. */
+  bloodGroup?: string;
+  allergies?: string;
+  doctorName?: string;
+  notes?: string;
 }
 
 export interface FinanceRecord {
@@ -261,6 +306,13 @@ export interface VaultSecurityRecord {
   accountVersion?: number;
   wrappedAccountVaultKey?: ArrayBuffer;
 
+  /*
+   * Record (field-level) encryption key, AES-GCM wrapped by the vault key.
+   * See src/security/recordEncryption.ts.
+   */
+  wrappedRecordKey?: ArrayBuffer;
+  recordKeyIv?: ArrayBuffer;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -378,6 +430,22 @@ export class MyLifeDockDatabase
     this.version(6).stores({
       medicalRecords: "id, ownerId, type, department, date, createdAt",
     });
+
+    // Version 7 drops indexes on sensitive fields (never queried) so those
+    // fields can be encrypted at rest by recordEncryptionMiddleware. Only
+    // id-like fields and timestamps remain indexed and in plaintext.
+    this.version(7).stores({
+      documents: "id, ownerId",
+      products: "id, ownerId",
+      coverages: "id, ownerId, productId",
+      reminders: "id, ownerId, relatedEntityType, relatedEntityId",
+      finance: "id, ownerId, createdAt",
+      properties: "id, ownerId, createdAt",
+      secrets: "id, ownerId, createdAt",
+      medicalRecords: "id, ownerId, createdAt",
+    });
+
+    this.use(recordEncryptionMiddleware);
   }
 }
 

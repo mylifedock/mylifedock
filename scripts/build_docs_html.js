@@ -2,17 +2,29 @@ import fs from "fs";
 import path from "path";
 import { marked } from "marked";
 
-const docsDir = path.resolve("docs");
+// Renders the internal (never published) docs to HTML. The public website in docs/
+// (index, guide, brochure, privacy, terms) is hand-written HTML and is not generated here.
+const INTERNAL = path.resolve("internal-docs");
 
 const files = [
-  { md: "MyLifeDock_User_Handbook.md", html: "MyLifeDock_User_Handbook.html", title: "User Handbook & Operational Manual" },
-  { md: "MyLifeDock_Product_Documentation.md", html: "MyLifeDock_Product_Documentation.html", title: "Product Architecture & Technical Specs" },
-  { md: "MyLifeDock_Production_Release_Guide.md", html: "MyLifeDock_Production_Release_Guide.html", title: "Production & Store Release Playbook" },
-  { md: "MyLifeDock_Future_Scope_Strategy.md", html: "MyLifeDock_Future_Scope_Strategy.html", title: "Future Scope, Monetization & Legal Strategy" },
-  { md: "MyLifeDock_Security_Audit_2026.md", html: "MyLifeDock_Security_Audit_2026.html", title: "Official Security Audit & Trust Report (2026)" },
-  { md: "Legal_Patent_Application_Guide.md", html: "Legal_Patent_Application_Guide.html", title: "Legal Entity, Patent & Global Monetization Blueprint" },
-  { md: "Android_PlayStore_Guide.md", html: "Android_PlayStore_Guide.html", title: "Android Play Store Production Deployment Playbook" }
+  { dir: INTERNAL, md: "STORE_BILLING_SETUP.md", html: "STORE_BILLING_SETUP.html", title: "Google Play & App Store Billing Setup" },
+  { dir: INTERNAL, md: "PRICING_AND_OFFERS.md", html: "PRICING_AND_OFFERS.html", title: "Prices and Offers" },
+  { dir: INTERNAL, md: "GOOGLE_DRIVE_SETUP.md", html: "GOOGLE_DRIVE_SETUP.html", title: "Google Drive Sign-in Setup" },
+  { dir: INTERNAL, md: "ARCHITECTURE.md", html: "ARCHITECTURE.html", title: "Architecture & Technical Overview" },
+  { dir: INTERNAL, md: "MyLifeDock_Production_Release_Guide.md", html: "MyLifeDock_Production_Release_Guide.html", title: "Production & Store Release Playbook" },
+  { dir: INTERNAL, md: "MyLifeDock_Future_Scope_Strategy.md", html: "MyLifeDock_Future_Scope_Strategy.html", title: "Future Scope, Monetization & Legal Strategy" },
+  { dir: INTERNAL, md: "MyLifeDock_Security_Audit_2026.md", html: "MyLifeDock_Security_Audit_2026.html", title: "Internal Security Review (2026)" },
+  { dir: INTERNAL, md: "Legal_Patent_Application_Guide.md", html: "Legal_Patent_Application_Guide.html", title: "Legal Entity, Patent & Global Monetization Blueprint" },
+  { dir: INTERNAL, md: "Android_PlayStore_Guide.md", html: "Android_PlayStore_Guide.html", title: "Android Play Store Production Deployment Playbook" }
 ];
+
+/** Navigation only links to pages published next to this one. */
+function navLinks(dir) {
+  return files
+    .filter((f) => f.dir === dir)
+    .map((f) => `<a href="${f.html}">${f.title.split(" &")[0]}</a>`)
+    .join("\n                ");
+}
 
 // Configure custom marked renderer
 const renderer = new marked.Renderer();
@@ -25,7 +37,7 @@ renderer.code = function({ text, lang }) {
 
 marked.use({ renderer });
 
-function generateFullHtml(title, renderedBody) {
+function generateFullHtml(title, renderedBody, dir) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,10 +156,7 @@ function generateFullHtml(title, renderedBody) {
         <div class="nav-header">
             <strong>🛡️ MyLifeDock Documentation Suite</strong>
             <div class="nav-links">
-                <a href="MyLifeDock_User_Handbook.html">User Handbook</a>
-                <a href="MyLifeDock_Product_Documentation.html">Architecture</a>
-                <a href="MyLifeDock_Production_Release_Guide.html">Release Guide</a>
-                <a href="MyLifeDock_Future_Scope_Strategy.html">Future Strategy</a>
+                ${navLinks(dir)}
             </div>
         </div>
         <div id="content">
@@ -171,13 +180,13 @@ function generateFullHtml(title, renderedBody) {
 }
 
 for (const item of files) {
-  const mdFilePath = path.join(docsDir, item.md);
-  const htmlFilePath = path.join(docsDir, item.html);
+  const mdFilePath = path.join(item.dir, item.md);
+  const htmlFilePath = path.join(item.dir, item.html);
   
   if (fs.existsSync(mdFilePath)) {
     const mdContent = fs.readFileSync(mdFilePath, "utf8");
     const renderedBody = marked.parse(mdContent);
-    const fullHtml = generateFullHtml(item.title, renderedBody);
+    const fullHtml = generateFullHtml(item.title, renderedBody, item.dir);
     fs.writeFileSync(htmlFilePath, fullHtml, "utf8");
     console.log(`Pre-rendered & Saved: ${item.html} (${fullHtml.length} bytes)`);
   }

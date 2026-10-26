@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MyLifeDock Brochure</title>
+  <meta name="description" content="MyLifeDock product brochure: your family's private life vault for documents, warranties, insurance, health records and passwords.">
+  <meta name="theme-color" content="#090b10">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/site.css">
+  <style>
+    .cover { padding: 72px 0 40px; text-align: center; }
+    .cover h1 { margin: 16px 0; font-size: clamp(38px, 6vw, 60px); letter-spacing: -0.045em; }
+    .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; align-items: start; }
+    .problem { padding: 22px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
+    .problem h3 { margin-bottom: 10px; }
+    .who { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .who div { padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+    .who strong { display: block; margin-bottom: 4px; color: #fff; }
+    .who span { color: var(--muted); font-size: 14.5px; }
+    .print-bar { display: flex; justify-content: center; gap: 12px; margin-top: 28px; }
+    .contact { text-align: center; }
+    .contact p { margin: 6px 0; }
+    @media print {
+      .cover { padding: 0 0 10px; }
+      .print-page-break { break-before: page; }
+      .problem, .who div { border-color: #d5dbe3; }
+      .who strong { color: #0f172a; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html" aria-label="MyLifeDock home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>MyLife<b>Dock</b></span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a class="nav-optional" href="index.html#features">Features</a>
+        <a class="nav-secondary" href="guide.html">Guide</a>
+        <a class="btn btn-primary btn-sm" href="index.html#download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="cover">
+      <div class="container">
+        <span class="eyebrow">Product brochure · 2026</span>
+        <h1>MyLife<span class="gradient-text">Dock</span></h1>
+        <p class="lead" style="max-width:720px;margin:0 auto;">Your family's private life vault. Documents, warranties, insurance, health records, accounts and passwords for everyone at home, encrypted on your own phone or PC.</p>
+        <div class="print-bar no-print">
+          <button class="btn btn-primary" type="button" onclick="window.print()">Print or save as PDF</button>
+          <a class="btn btn-ghost" href="index.html#download">Download the app</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container two-col">
+        <div class="problem">
+          <h3>The problem</h3>
+          <ul class="check-list">
+            <li>Important papers are spread across drawers, email, WhatsApp and phone galleries.</li>
+            <li>Warranties lapse and policies expire because nobody remembered the date.</li>
+            <li>In an emergency, nobody can find the blood group, policy number or doctor's phone.</li>
+            <li>Cloud apps ask you to trust a company with your family's most private data.</li>
+          </ul>
+        </div>
+        <div class="problem">
+          <h3>MyLifeDock</h3>
+          <ul class="check-list">
+            <li>One organised, searchable place for every record, for every family member.</li>
+            <li>Automatic reminders before warranties, policies, documents and subscriptions expire.</li>
+            <li>An emergency kit per person, ready to print for family or doctors.</li>
+            <li>Encrypted on your own device. No account, no cloud database, no tracking.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="container">
+        <div class="section-head">
+          <h2>What you can keep</h2>
+        </div>
+        <div class="grid grid-3">
+          <article class="card"><div class="card-icon" aria-hidden="true">📄</div><h3>Documents</h3><p>IDs, certificates, licences and bills with photos or PDFs, expiry dates and reminders.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">📦</div><h3>Products &amp; warranties</h3><p>Invoices read automatically, warranties, extended warranties and AMCs with renewal alerts.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🛡️</div><h3>Insurance</h3><p>Health, life, vehicle and home policies, linked to what they cover.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🩺</div><h3>Medical &amp; health</h3><p>Prescriptions, lab reports and follow-ups per person, with on-device text reading.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">💰</div><h3>Money</h3><p>Accounts and cards (last 4 digits only) and subscriptions with charge reminders.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🚗</div><h3>Vehicles &amp; property</h3><p>RC, deeds and purchase papers, with linked insurance shown on each.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🔐</div><h3>Secrets</h3><p>PINs and passwords, hidden until revealed, with a self-clearing copy button.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🆘</div><h3>Emergency kit</h3><p>Blood group, allergies, medicines and contacts for every family member.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🔎</div><h3>Universal search</h3><p>Find any record for anyone in seconds and open it directly.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="print-page-break">
+      <div class="container">
+        <div class="section-head">
+          <h2>Who it's for</h2>
+        </div>
+        <div class="who">
+          <div><strong>Families</strong><span>Parents keeping records for children and elderly parents in one place.</span></div>
+          <div><strong>Professionals</strong><span>Busy people who want renewals and warranties to stop slipping.</span></div>
+          <div><strong>Privacy-minded users</strong><span>Anyone who does not want their documents on someone else's server.</span></div>
+          <div><strong>NRIs and travellers</strong><span>Passports, visas and policies available offline, anywhere.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="container">
+        <div class="section-head">
+          <h2>Security, in plain words</h2>
+          <p class="lead">Only you hold the key to your vault.</p>
+        </div>
+        <div class="security-grid">
+          <div class="stat"><strong>AES-256-GCM</strong><span>Every record and file is encrypted on your device.</span></div>
+          <div class="stat"><strong>Your passphrase is the key</strong><span>Turned into the key with PBKDF2-SHA-256 (600,000 rounds); never stored or sent.</span></div>
+          <div class="stat"><strong>No account, no servers</strong><span>We never receive your records, so there is nothing for anyone to leak.</span></div>
+          <div class="stat"><strong>Encrypted backups</strong><span>Google Drive and backup files contain only the encrypted vault.</span></div>
+          <div class="stat"><strong>Auto-lock</strong><span>Locks when idle or when you switch apps; screenshots blocked on Android.</span></div>
+          <div class="stat"><strong>Recovery key</strong><span>A 64-character key you keep safe, for when the passphrase is forgotten.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <h2>Platforms and pricing</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Platform</th><th>Status</th><th>How Pro is bought</th></tr></thead>
+            <tbody>
+              <tr><td>Windows 10 &amp; 11</td><td>Available</td><td>Website, UPI or card via Razorpay, licence key by email</td></tr>
+              <tr><td>Android</td><td>Coming soon</td><td>In the app, through Google Play</td></tr>
+              <tr><td>iPhone</td><td>Coming soon</td><td>In the app, through the App Store</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Plan</th><th>Price (website)</th><th>What you get</th></tr></thead>
+            <tbody>
+              <tr><td>Free</td><td>₹0</td><td>Every feature, up to 10 items</td></tr>
+              <tr><td>Monthly Pro</td><td>₹25 / month ($0.49)</td><td>Unlimited items</td></tr>
+              <tr><td>Yearly Pro</td><td>₹250 / year ($4.99)</td><td>Unlimited items, 2 months free</td></tr>
+              <tr><td>Lifetime</td><td>₹999 once ($19.99)</td><td>Unlimited items forever, all updates, priority support</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="text-align:center;font-size:14px;">In the Android and iPhone apps, Pro is priced in the store. Website purchases can be refunded within 7 days.</p>
+      </div>
+    </section>
+
+    <section class="band contact">
+      <div class="container">
+        <h2>Get started</h2>
+        <p class="lead">Free to download. Your vault in five minutes.</p>
+        <p><strong>Website:</strong> <a href="index.html">mylifedock.github.io</a></p>
+        <p><strong>Email:</strong> <a href="mailto:mylifedock@gmail.com">mylifedock@gmail.com</a></p>
+        <p class="muted" style="font-size:13px;">© 2026 MyLifeDock Technologies</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <nav class="footer-links" aria-label="Footer">
+        <a href="index.html">Home</a>
+        <a href="guide.html">User guide</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="terms.html">Terms of service</a>
+        <a href="refunds.html">Refunds &amp; delivery</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

@@ -14,11 +14,13 @@ export async function createLocalProfile(
   const now = new Date().toISOString();
   const existing = await db.profiles.get(LOCAL_PROFILE_ID);
 
+  // Keep fields stored on an existing profile (emergency kit, subscriptions, health data).
   const profile: ProfileRecord = {
+    ...existing,
     id: LOCAL_PROFILE_ID,
     displayName: displayName.trim(),
     role: "primary",
-    avatarIcon: "👤",
+    avatarIcon: existing?.avatarIcon ?? "👤",
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

@@ -3,28 +3,40 @@ import {
   type DocumentRecord,
 } from "../infrastructure/database/db";
 import { createEncryptedAttachment } from "./attachmentService";
+import { assertCanAddItem } from "./vaultLimitService";
 
 const LOCAL_PROFILE_ID = "local-profile";
 
+/** `ownerId` is the family member the document belongs to (defaults to the vault owner). */
 export type CreateDocumentInput = Omit<
   DocumentRecord,
   "id" | "ownerId" | "createdAt" | "updatedAt"
->;
+> & { ownerId?: string };
 
 export type CreateDocumentWithAttachmentInput =
   CreateDocumentInput & {
     file?: File;
   };
 
+/** Documents belong to the vault owner or to an existing family member profile. */
+async function resolveOwner(ownerId: string | undefined): Promise<string> {
+  if (!ownerId || ownerId === LOCAL_PROFILE_ID) return LOCAL_PROFILE_ID;
+  if (!(await db.profiles.get(ownerId))) {
+    throw new Error("That family member no longer exists.");
+  }
+  return ownerId;
+}
+
 export async function createDocument(
   input: CreateDocumentInput,
 ): Promise<DocumentRecord> {
+  await assertCanAddItem();
   const now = new Date().toISOString();
 
   const document: DocumentRecord = {
     ...input,
     id: crypto.randomUUID(),
-    ownerId: LOCAL_PROFILE_ID,
+    ownerId: await resolveOwner(input.ownerId),
     createdAt: now,
     updatedAt: now,
   };
@@ -37,6 +49,7 @@ export async function createDocument(
 export async function createDocumentWithAttachment(
   input: CreateDocumentWithAttachmentInput,
 ): Promise<DocumentRecord> {
+  await assertCanAddItem();
   const now = new Date().toISOString();
 
   const document: DocumentRecord = {
@@ -51,7 +64,7 @@ export async function createDocumentWithAttachment(
     tags: input.tags,
     notes: input.notes,
     id: crypto.randomUUID(),
-    ownerId: LOCAL_PROFILE_ID,
+    ownerId: await resolveOwner(input.ownerId),
     createdAt: now,
     updatedAt: now,
   };
@@ -75,14 +88,8 @@ export async function createDocumentWithAttachment(
     : undefined;
 
   /*
-   * Persist the document and encrypted attachment atomically.
-   *
-   * Either:
-   *   document + attachment
-   * are both committed,
-   *
-   * or:
-   *   neither is committed.
+   * Persist the document and encrypted attachment atomically: either both
+   * are committed, or neither is.
    */
   await db.transaction(
     "rw",
@@ -118,13 +125,13 @@ export async function deleteDocument(
   );
 }
 
-export async function getDocuments(): Promise<
+/** All documents of the vault owner and family members, or one person's with `ownerId`. */
+export async function getDocuments(ownerId?: string): Promise<
   DocumentRecord[]
 > {
-  const documents = await db.documents
-    .where("ownerId")
-    .equals(LOCAL_PROFILE_ID)
-    .toArray();
+  const documents = ownerId && ownerId !== "all"
+    ? await db.documents.where("ownerId").equals(ownerId).toArray()
+    : await db.documents.toArray();
 
   return documents.sort(
     (a, b) =>
@@ -144,7 +151,6 @@ export type UpdateDocumentInput = Partial<
   Omit<
     DocumentRecord,
     | "id"
-    | "ownerId"
     | "createdAt"
     | "updatedAt"
   >
@@ -163,17 +169,10 @@ export async function updateDocument(
     );
   }
 
-  if (
-    existing.ownerId !== LOCAL_PROFILE_ID
-  ) {
-    throw new Error(
-      "You cannot update this document.",
-    );
-  }
-
   const updated: DocumentRecord = {
     ...existing,
     ...input,
+    ownerId: await resolveOwner(input.ownerId ?? existing.ownerId),
     updatedAt:
       new Date().toISOString(),
   };

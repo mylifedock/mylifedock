@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 async function ensureOnboardedAndSetup(page: Page, secret: string = 'AuditSecretPassword2026!') {
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
   // Dismiss onboarding slides if present on fresh run
@@ -42,7 +42,7 @@ async function ensureOnboardedAndSetup(page: Page, secret: string = 'AuditSecret
 
 test.describe('Security Audit & Zero-Knowledge Verification Suite', () => {
   test('Zero-Knowledge Storage Inspection: No Plaintext Passphrases Stored', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
     await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
     // Complete onboarding if present
@@ -109,7 +109,7 @@ test.describe('Security Audit & Zero-Knowledge Verification Suite', () => {
   });
 
   test('Content Security Policy (CSP) & Defense-in-Depth Meta Tag Verification', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const cspHeader = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
     expect(cspHeader).not.toBeNull();
@@ -119,7 +119,7 @@ test.describe('Security Audit & Zero-Knowledge Verification Suite', () => {
   });
 
   test('XSS Sanitization & Input Injection Defense', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
     await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
     // Ensure app is unlocked

@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 
 async function ensureUnlocked(page: Page) {
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
   // Dismiss onboarding slides if present on fresh run
@@ -42,7 +42,7 @@ async function ensureUnlocked(page: Page) {
 
 test.describe('Medical Profile & Health Records Suite', () => {
   test('Medical Profile Service: CRUD, Department Defaulting & Linked Reminders', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const result = await page.evaluate(async () => {
       const { 
@@ -130,7 +130,7 @@ test.describe('Medical Profile & Health Records Suite', () => {
   });
 
   test('Beta Smart Capture: Heuristics & OCR Medical Text Parsing', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const parseVerification = await page.evaluate(async () => {
       const { parseMedicalOcrText } = await import('../src/application/medicalService');
@@ -189,7 +189,7 @@ test.describe('Medical Profile & Health Records Suite', () => {
   });
 
   test('Universal Search: Indexes and Finds Medical Prescriptions & Lab Reports', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     const searchVerification = await page.evaluate(async () => {
       const { createMedicalRecord, deleteMedicalRecord } = await import('../src/application/medicalService');
@@ -236,20 +236,20 @@ test.describe('Medical Profile & Health Records Suite', () => {
     await ensureUnlocked(page);
 
     // Navigate to Medical & Health Records from Sidebar
-    const navBtn = page.locator('button.nav-item:has-text("Medical & Health Records")');
+    const navBtn = page.locator('button.nav-item:has-text("Medical & Health")');
     if (await navBtn.isVisible()) {
       await navBtn.click();
     } else {
       // If mobile view, open sidebar or navigate
-      const dirBtn = page.locator('button[aria-label="Vault Directory"]');
+      const dirBtn = page.locator('button[aria-label="Sections"]');
       if (await dirBtn.isVisible()) {
         await dirBtn.click();
       }
-      await page.click('button.nav-item:has-text("Medical & Health Records")');
+      await page.click('button.nav-item:has-text("Medical & Health")');
     }
 
     // Verify Page Title is rendered
-    await expect(page.locator('h1.page-title:has-text("Medical & Health Records")')).toBeVisible();
+    await expect(page.locator('h1.page-title:has-text("Medical & Health")')).toBeVisible();
 
     // Verify Sub-module Tabs exist
     await expect(page.locator('button.tab:has-text("All Records")')).toBeVisible();

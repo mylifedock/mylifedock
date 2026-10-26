@@ -1,6 +1,3 @@
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
-import { Capacitor } from "@capacitor/core";
 import { db, type VaultSecurityRecord, type ProfileRecord } from "../infrastructure/database/db";
 import {
   getUnlockedVaultKey,
@@ -9,7 +6,32 @@ import {
   unwrapVaultKeyWithPassphrase,
   unwrapVaultKeyWithRecovery,
 } from "../security/vaultKeyService";
-import { isTauri, showSaveDialog, writeFileDesktop } from "../platform/desktopBridge";
+import { saveFile } from "../platform/fileExport";
+import { getLocalDateString } from "../utils/dateUtils";
+import { generateRecordKey, swapRecordKey, wrapRecordKey } from "../security/recordEncryption";
+import { getStoredLicenseKey, LICENSE_STORAGE_KEY, notifyLicenseChanged } from "./licenseService";
+import { isSupportedCurrency, PREFERRED_CURRENCY_STORAGE_KEY } from "./currencyService";
+
+const RESTORABLE_TABLES = [
+  "documents",
+  "products",
+  "coverages",
+  "reminders",
+  "finance",
+  "vehicles",
+  "properties",
+  "secrets",
+  "medicalRecords",
+  "attachments",
+] as const;
+
+/** The backup belongs to another vault (or the vault is locked): ask for its passphrase. */
+export class PassphraseRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PassphraseRequiredError";
+  }
+}
 
 export interface VaultBackupSecurityHeader {
   salt: string;
@@ -58,25 +80,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-export async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      const base64 = result.includes(",") ? result.split(",")[1] : result;
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+  return Uint8Array.from(binaryString, (char) => char.charCodeAt(0)).buffer;
 }
 
 /**
@@ -91,8 +95,8 @@ export async function createBackupBlob(): Promise<{ blob: Blob; filename: string
   if (!secRecord) throw new Error("Vault security record not found");
 
   const profile = await db.profiles.toCollection().first();
-  const licenseKey = localStorage.getItem("mylifedock_license_key");
-  const preferredCurrency = localStorage.getItem("mylifedock_preferred_currency");
+  const licenseKey = getStoredLicenseKey();
+  const preferredCurrency = localStorage.getItem(PREFERRED_CURRENCY_STORAGE_KEY);
 
   const exportData: Record<string, unknown[]> = {
     documents: await db.documents.toArray(),
@@ -164,48 +168,19 @@ export async function createBackupBlob(): Promise<{ blob: Blob; filename: string
 
   const envelopeJson = JSON.stringify(envelope, null, 2);
   const blob = new Blob([envelopeJson], { type: "application/json" });
-  const filename = `MyLifeDock_Backup_${new Date().toISOString().split("T")[0]}.mldv`;
+  const filename = `MyLifeDock_Backup_${getLocalDateString()}.mldv`;
 
   return { blob, filename };
 }
 
-export async function exportVault(): Promise<void> {
+/** Exports an encrypted backup; returns false if the user cancelled the save. */
+export async function exportVault(): Promise<boolean> {
   const { blob, filename } = await createBackupBlob();
-
-  if (Capacitor.isNativePlatform()) {
-    const base64Data = await blobToBase64(blob);
-
-    const savedFile = await Filesystem.writeFile({
-      path: filename,
-      data: base64Data,
-      directory: Directory.Cache,
-    });
-
-    await Share.share({
-      title: "MyLifeDock Vault Backup",
-      text: "Encrypted MyLifeDock Backup File (.mldv)",
-      url: savedFile.uri,
-      dialogTitle: "Save or Share Vault Backup",
-    });
-  } else if (isTauri()) {
-    const arrayBuffer = await blob.arrayBuffer();
-    const filePath = await showSaveDialog({
-      defaultPath: filename,
-      filters: [{ name: "MyLifeDock Vault Backup (*.mldv)", extensions: ["mldv"] }],
-    });
-    if (filePath) {
-      await writeFileDesktop(filePath, new Uint8Array(arrayBuffer));
-    }
-  } else {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
+  return saveFile(blob, filename, {
+    title: "Save or Share Vault Backup",
+    text: "Encrypted MyLifeDock Backup File (.mldv)",
+    filterName: "MyLifeDock Vault Backup (*.mldv)",
+  });
 }
 
 /**
@@ -286,9 +261,13 @@ export async function restoreVaultFromBackup(
     throw new Error("Corrupted backup payload.");
   }
 
-  // Restore vaultSecurity
+  // The restored vault gets a fresh record key; all rows are rewritten under it.
+  const recordKey = generateRecordKey();
+  const wrappedRecord = await wrapRecordKey(vaultKey, recordKey);
+
   const now = new Date().toISOString();
   const secRecord: VaultSecurityRecord = {
+    ...wrappedRecord,
     id: "local-vault",
     keyVersion: envelope.security.keyVersion || 1,
     kdf: envelope.security.kdf || "PBKDF2",
@@ -302,79 +281,11 @@ export async function restoreVaultFromBackup(
     updatedAt: now,
   };
 
-  await db.vaultSecurity.put(secRecord);
+  await writeRestoredVault(payload, secRecord, recordKey);
+  const licenseRestored = restorePreferences(payload);
 
-  // Restore profile(s)
-  const backupProfiles = payload.data?.["profiles"];
-  if (Array.isArray(backupProfiles) && backupProfiles.length > 0) {
-    await db.profiles.clear();
-    await db.profiles.bulkPut(backupProfiles as ProfileRecord[]);
-  } else if (payload.profile) {
-    await db.profiles.clear();
-    await db.profiles.put(payload.profile);
-  }
-
-  // Restore preferences and license
-  let licenseRestored = false;
-  if (payload.licenseKey) {
-    localStorage.setItem("mylifedock_license_key", payload.licenseKey);
-    licenseRestored = true;
-  }
-  if (payload.preferredCurrency) {
-    localStorage.setItem("mylifedock_preferred_currency", payload.preferredCurrency);
-  }
-
-  // Restore tables
-  const tables = [
-    "documents",
-    "products",
-    "coverages",
-    "reminders",
-    "finance",
-    "vehicles",
-    "properties",
-    "secrets",
-    "medicalRecords",
-    "attachments",
-  ] as const;
-
-  const dexieTables = tables.map((t) => db.table(t));
-
-  await db.transaction("rw", dexieTables, async () => {
-    for (const table of tables) {
-      if (payload.data && Object.prototype.hasOwnProperty.call(payload.data, table)) {
-        const tableData = payload.data[table];
-        if (Array.isArray(tableData)) {
-          const targetTable = db.table(table);
-
-          if (table === 'attachments') {
-            const reconstructed = tableData.map((rawItem: unknown) => {
-              const item = (rawItem && typeof rawItem === 'object' ? rawItem : {}) as Record<string, unknown>;
-              const record = { ...item };
-              if (record.blobBase64 && typeof record.blobBase64 === 'string') {
-                record.blob = new Blob([base64ToArrayBuffer(record.blobBase64)], { type: 'application/octet-stream' });
-                delete record.blobBase64;
-              }
-              if (record.ivBase64 && typeof record.ivBase64 === 'string') {
-                record.iv = base64ToArrayBuffer(record.ivBase64);
-                delete record.ivBase64;
-              }
-              return record;
-            });
-            await targetTable.clear();
-            await targetTable.bulkAdd(reconstructed);
-            continue;
-          }
-
-          await targetTable.clear();
-          await targetTable.bulkAdd(tableData);
-        }
-      }
-    }
-  });
-
-  // Activate unlocked vault key in memory
-  setUnlockedVaultKey(vaultKey);
+  // Activate unlocked vault key (and its record key) in memory
+  await setUnlockedVaultKey(vaultKey);
 
   return {
     profileName: payload.profile?.displayName || "User",
@@ -409,7 +320,7 @@ export async function importVault(file: File | Blob, optionalPassphrase?: string
     try {
       activeVaultKey = getUnlockedVaultKey();
     } catch {
-      throw new Error("Master Passphrase required to restore this backup.");
+      throw new PassphraseRequiredError("Master Passphrase required to restore this backup.");
     }
 
     const envelope = JSON.parse(text) as VaultBackupEnvelope;
@@ -424,75 +335,20 @@ export async function importVault(file: File | Blob, optionalPassphrase?: string
         ciphertext
       );
     } catch {
-      throw new Error(
+      throw new PassphraseRequiredError(
         "Decryption failed with the current vault key. Please enter your Master Passphrase."
       );
     }
 
-    const payload: VaultBackupPayload = JSON.parse(new TextDecoder().decode(plaintextBuffer));
-
-    const backupProfiles = payload.data?.["profiles"];
-    if (Array.isArray(backupProfiles) && backupProfiles.length > 0) {
-      await db.profiles.clear();
-      await db.profiles.bulkPut(backupProfiles as ProfileRecord[]);
-    } else if (payload.profile) {
-      await db.profiles.clear();
-      await db.profiles.put(payload.profile);
-    }
-    if (payload.licenseKey) {
-      localStorage.setItem("mylifedock_license_key", payload.licenseKey);
-    }
-    if (payload.preferredCurrency) {
-      localStorage.setItem("mylifedock_preferred_currency", payload.preferredCurrency);
+    let payload: VaultBackupPayload;
+    try {
+      payload = JSON.parse(new TextDecoder().decode(plaintextBuffer));
+    } catch {
+      throw new Error("Corrupted backup payload.");
     }
 
-    const tables = [
-      "documents",
-      "products",
-      "coverages",
-      "reminders",
-      "finance",
-      "vehicles",
-      "properties",
-      "secrets",
-      "medicalRecords",
-      "attachments",
-    ] as const;
-
-    const dexieTables = tables.map((t) => db.table(t));
-
-    await db.transaction("rw", dexieTables, async () => {
-      for (const table of tables) {
-        if (payload.data && Object.prototype.hasOwnProperty.call(payload.data, table)) {
-          const tableData = payload.data[table];
-          if (Array.isArray(tableData)) {
-            const targetTable = db.table(table);
-
-            if (table === 'attachments') {
-              const reconstructed = tableData.map((rawItem: unknown) => {
-                const item = (rawItem && typeof rawItem === 'object' ? rawItem : {}) as Record<string, unknown>;
-                const record = { ...item };
-                if (record.blobBase64 && typeof record.blobBase64 === 'string') {
-                  record.blob = new Blob([base64ToArrayBuffer(record.blobBase64)], { type: 'application/octet-stream' });
-                  delete record.blobBase64;
-                }
-                if (record.ivBase64 && typeof record.ivBase64 === 'string') {
-                  record.iv = base64ToArrayBuffer(record.ivBase64);
-                  delete record.ivBase64;
-                }
-                return record;
-              });
-              await targetTable.clear();
-              await targetTable.bulkAdd(reconstructed);
-              continue;
-            }
-
-            await targetTable.clear();
-            await targetTable.bulkAdd(tableData);
-          }
-        }
-      }
-    });
+    await writeRestoredVault(payload);
+    restorePreferences(payload);
 
     return;
   }
@@ -535,32 +391,115 @@ export async function importVault(file: File | Blob, optionalPassphrase?: string
     throw new Error("Unrecognized backup format.");
   }
 
+  await writeRestoredVault(backupPayload);
+}
+
+function reviveAttachment(rawItem: unknown): Record<string, unknown> {
+  const item = (rawItem && typeof rawItem === "object" ? rawItem : {}) as Record<string, unknown>;
+  const record = { ...item };
+  if (typeof record.blobBase64 === "string") {
+    record.blob = new Blob([base64ToArrayBuffer(record.blobBase64)], { type: "application/octet-stream" });
+    delete record.blobBase64;
+  }
+  if (typeof record.ivBase64 === "string") {
+    record.iv = base64ToArrayBuffer(record.ivBase64);
+    delete record.ivBase64;
+  }
+  return record;
+}
+
+/**
+ * Replaces vault contents with a decrypted backup in a single transaction,
+ * so a failed restore leaves the existing vault (and its record key) untouched.
+ *
+ * With `newRecordKey`, every row is rewritten under that key, including rows
+ * of tables the backup does not contain.
+ */
+async function writeRestoredVault(
+  payload: Pick<VaultBackupPayload, "data" | "profile">,
+  secRecord?: VaultSecurityRecord,
+  newRecordKey?: Uint8Array,
+): Promise<void> {
+  // A Map keeps untrusted table names in the backup from reaching object keys.
+  const backupTables = new Map<string, unknown>(
+    payload.data && typeof payload.data === "object" ? Object.entries(payload.data) : [],
+  );
+  const backupProfiles = backupTables.get("profiles");
+  const profiles: ProfileRecord[] = Array.isArray(backupProfiles) && backupProfiles.length > 0
+    ? (backupProfiles as ProfileRecord[])
+    : payload.profile ? [payload.profile] : [];
+
   const tables = [
-    "documents",
-    "products",
-    "coverages",
-    "reminders",
-    "finance",
-    "vehicles",
-    "properties",
-    "secrets",
-    "medicalRecords",
-    "attachments",
-  ] as const;
+    ...RESTORABLE_TABLES.map((t) => db.table(t)),
+    db.profiles,
+    ...(secRecord ? [db.vaultSecurity] : []),
+  ];
 
-  const dexieTables = tables.map((t) => db.table(t));
+  let previousRecordKey: Uint8Array | null = null;
+  let swapped = false;
 
-  await db.transaction("rw", dexieTables, async () => {
-    for (const table of tables) {
-      if (Object.prototype.hasOwnProperty.call(backupPayload.data, table)) {
-        const tableData = backupPayload.data[table as keyof typeof backupPayload.data];
-        if (Array.isArray(tableData)) {
-          const targetTable = db.table(table);
-          await targetTable.clear();
-          await targetTable.bulkAdd(tableData);
+  try {
+    await db.transaction("rw", tables, async () => {
+      // Read rows that the backup does not replace while the current key is active.
+      const carriedOver = new Map<string, unknown[]>();
+      if (newRecordKey) {
+        for (const table of RESTORABLE_TABLES) {
+          if (!Array.isArray(backupTables.get(table))) {
+            carriedOver.set(table, await db.table(table).toArray());
+          }
+        }
+        if (profiles.length === 0) {
+          carriedOver.set("profiles", await db.profiles.toArray());
+        }
+        previousRecordKey = swapRecordKey(newRecordKey);
+        swapped = true;
+      }
+
+      if (secRecord) {
+        await db.vaultSecurity.put(secRecord);
+      }
+
+      if (profiles.length > 0) {
+        await db.profiles.clear();
+        await db.profiles.bulkPut(profiles);
+      }
+
+      for (const table of RESTORABLE_TABLES) {
+        const tableData = backupTables.get(table);
+        if (!Array.isArray(tableData)) continue;
+
+        const targetTable = db.table(table);
+        await targetTable.clear();
+        await targetTable.bulkAdd(table === "attachments" ? tableData.map(reviveAttachment) : tableData);
+      }
+
+      for (const [table, rows] of carriedOver) {
+        if (rows.length > 0) {
+          await db.table(table).bulkPut(rows);
         }
       }
+    });
+  } catch (error) {
+    if (swapped) {
+      swapRecordKey(previousRecordKey);
     }
-  });
+    throw error;
+  }
+
+  (previousRecordKey as Uint8Array | null)?.fill(0);
+}
+
+/** Restores license and currency preference; returns whether a license was restored. */
+function restorePreferences(payload: VaultBackupPayload): boolean {
+  let licenseRestored = false;
+  if (typeof payload.licenseKey === "string" && payload.licenseKey) {
+    localStorage.setItem(LICENSE_STORAGE_KEY, payload.licenseKey);
+    licenseRestored = true;
+    notifyLicenseChanged();
+  }
+  if (isSupportedCurrency(payload.preferredCurrency)) {
+    localStorage.setItem(PREFERRED_CURRENCY_STORAGE_KEY, payload.preferredCurrency);
+  }
+  return licenseRestored;
 }
 

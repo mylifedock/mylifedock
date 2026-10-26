@@ -1,7 +1,21 @@
-import { useState } from "react";
-import { PRICING_CONFIG, type PricingPlan } from "../../config/pricingConfig";
-import { activateLicense, __generateDevLicense } from "../../application/licenseService";
+import { useEffect, useState } from "react";
+import { FREE_FEATURES, PRICING_CONFIG, checkoutUrl, type PricingPlan } from "../../config/pricingConfig";
+import { formatINR, formatUSD, loadLivePricing, type LivePricing } from "../../application/livePricingService";
+import { activateLicense, isProLicense, __generateDevLicense } from "../../application/licenseService";
+import { getCheckoutChannel } from "../../config/storePolicy";
+import { openExternalUrl } from "../../platform/fileExport";
+import {
+  isStoreBillingAvailable,
+  isStoreBillingPending,
+  loadStoreOffers,
+  purchaseStorePlan,
+  restoreStorePurchases,
+  StorePurchaseCancelledError,
+  type StoreOffer,
+} from "../../application/storeBillingService";
+import type { StorePlanId } from "../../config/storeProducts";
 import { useToast } from "./Toast";
+import { LegalDocModal, type LegalDoc } from "./LegalDocModal";
 
 interface ProUpgradeModalProps {
   isOpen: boolean;
@@ -10,52 +24,198 @@ interface ProUpgradeModalProps {
   currentCount?: number;
 }
 
-export function ProUpgradeModal({
-  isOpen,
-  onClose,
-  onSuccess,
-  currentCount = 10,
-}: ProUpgradeModalProps) {
-  const { showToast } = useToast();
-  const [licenseKeyInput, setLicenseKeyInput] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>(PRICING_CONFIG.plans[2] || PRICING_CONFIG.plans[0]); // Default to Lifetime (plans[2])
+const DEFAULT_PLAN: PricingPlan["id"] = "pro_lifetime";
 
+/**
+ * The one upgrade screen. What it sells depends on where the app runs
+ * (src/config/storePolicy.ts):
+ * - Windows app: live prices/offers, website checkout (Razorpay) in the browser, then a license key by email.
+ * - Android / iOS: Google Play Billing / Apple In-App Purchase, with Restore.
+ * License-key activation is offered everywhere.
+ */
+export function ProUpgradeModal({ isOpen, onClose, onSuccess, currentCount }: ProUpgradeModalProps) {
   if (!isOpen) return null;
+  return <UpgradeDialog onClose={onClose} onSuccess={onSuccess} currentCount={currentCount} />;
+}
 
-  function handleActivate() {
+function UpgradeDialog({ onClose, onSuccess, currentCount }: Omit<ProUpgradeModalProps, "isOpen">) {
+  const { showToast } = useToast();
+  const channel = getCheckoutChannel();
+  const storeLive = isStoreBillingAvailable();
+  const storePending = isStoreBillingPending();
+  const storeName = channel === "app-store" ? "App Store" : "Google Play";
+
+  const [selectedPlanId, setSelectedPlanId] = useState<PricingPlan["id"]>(DEFAULT_PLAN);
+  const [licenseKeyInput, setLicenseKeyInput] = useState("");
+  const [busy, setBusy] = useState<"" | "activate" | "buy" | "restore">("");
+  const [offers, setOffers] = useState<StoreOffer[] | null>(storeLive ? null : []);
+  const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
+  const [live, setLive] = useState<LivePricing | null>(null);
+
+  useEffect(() => {
+    if (channel !== "razorpay") return;
+    let active = true;
+    void loadLivePricing().then((prices) => active && setLive(prices));
+    return () => {
+      active = false;
+    };
+  }, [channel]);
+
+  useEffect(() => {
+    if (!storeLive) return;
+    let active = true;
+    loadStoreOffers()
+      .then((loaded) => active && setOffers(loaded))
+      .catch(() => active && setOffers([]));
+    return () => {
+      active = false;
+    };
+  }, [storeLive]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const limit = PRICING_CONFIG.freeItemLimit;
+  const isLimitReached = currentCount !== undefined && currentCount >= limit;
+  const usagePercent = currentCount === undefined ? 0 : Math.min(100, Math.round((currentCount / limit) * 100));
+  const selectedPlan = PRICING_CONFIG.plans.find((p) => p.id === selectedPlanId) ?? PRICING_CONFIG.plans[0];
+  const selectedOffer = offers?.find((o) => o.plan === selectedPlanId);
+
+  function done(message: string) {
+    showToast(message, "success");
+    onSuccess?.();
+    onClose();
+  }
+
+  async function handleActivate() {
     if (!licenseKeyInput.trim()) {
       showToast("Please enter your MLD-PRO license key", "error");
       return;
     }
-
-    const success = activateLicense(licenseKeyInput.trim());
-    if (success) {
-      showToast("🎉 MyLifeDock PRO successfully activated! Unlimited storage unlocked.", "success");
-      setLicenseKeyInput("");
-      if (onSuccess) onSuccess();
-      onClose();
-    } else {
-      showToast("Invalid cryptographic signature or expired license key.", "error");
-    }
-  }
-
-  function handleFillTestKey() {
+    setBusy("activate");
     try {
-      const sampleKey = __generateDevLicense("mylifedock@gmail.com", "pro_lifetime");
-      setLicenseKeyInput(sampleKey);
-      showToast("Test Lifetime Pro key populated! Click 'Activate Key' to unlock.", "info");
-    } catch {
-      showToast("Test keys only available in development mode.", "info");
+      const status = await activateLicense(licenseKeyInput.trim());
+      if (isProLicense(status)) {
+        setLicenseKeyInput("");
+        done("🎉 MyLifeDock Pro activated. Your vault now has unlimited items.");
+      } else {
+        showToast(status.message || "Invalid or expired license key.", "error");
+      }
+    } finally {
+      setBusy("");
     }
   }
 
-  function handleCheckout(plan: PricingPlan) {
-    if (!plan.razorpayPaymentLink) {
-      showToast("Payment link not configured yet.", "error");
-      return;
+  async function handleStorePurchase(plan: StorePlanId) {
+    setBusy("buy");
+    try {
+      const status = await purchaseStorePlan(plan);
+      if (status && isProLicense(status)) {
+        done("🎉 MyLifeDock Pro unlocked. Thank you!");
+      } else {
+        showToast(`${storeName} has not confirmed the payment yet. It will unlock automatically when it does.`, "info");
+      }
+    } catch (err) {
+      if (!(err instanceof StorePurchaseCancelledError)) {
+        showToast(err instanceof Error ? err.message : "The purchase could not be completed.", "error");
+      }
+    } finally {
+      setBusy("");
     }
-    window.open(plan.razorpayPaymentLink, "_system");
   }
+
+  async function handleRestore() {
+    setBusy("restore");
+    try {
+      const status = await restoreStorePurchases();
+      if (status && isProLicense(status)) {
+        done("Your Pro purchase was restored.");
+      } else {
+        showToast(`No active Pro purchase was found for this ${storeName} account.`, "info");
+      }
+    } catch {
+      showToast(`Could not reach ${storeName}. Check your connection and try again.`, "error");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  /** Website price for a plan: live (with any offer) when loaded, otherwise the built-in regular price. */
+  function websitePrice(plan: PricingPlan) {
+    const p = live?.[plan.id];
+    if (!p) return { inr: plan.priceINR, usd: plan.priceUSD, regularINR: "", offerText: "" };
+    const current = p.offer ?? p;
+    return {
+      inr: formatINR(current.priceINR),
+      usd: formatUSD(current.priceUSD),
+      regularINR: p.offer ? formatINR(p.priceINR) : "",
+      offerText: p.offer ? p.offer.text : "",
+    };
+  }
+
+  function handleRazorpay(plan: PricingPlan) {
+    void openExternalUrl(checkoutUrl(plan.id)).catch(() => showToast("Could not open the payment page.", "error"));
+  }
+
+  async function handleFillTestKey() {
+    try {
+      setLicenseKeyInput(await __generateDevLicense("mylifedock@gmail.com", "pro_lifetime"));
+      showToast("Test Lifetime Pro key filled in. Click 'Activate Key'.", "info");
+    } catch {
+      showToast("Test keys are only available in development mode.", "info");
+    }
+  }
+
+  const planCards = (
+    <div className="upgrade-plans" role="radiogroup" aria-label="Pro plan">
+      {PRICING_CONFIG.plans.map((plan) => {
+        const offer = offers?.find((o) => o.plan === plan.id);
+        // In the store apps, show only plans the store actually offers, with the store's price.
+        if (storeLive && offers && !offer) return null;
+        const isSelected = selectedPlanId === plan.id;
+        const web = websitePrice(plan);
+        return (
+          <button
+            key={plan.id}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            className={`upgrade-plan ${isSelected ? "active" : ""}`}
+            onClick={() => setSelectedPlanId(plan.id)}
+          >
+            {plan.badge && <span className={`upgrade-plan-badge ${plan.id === "pro_yearly" ? "green" : ""}`}>{plan.badge}</span>}
+            <span className="upgrade-plan-title">{plan.title}</span>
+            <span className="upgrade-plan-price">
+              {!storeLive && web.regularINR && <s className="upgrade-plan-was">{web.regularINR}</s>}
+              {storeLive ? offer?.priceString ?? "…" : web.inr}
+              {!storeLive && <small> ({web.usd})</small>}
+            </span>
+            {!storeLive && web.offerText && <span className="upgrade-plan-offer">{web.offerText}</span>}
+            <span className="upgrade-plan-period">
+              {plan.id === "pro_lifetime" ? "one-time payment" : storeLive ? `${plan.billingPeriod}, renews automatically` : plan.billingPeriod}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const features = (
+    <div className="upgrade-features">
+      <div className="upgrade-features-title">Included with MyLifeDock Pro</div>
+      <ul>
+        {selectedPlan.features.map((feat) => (
+          <li key={feat}>{feat}</li>
+        ))}
+      </ul>
+      <p className="muted-text">Free includes: {FREE_FEATURES.join(" · ")}.</p>
+    </div>
+  );
 
   return (
     <div
@@ -66,295 +226,128 @@ export function ProUpgradeModal({
       }}
       style={{ zIndex: 1200 }}
     >
-      <section
-        className="product-detail-modal"
-        role="dialog"
-        aria-modal="true"
-        style={{
-          maxWidth: "580px",
-          width: "95%",
-          maxHeight: "92vh",
-          overflowY: "auto",
-          background: "#0d1322",
-          border: "1px solid rgba(234, 179, 8, 0.35)",
-          boxShadow: "0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(234, 179, 8, 0.15)",
-        }}
-      >
-        {/* Modal Header */}
-        <div
-          className="product-detail-header"
-          style={{
-            borderBottom: "1px solid rgba(234, 179, 8, 0.2)",
-            background: "linear-gradient(to right, rgba(234, 179, 8, 0.08), transparent)",
-          }}
-        >
+      <section className="product-detail-modal upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+        <div className="product-detail-header upgrade-header">
           <div>
-            <span
-              className="eyebrow"
-              style={{ color: "#eab308", fontWeight: 700, letterSpacing: "0.08em" }}
-            >
-              ⭐ VAULT QUOTA LIMIT REACHED
-            </span>
-            <h2 style={{ color: "#fff", margin: "4px 0 0 0", fontSize: "22px" }}>
-              Upgrade to MyLifeDock PRO
-            </h2>
+            <span className="eyebrow upgrade-eyebrow">{isLimitReached ? "⭐ FREE VAULT IS FULL" : "⭐ MYLIFEDOCK PRO"}</span>
+            <h2 id="upgrade-title">Upgrade to MyLifeDock Pro</h2>
           </div>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={onClose}
-            aria-label="Close"
-          >
+          <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
             ✕
           </button>
         </div>
 
-        <div style={{ padding: "22px" }}>
-          {/* Usage Progress Meter */}
-          <div
-            style={{
-              background: "rgba(15, 23, 42, 0.8)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              borderRadius: "10px",
-              padding: "14px 16px",
-              marginBottom: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "13px",
-                marginBottom: "6px",
-                color: "#e2e8f0",
-              }}
-            >
-              <span>
-                Free Core Capacity: <strong>{currentCount} / {PRICING_CONFIG.freeItemLimit} items</strong>
-              </span>
-              <span style={{ color: "#f87171", fontWeight: 700 }}>100% Full</span>
+        <div className="upgrade-body">
+          {currentCount !== undefined && (
+            <div className="upgrade-usage">
+              <div className="upgrade-usage-row">
+                <span>
+                  Free vault: <strong>{currentCount} / {limit} items</strong>
+                </span>
+                <span className={isLimitReached ? "danger-text" : "upgrade-gold"}>{isLimitReached ? "Full" : `${usagePercent}% used`}</span>
+              </div>
+              <div className="upgrade-meter" aria-hidden="true">
+                <div style={{ width: `${usagePercent}%` }} />
+              </div>
+              <p className="muted-text">
+                Pro removes the limit in every section: documents, medical records, policies, accounts, subscriptions and secrets.
+              </p>
             </div>
-            <div
-              style={{
-                width: "100%",
-                height: "8px",
-                background: "rgba(255, 255, 255, 0.1)",
-                borderRadius: "4px",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  background: "linear-gradient(90deg, #f59e0b, #ef4444)",
-                }}
-              />
-            </div>
-            <p
-              style={{
-                fontSize: "12.5px",
-                color: "#94a3b8",
-                margin: "8px 0 0 0",
-                lineHeight: "1.45",
-              }}
-            >
-              You have reached the 10-item limit for the free version. Upgrade to PRO to store unlimited documents, medical prescriptions, lab reports, warranties, and secrets.
+          )}
+
+          {channel === "razorpay" && (
+            <>
+              {planCards}
+              {features}
+              <button type="button" className="primary-button cta-button upgrade-buy" onClick={() => handleRazorpay(selectedPlan)}>
+                <span>Pay with UPI / Cards via Razorpay ({websitePrice(selectedPlan).inr})</span>
+                <span className="btn-arrow" aria-hidden="true">→</span>
+              </button>
+              <p className="upgrade-fineprint">
+                🔒 Opens the secure MyLifeDock checkout in your browser (Razorpay: UPI, RuPay, debit and credit cards). Your
+                license key arrives by email within minutes.
+              </p>
+            </>
+          )}
+
+          {storeLive && (
+            <>
+              {offers === null ? <p className="muted-text">Loading prices from {storeName}…</p> : planCards}
+              {offers !== null && offers.length === 0 && (
+                <p className="warning-text">Could not load plans from {storeName}. Check your connection and try again.</p>
+              )}
+              {features}
+              <button
+                type="button"
+                className="primary-button cta-button upgrade-buy"
+                disabled={!selectedOffer || busy !== ""}
+                onClick={() => void handleStorePurchase(selectedPlanId)}
+              >
+                <span>
+                  {busy === "buy"
+                    ? "Opening payment…"
+                    : selectedPlanId === "pro_lifetime"
+                      ? `Buy with ${storeName}${selectedOffer ? ` (${selectedOffer.priceString})` : ""}`
+                      : `Subscribe with ${storeName}${selectedOffer ? ` (${selectedOffer.priceString})` : ""}`}
+                </span>
+              </button>
+              <button type="button" className="text-button upgrade-restore" disabled={busy !== ""} onClick={() => void handleRestore()}>
+                {busy === "restore" ? "Restoring…" : "Restore purchases"}
+              </button>
+              <p className="upgrade-fineprint">
+                Payment is charged to your {storeName} account. Monthly and yearly plans renew automatically unless cancelled at least
+                24 hours before the end of the current period; manage or cancel them in your {storeName} account settings.{" "}
+                <button type="button" className="inline-link" onClick={() => setLegalDoc("terms")}>
+                  Terms of Use
+                </button>{" "}
+                ·{" "}
+                <button type="button" className="inline-link" onClick={() => setLegalDoc("privacy")}>
+                  Privacy Policy
+                </button>
+              </p>
+            </>
+          )}
+
+          {storePending && (
+            <p className="upgrade-coming-soon" role="note">
+              Buying Pro through {storeName} arrives with the store release. Bought a license key on the MyLifeDock website or
+              desktop app? Activate it below.
             </p>
+          )}
+
+          <div className="upgrade-divider">
+            <span>{channel === "razorpay" ? "ALREADY HAVE A KEY?" : "HAVE A LICENSE KEY?"}</span>
           </div>
 
-          {/* Pricing Plans Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px", marginBottom: "20px" }}>
-            {PRICING_CONFIG.plans.map((plan) => {
-              const isSelected = selectedPlan.id === plan.id;
-              return (
-                <div
-                  key={plan.id}
-                  onClick={() => setSelectedPlan(plan)}
-                  style={{
-                    padding: "16px 12px",
-                    borderRadius: "10px",
-                    border: isSelected
-                      ? "2px solid #eab308"
-                      : "1px solid rgba(255, 255, 255, 0.1)",
-                    background: isSelected
-                      ? "rgba(234, 179, 8, 0.08)"
-                      : "rgba(15, 23, 42, 0.5)",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  {plan.badge && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: "-9px",
-                        right: "8px",
-                        background: plan.id === "pro_yearly" ? "#10b981" : "#eab308",
-                        color: plan.id === "pro_yearly" ? "#ffffff" : "#0f172a",
-                        fontSize: "9px",
-                        fontWeight: 800,
-                        padding: "2px 7px",
-                        borderRadius: "999px",
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      {plan.badge}
-                    </span>
-                  )}
-                  <h4 style={{ margin: "0 0 6px 0", fontSize: "14px", color: "#fff" }}>
-                    {plan.title}
-                  </h4>
-                  <div style={{ fontSize: "19px", fontWeight: 800, color: isSelected ? "#eab308" : "#fff" }}>
-                    {plan.priceINR} <small style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 400 }}>({plan.priceUSD})</small>
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>
-                    {plan.billingPeriod}
-                  </div>
-                  {plan.savingsBadge && (
-                    <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 700, lineHeight: "1.2" }}>
-                      ★ {plan.savingsBadge}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Features Included */}
-          <div
-            style={{
-              background: "rgba(15, 23, 42, 0.5)",
-              border: "1px solid rgba(255, 255, 255, 0.06)",
-              borderRadius: "8px",
-              padding: "12px 14px",
-              marginBottom: "20px",
-            }}
-          >
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#eab308", marginBottom: "6px", textTransform: "uppercase" }}>
-              Included with MyLifeDock PRO:
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-              {selectedPlan.features.map((feat, idx) => (
-                <div key={idx} style={{ fontSize: "12px", color: "#cbd5e1", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ color: "#4ade80", fontWeight: "bold" }}>✓</span>
-                  <span>{feat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Buy via Razorpay Button */}
-          <div style={{ marginBottom: "22px" }}>
-            <button
-              type="button"
-              className="primary-button cta-button"
-              onClick={() => handleCheckout(selectedPlan)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                fontSize: "15px",
-                fontWeight: 700,
-                background: "linear-gradient(135deg, #eab308, #ca8a04)",
-                color: "#0f172a",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-              }}
-            >
-              <span>Pay with UPI / Cards via Razorpay ({selectedPlan.priceINR})</span>
-              <span className="btn-arrow" aria-hidden="true">→</span>
-            </button>
-            <div style={{ textAlign: "center", fontSize: "11.5px", color: "#94a3b8", marginTop: "6px" }}>
-              🔒 Secured by Razorpay. Supports UPI (GPay, PhonePe, Paytm), RuPay, and Debit/Credit Cards.
-            </div>
-          </div>
-
-          {/* License Key Activation Divider */}
-          <div
-            style={{
-              position: "relative",
-              textAlign: "center",
-              margin: "18px 0",
-              borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
-          >
-            <span
-              style={{
-                position: "absolute",
-                top: "-10px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "#0d1322",
-                padding: "0 10px",
-                color: "#64748b",
-                fontSize: "12px",
-                fontWeight: 600,
-              }}
-            >
-              ALREADY HAVE A KEY?
-            </span>
-          </div>
-
-          {/* Key Input Section */}
-          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+          <div className="upgrade-key-row">
             <input
               type="text"
               placeholder="Paste license key (MLD-PRO-...)"
+              aria-label="License key"
               value={licenseKeyInput}
               onChange={(e) => setLicenseKeyInput(e.target.value)}
-              style={{
-                flex: 1,
-                padding: "10px 14px",
-                background: "rgba(15, 23, 42, 0.9)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                borderRadius: "8px",
-                color: "#fff",
-                fontSize: "13px",
-              }}
+              autoComplete="off"
+              spellCheck={false}
             />
-            <button
-              type="button"
-              className="primary-button"
-              onClick={handleActivate}
-              style={{ fontSize: "13px", padding: "10px 18px", whiteSpace: "nowrap" }}
-            >
-              Activate Key
+            <button type="button" className="primary-button" onClick={() => void handleActivate()} disabled={busy !== ""}>
+              {busy === "activate" ? "Verifying..." : "Activate Key"}
             </button>
           </div>
 
-          {/* Test / Dev Button */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button
-              type="button"
-              onClick={handleFillTestKey}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#38bdf8",
-                fontSize: "12px",
-                cursor: "pointer",
-                textDecoration: "underline",
-                padding: 0,
-              }}
-            >
-              🧪 Fill Sample Test Key (Dev Mode)
-            </button>
-
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={onClose}
-              style={{ fontSize: "12.5px", padding: "6px 14px" }}
-            >
+          <div className="upgrade-footer">
+            {import.meta.env.DEV && (
+              <button type="button" className="text-button" onClick={() => void handleFillTestKey()}>
+                🧪 Fill Sample Test Key (Dev Mode)
+              </button>
+            )}
+            <button type="button" className="secondary-button" onClick={onClose}>
               Close
             </button>
           </div>
         </div>
       </section>
+
+      {legalDoc && <LegalDocModal doc={legalDoc} onClose={() => setLegalDoc(null)} />}
     </div>
   );
 }

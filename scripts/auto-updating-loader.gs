@@ -1,50 +1,36 @@
 /**
  * =========================================================================
- * MYLIFEDOCK PRO: AUTO-UPDATING LOADER (Google Apps Script)
+ * MYLIFEDOCK PRO: AUTO-UPDATING LOADER — RETIRED
  * =========================================================================
- * 
- * 🚀 PERMANENT ZERO-MAINTENANCE LOADER:
- * Paste this single lightweight file into Google Apps Script ONCE.
- * You will NEVER need to copy-paste or update code in Google Apps Script again!
- * 
- * Whenever a payment or feedback arrives, this loader automatically fetches 
- * the latest production script from your GitHub repository and executes it.
- * 
- * SETUP (One-Time Only - Takes 2 Minutes):
- * 1. Open your Google Sheet -> Extensions -> Apps Script.
- * 2. Replace all existing code with this file.
- * 3. Click "Deploy" -> "New Deployment" -> Select "Web app":
- *    - Description: "MyLifeDock Auto Loader v1"
- *    - Execute as: "Me (mylifedock@gmail.com)"
- *    - Who has access: "Anyone"
- * 4. Authorize permissions once when prompted. That's it!
+ *
+ * The previous loader downloaded razorpay-auto-mailer.gs from GitHub on every
+ * request and ran it with eval(). That gave anyone able to change that file
+ * (or the account/branch it came from) code execution with this script's
+ * Gmail and Sheets permissions, and it bypassed review of what actually ran.
+ *
+ * WHAT TO DO INSTEAD:
+ * 1. Open your Apps Script project (Google Sheet -> Extensions -> Apps Script).
+ * 2. Replace the loader code with the full contents of
+ *    scripts/razorpay-auto-mailer.gs and follow the setup steps at its top
+ *    (Script Properties: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET,
+ *    MLD_LICENSE_PRIVATE_KEY).
+ * 3. Deploy -> Manage deployments -> edit the existing Web app deployment ->
+ *    Version: "New version". The Web App URL stays the same, so the Razorpay
+ *    webhook does not need to change.
+ *
+ * When the mailer changes, paste the reviewed new version and deploy a new
+ * version the same way.
  * =========================================================================
  */
 
-var REMOTE_SCRIPT_URL = "https://raw.githubusercontent.com/mylifedock/mylifedock.github.io/main/app/scripts/razorpay-auto-mailer.gs";
-
 function doPost(e) {
-  try {
-    var response = UrlFetchApp.fetch(REMOTE_SCRIPT_URL + "?cache_bust=" + new Date().getTime());
-    var remoteCode = response.getContentText();
-    eval(remoteCode);
-    return handleWebhook(e);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ 
-      status: "error", 
-      stage: "loader", 
-      message: err.toString() 
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "error",
+    message: "Loader retired: deploy scripts/razorpay-auto-mailer.gs directly."
+  })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput("MyLifeDock Auto-Updating Webhook Loader is LIVE and connected to GitHub!")
+  return ContentService.createTextOutput("MyLifeDock loader retired: deploy razorpay-auto-mailer.gs directly.")
     .setMimeType(ContentService.MimeType.TEXT);
-}
-
-// Scopes declaration: ensures Google prompts for Gmail and Sheets permissions on first deployment
-function _declareGoogleScopes() {
-  GmailApp.getAliases();
-  SpreadsheetApp.getActiveSpreadsheet();
 }

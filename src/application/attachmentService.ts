@@ -199,6 +199,11 @@ export async function deleteAttachment(id: string) {
   await db.attachments.delete(id);
 }
 
+/** Removes every attachment of a record (called when the record is deleted or a new one is cancelled). */
+export async function deleteAttachmentsFor(entityId: string): Promise<void> {
+  await db.attachments.where("documentId").equals(entityId).delete();
+}
+
 export async function getAttachmentsForDocument(
   documentId: string,
 ) {

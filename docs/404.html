@@ -1,19 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>MyLifeDock — Redirecting...</title>
-  <script>
-    var path = window.location.pathname;
-    if (path === '/admin' || path === '/admin/' || path.endsWith('/admin') || path.endsWith('/admin/')) {
-      window.location.replace('/admin.html');
-    } else {
-      window.location.replace('/');
-    }
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found · MyLifeDock</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#090b10">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
 </head>
-<body style="background:#07090e; color:#fff; font-family:sans-serif; text-align:center; padding:50px;">
-  <h2>Redirecting to MyLifeDock...</h2>
-  <p><a href="/" style="color:#38bdf8;">Click here if you are not redirected automatically</a></p>
+<body>
+  <main id="main" class="hero" style="min-height:80vh;display:grid;place-items:center;text-align:center;">
+    <div class="container">
+      <span class="eyebrow">Error 404</span>
+      <h1 style="margin:16px 0;">This page doesn't exist</h1>
+      <p class="lead" style="max-width:560px;margin:0 auto 28px;">The link may be old or mistyped. Everything about MyLifeDock is on the home page and in the user guide.</p>
+      <p style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a class="btn btn-primary" href="/">Go to the home page</a>
+        <a class="btn btn-ghost" href="/guide.html">Read the user guide</a>
+      </p>
+    </div>
+  </main>
 </body>
 </html>

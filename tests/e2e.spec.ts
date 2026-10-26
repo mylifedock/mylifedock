@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('End-to-End Vault Flow', async ({ page }) => {
   // 1. Navigate to local app
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
   
   // 1b. Handle Initial Profile & Legal Terms Onboarding if present

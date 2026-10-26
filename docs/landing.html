@@ -1,802 +1,308 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MyLifeDock — Privacy-First Sovereign Personal & Family Vault</title>
-  <meta name="description" content="Zero-knowledge, offline-first personal vault. Keep documents, prescriptions, warranties, and life records safe with local AES-256-GCM encryption.">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <style>
-    :root {
-      --bg-main: #07090e;
-      --bg-card: #0f172a;
-      --border-card: rgba(56, 189, 248, 0.2);
-      --color-primary: #38bdf8;
-      --color-primary-glow: rgba(56, 189, 248, 0.35);
-      --color-accent: #818cf8;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg-main); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
-    a { color: var(--color-primary); text-decoration: none; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    
-    /* Header */
-    header { padding: 20px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100; background: rgba(7, 9, 14, 0.9); }
-    .nav-wrap { display: flex; justify-content: space-between; align-items: center; }
-    .logo-container { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; color: #fff; text-decoration: none; }
-    .brand-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-      border-radius: 10px;
-      border: 1px solid rgba(56, 189, 248, 0.5);
-      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.45);
-      flex-shrink: 0;
-    }
-    .nav-links { display: flex; gap: 24px; align-items: center; }
-    .nav-links a { color: var(--text-muted); font-size: 14px; font-weight: 500; transition: color 0.2s; }
-    .nav-links a:hover { color: #fff; }
-    
-    /* High-Contrast CTA Buttons */
-    .btn-cta {
-      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-      color: #ffffff !important;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      transition: transform 0.2s, box-shadow 0.2s;
-      cursor: pointer;
-    }
-    .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14, 165, 233, 0.6); }
-
-    .btn-secondary {
-      background: #1e293b !important;
-      color: #f8fafc !important;
-      border: 1px solid rgba(56, 189, 248, 0.4) !important;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-    .btn-secondary:hover {
-      background: #334155 !important;
-      border-color: #38bdf8 !important;
-      transform: translateY(-2px);
-    }
-    
-    /* Hero */
-    .hero { padding: 90px 0 60px; text-align: center; position: relative; }
-    .hero-glow { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 700px; height: 400px; background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, rgba(99, 102, 241, 0.1) 50%, transparent 70%); filter: blur(70px); z-index: -1; }
-    .badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 9999px; font-size: 12px; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 24px; }
-    .hero h1 { font-size: 54px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 24px; }
-    .hero h1 span { background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero p { font-size: 19px; color: #cbd5e1; max-width: 760px; margin: 0 auto 36px; font-weight: 400; line-height: 1.6; }
-    .hero-buttons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 48px; }
-    
-    /* Trust Pillars */
-    .trust-bar { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; padding: 22px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); border-bottom: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 80px; }
-    .trust-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: #f1f5f9; }
-    
-    /* Features */
-    .section-title { text-align: center; margin-bottom: 50px; }
-    .section-title h2 { font-size: 36px; font-weight: 800; margin-bottom: 14px; color: #f8fafc; }
-    .section-title p { color: var(--text-muted); font-size: 17px; max-width: 640px; margin: 0 auto; }
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 90px; }
-    .feature-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 14px; padding: 32px; transition: transform 0.2s, border-color 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .feature-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
-    .feature-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); color: var(--color-primary); display: grid; place-items: center; font-size: 22px; margin-bottom: 20px; }
-    .feature-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; color: #fff; }
-    .feature-card p { font-size: 14.5px; color: #cbd5e1; line-height: 1.6; }
-
-    /* Founder Section */
-    .founder-section {
-      background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(15, 23, 42, 0.95) 100%);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      border-radius: 16px;
-      padding: 40px;
-      margin: 80px auto;
-      max-width: 960px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    
-    /* Pricing */
-    .pricing-section { padding: 80px 0; background: rgba(255, 255, 255, 0.01); border-top: 1px solid rgba(255, 255, 255, 0.08); }
-    .currency-toggle { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 40px; }
-    .toggle-btn { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; padding: 8px 20px; border-radius: 9999px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .toggle-btn.active { background: #38bdf8; color: #07090e; border-color: #38bdf8; font-weight: 700; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
-    .pricing-card { background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 32px 24px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
-    .pricing-card.featured { border-color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); }
-    .pricing-card.lifetime { border-color: #eab308; box-shadow: 0 0 30px rgba(234, 179, 8, 0.2); }
-    .popular-badge { position: absolute; top: -14px; right: 20px; background: #10b981; color: #fff; font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .popular-badge.gold { background: #eab308; color: #000; }
-    .plan-price { font-size: 38px; font-weight: 800; margin: 16px 0; display: flex; align-items: baseline; gap: 6px; color: #fff; }
-    .plan-price small { font-size: 14px; color: var(--text-muted); font-weight: 400; }
-    .plan-features { list-style: none; margin: 20px 0 24px; padding: 0; }
-    .plan-features li { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 10px; color: #e2e8f0; }
-    .plan-features li::before { content: "\2713\0020"; color: #4ade80; font-weight: bold; }
-    
-    /* Footer */
-    footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 60px 0 30px; text-align: center; font-size: 13px; color: var(--text-muted); }
-    .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; }
-    .footer-links a { color: var(--text-muted); }
-    .footer-links a:hover { color: #fff; }
-
-    /* Compact Offers Strip */
-    .offers-compact-bar {
-      max-width: 860px;
-      margin: 0 auto 30px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(56, 189, 248, 0.28);
-      border-radius: 12px;
-      padding: 12px 18px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(10px);
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-    .offers-compact-inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-    .offers-compact-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 11.5px;
-      font-weight: 800;
-      color: #38bdf8;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-    .live-pulse {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
-      animation: pulse 1.8s infinite;
-      display: inline-block;
-    }
-    @keyframes pulse {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.3); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .offers-compact-pills {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .offer-pill-btn {
-      background: #07090e;
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      color: #e2e8f0;
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
-    .offer-pill-btn:hover {
-      border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.12);
-      transform: translateY(-1px);
-    }
-    .offer-pill-btn.active {
-      border-color: #10b981;
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
-    }
-    .offer-pill-code {
-      font-family: monospace;
-      font-weight: 800;
-      color: #38bdf8;
-    }
-    .offer-pill-disc {
-      font-weight: 700;
-      color: #4ade80;
-      font-size: 11px;
-    }
-    .offers-compact-hint {
-      font-size: 11.5px;
-      color: #94a3b8;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MyLifeDock — Your family's private life vault</title>
+  <meta name="description" content="MyLifeDock keeps documents, warranties, insurance, health records and passwords for your whole family in one encrypted vault on your own device. No account, no cloud, no tracking.">
+  <meta name="theme-color" content="#090b10">
+  <meta property="og:title" content="MyLifeDock — Your family's private life vault">
+  <meta property="og:description" content="Documents, warranties, insurance, health records and passwords for your whole family, encrypted on your own device.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="offer-bar" id="offer-bar" href="#pricing" hidden></a>
 
-  <!-- Header -->
-  <header>
-    <div class="container nav-wrap">
-      <a href="./" class="logo-container">
-        <div class="brand-logo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <path d="m9 12 2 2 4-4"/>
-          </svg>
-        </div>
-        <span>MyLife<span style="color:var(--color-primary)">Dock</span></span>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="#top" aria-label="MyLifeDock home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>MyLife<b>Dock</b></span>
       </a>
-      <nav class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#security">Security</a>
-        <a href="#founder">Founder</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#download">Download</a>
-        <a href="PersonalVault_Master_Product_Documentation.html" target="_blank">Master Docs</a>
-        <a href="MyLifeDock_Security_Audit_2026.html" target="_blank">Security Audit</a>
-        <a href="#download" class="btn-cta">Download App &darr;</a>
+      <nav class="site-nav" aria-label="Main">
+        <a class="nav-optional" href="#features">Features</a>
+        <a class="nav-optional" href="#security">Security</a>
+        <a class="nav-secondary" href="#pricing">Pricing</a>
+        <a class="nav-secondary" href="guide.html">Guide</a>
+        <a class="btn btn-primary btn-sm" href="#download">Download</a>
       </nav>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-glow"></div>
-    <div class="container">
-      <div class="badge">🛡️ Bank-Grade AES-256-GCM • Zero-Knowledge</div>
-      <h1>Your Life.<br><span>One Private Dock.</span></h1>
-      <p>The sovereign personal & family vault for your documents, medical prescriptions, warranties, finances, and life records. Encrypted locally on your device. We hold zero servers and zero keys.</p>
-      <div class="hero-buttons">
-        <a href="https://github.com/mylifedock/mylifedock.github.io/releases" class="btn-cta" style="padding: 14px 28px; font-size: 15.5px;">🪟 Download for Windows (.exe)</a>
-        <a href="https://play.google.com/store/apps/details?id=com.mylifedock.app" class="btn-secondary" style="padding: 14px 24px; font-size: 15.5px;">📱 Google Play (Android)</a>
-        <a href="#download" class="btn-secondary" style="padding: 14px 24px; font-size: 15.5px;">🍏 Apple iOS App</a>
-      </div>
-
-      <!-- Trust Pillars -->
-      <div class="trust-bar">
-        <div class="trust-item"><span>🔒</span> 100% Client-Side Encryption</div>
-        <div class="trust-item"><span>⚡</span> PBKDF2 100,000 Iterations</div>
-        <div class="trust-item"><span>🚫</span> Zero Servers & Zero Telemetry</div>
-        <div class="trust-item"><span>📴</span> Works 100% Offline</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Grid -->
-  <section id="features" class="container">
-    <div class="section-title">
-      <h2>Engineered for Absolute Sovereignty</h2>
-      <p>Everything you need to organize your life without ever trusting corporate cloud databases.</p>
-    </div>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">🗄️</div>
-        <h3>Sovereign Document & Life Vault</h3>
-        <p>Safely store national IDs, passports, property deeds, warranties, and certificates. Tagged, categorized, and indexed for instant offline retrieval without ever trusting corporate cloud databases.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🔐</div>
-        <h3>Zero-Knowledge AES-256 Encryption</h3>
-        <p>Your master passphrase derives 256-bit AES-GCM keys locally via PBKDF2 (100,000 rounds). Files are encrypted in RAM before touching disk—zero developer backdoors, zero telemetry.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">📷</div>
-        <h3>Offline Camera & Smart Receipt OCR</h3>
-        <p>Capture bills, warranties, and purchase receipts directly with your camera. Our local WebAssembly OCR engine extracts dates, merchants, and amounts in RAM with zero cloud uploads.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🩺</div>
-        <h3>Medical & Pediatric Records</h3>
-        <p>Organize doctor consultations, diagnostic lab reports, and vaccinations chronologically. Smart OCR extracts doctor notes, diagnoses, and follow-up dosage alerts on-device.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">👶</div>
-        <h3>Kids & Family Multi-Profile Vault</h3>
-        <p>Manage children's immunization schedules, pediatric prescriptions, birth records, and school IDs with instant family profile switching under a single sovereign master key.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🛡️</div>
-        <h3>Emergency Kit & Privacy Shield</h3>
-        <p>One-tap emergency access to blood groups, allergies, pediatrician hotlines, and insurance cards. Auto-locks instantly when switching apps with Android FLAG_SECURE protection.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Security Section -->
-  <section id="security" style="padding: 80px 0; background: rgba(56, 189, 248, 0.03); border-top: 1px solid rgba(255, 255, 255, 0.08); border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-    <div class="container" style="text-align: center;">
-      <div class="badge" style="background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">Certified Audit Passed</div>
-      <h2 style="font-size: 36px; margin: 16px 0; color: #fff;">We Cannot Read Your Data.<br>Even If Subpoenaed.</h2>
-      <p style="color: #cbd5e1; max-width: 680px; margin: 0 auto 30px; font-size: 17px; line-height: 1.6;">
-        Unlike cloud services that claim to encrypt data "in transit" but hold master keys on corporate servers, MyLifeDock mathematically wraps your vault using keys derived solely from your master passphrase.
-      </p>
-      <a href="MyLifeDock_Security_Audit_2026.html" target="_blank" class="btn-secondary" style="border-color: rgba(74, 222, 128, 0.4); color: #4ade80 !important;">
-        Read Full 2026 Security Audit Report &rarr;
-      </a>
-    </div>
-  </section>
-
-  <!-- Founder Section -->
-  <section id="founder" class="container">
-    <div class="founder-section">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; gap: 18px;">
-          <div style="width: 68px; height: 68px; border-radius: 50%; overflow: hidden; border: 2.5px solid #38bdf8; box-shadow: 0 0 20px rgba(14, 165, 233, 0.45); flex-shrink: 0; display: grid; place-items: center; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);">
-            <img src="founder.jpg" alt="B.S.S. Dinesh - Founder" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
-            <span style="display: none; color: #ffffff; font-weight: 800; font-size: 22px;">BD</span>
-          </div>
-          <div>
-            <h3 style="font-size: 22px; color: #fff; margin: 0;">B.S.S. Dinesh</h3>
-            <p style="color: #38bdf8; font-size: 14px; font-weight: 600; margin: 2px 0 0 0;">Founder & Software Architect, MyLifeDock</p>
-          </div>
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="container">
+        <span class="eyebrow">Private by design</span>
+        <h1>Your family's life,<br><span class="gradient-text">in one private vault.</span></h1>
+        <p class="lead">Documents, warranties, insurance, health records, accounts and passwords for everyone in your family. Encrypted on your own phone or PC. No account, no cloud, no tracking.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#download">Get MyLifeDock free</a>
+          <a class="btn btn-ghost" href="#features">See what it does</a>
         </div>
-        <a href="https://in.linkedin.com/in/srisaidineshbollupalli" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 13.5px; padding: 10px 18px;">
-          <span>🔗</span> Connect on LinkedIn &rarr;
-        </a>
-      </div>
-      <p style="color: #e2e8f0; font-size: 15px; line-height: 1.7; font-style: italic;">
-        &ldquo;I engineered MyLifeDock on a non-negotiable principle: your most sensitive life records, health prescriptions, and personal documents should belong exclusively to you. In an era where corporate clouds monetize and inspect personal files, MyLifeDock guarantees mathematical zero-knowledge privacy with 100% on-device encryption. You hold the master key; we hold zero servers.&rdquo;
-      </p>
-    </div>
-  </section>
-
-  <!-- Pricing Section -->
-  <section id="pricing" class="pricing-section">
-    <div class="container">
-      <div class="section-title">
-        <h2>Transparent, Fair Pricing</h2>
-        <p>Free core version up to 10 stored items. Upgrade to PRO for unlimited lifetime storage.</p>
-      </div>
-
-      <div class="currency-toggle">
-        <button class="toggle-btn active" onclick="setCurrency('INR')">🇮🇳 India (INR ₹)</button>
-        <button class="toggle-btn" onclick="setCurrency('USD')">🌍 Global (USD $)</button>
-      </div>
-
-                  <!-- COMPACT LIVE OFFERS STRIP -->
-      <div id="live-offers-wrapper" class="offers-compact-bar" style="display: none;">
-        <div class="offers-compact-inner">
-          <div class="offers-compact-label">
-            <span class="live-pulse"></span>
-            <span>SPECIAL OFFERS</span>
-          </div>
-
-          <div class="offers-compact-pills" id="offers-chips-list">
-            <!-- Dynamic Offer Pills -->
-          </div>
-        </div>
-        <div class="offers-compact-hint">
-          💡 Click any code to copy & preview. Apply at final <strong>Razorpay checkout</strong>.
-          <span id="coupon-status-msg" style="display:none; margin-left: 8px; font-weight: 700; color: #4ade80;"></span>
-          <button type="button" id="coupon-reset-btn" onclick="resetCouponPreview()" style="display:none; margin-left:8px; background:none; border:none; color:#f87171; cursor:pointer; font-size:11px; text-decoration:underline;">[Reset Normal Price]</button>
+        <p class="hero-note">Free for up to 10 items, with every feature. Windows available now · Android and iPhone coming soon.</p>
+        <div class="trust-row" aria-label="Highlights">
+          <span class="trust-chip">🔒 AES-256 encryption on your device</span>
+          <span class="trust-chip">📴 Works fully offline</span>
+          <span class="trust-chip">👨‍👩‍👧 Whole-family profiles</span>
+          <span class="trust-chip">🚫 No ads, no analytics</span>
         </div>
       </div>
+    </section>
 
-      <div class="pricing-grid">
-        <!-- Free Core Vault -->
-        <div class="pricing-card">
-          <div>
-            <h3>Free Core Vault</h3>
-            <p style="color: var(--text-muted); font-size: 13.5px;">For individuals wanting to experience sovereign vault security.</p>
-            <div class="plan-price"><span id="price-free">&#8377;0</span><small>/ forever</small></div>
-            <ul class="plan-features">
-              <li>Store up to 10 Items free forever</li>
-              <li>100% Zero-Knowledge AES-256</li>
-              <li>Doctor Prescriptions & Lab Reports</li>
-              <li>Local Camera OCR Receipt Scanner</li>
-              <li>Kids & Dependent Multi-Profile Tagging</li>
-              <li>Biometric Fingerprint / PIN Lock</li>
+    <section id="features" class="band">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Everything in one place</span>
+          <h2>Stop searching for that one paper</h2>
+          <p class="lead">Every important record your family owns, organised, searchable and reminded before it expires.</p>
+        </div>
+        <div class="grid grid-3">
+          <article class="card"><div class="card-icon" aria-hidden="true">📄</div><h3>Documents</h3><p>Aadhaar, PAN, passports, certificates and bills, with photos or PDFs attached and expiry reminders for each.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">📦</div><h3>Products &amp; warranties</h3><p>Snap the invoice and the app reads the date and amount for you. Warranties, extended warranties and AMCs with renewal alerts.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🛡️</div><h3>Insurance</h3><p>Health, life, vehicle and home policies in one list, linked to the car or house they cover, with reminders before renewal.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🩺</div><h3>Medical &amp; health</h3><p>Prescriptions, lab reports and follow-ups for each family member, sorted by date and department.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">💰</div><h3>Money</h3><p>Bank accounts, cards, investments and loans (last 4 digits only), plus subscriptions with charge reminders.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🆘</div><h3>Emergency kit</h3><p>Blood group, allergies, medicines and emergency contacts for each person, exported as a printable page for family or doctors.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🔐</div><h3>Secrets</h3><p>PINs, passwords and recovery phrases, hidden until you reveal them, with a copy button that clears itself.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🚗</div><h3>Vehicles &amp; property</h3><p>RC, purchase details and papers for cars, bikes, homes and land, with their insurance shown alongside.</p></article>
+          <article class="card"><div class="card-icon" aria-hidden="true">🔎</div><h3>One search for everything</h3><p>Find any record for anyone in the family in seconds, and jump straight to it.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="security">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Privacy you can explain</span>
+          <h2>We can't see your data. Nobody can.</h2>
+          <p class="lead">Your vault is encrypted on your device with a key made from your passphrase. We run no servers that hold your records, and you never create an account with us.</p>
+        </div>
+        <div class="security-grid">
+          <div class="stat"><strong>AES-256-GCM</strong><span>Every record and file is encrypted before it is saved.</span></div>
+          <div class="stat"><strong>600,000 rounds</strong><span>PBKDF2-SHA-256 turns your passphrase into the key, slowing down guessing.</span></div>
+          <div class="stat"><strong>Recovery key</strong><span>A 64-character key you keep safely lets you back in if you forget your passphrase.</span></div>
+          <div class="stat"><strong>Encrypted backups</strong><span>Google Drive and backup files only ever contain the encrypted vault.</span></div>
+          <div class="stat"><strong>Auto-lock</strong><span>Locks when you leave the app or stop using it, and hides the screen in the app switcher.</span></div>
+          <div class="stat"><strong>No tracking</strong><span>No ads, no analytics, no third-party trackers. Ever.</span></div>
+        </div>
+        <p class="callout warn" style="max-width:760px;margin:28px auto 0;">Because nobody else holds your key, nobody can reset your passphrase for you. Keep your recovery key somewhere safe.</p>
+      </div>
+    </section>
+
+    <section id="pricing" class="band">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Simple pricing</span>
+          <h2>Free to start. Pro when you need more.</h2>
+          <p class="lead">The free vault has every feature, including Google Drive backup, for up to 10 items. Pro removes the limit.</p>
+        </div>
+        <div style="text-align:center">
+          <div class="currency-switch" role="group" aria-label="Currency">
+            <button type="button" data-currency="INR" aria-pressed="true">₹ INR</button>
+            <button type="button" data-currency="USD" aria-pressed="false">$ USD</button>
+          </div>
+        </div>
+        <div class="pricing-grid">
+          <div class="plan">
+            <h3>Free</h3>
+            <div class="plan-price"><span data-price-inr="₹0" data-price-usd="$0">₹0</span><small>forever</small></div>
+            <ul class="check-list">
+              <li>Up to 10 items in total</li>
+              <li>Every section and family profiles</li>
+              <li>Encrypted Google Drive backup</li>
+              <li>On-device receipt scanning</li>
+              <li>Reminders and emergency kit</li>
             </ul>
+            <a class="btn btn-ghost" href="#download">Download free</a>
           </div>
-          <a href="#download" class="btn-secondary" style="width: 100%; justify-content: center; margin-top: 16px;">Download Free App</a>
-        </div>
-
-        <!-- Monthly Pro -->
-        <div class="pricing-card">
-          <div>
+          <div class="plan">
             <h3>Monthly Pro</h3>
-            <p style="color: var(--text-muted); font-size: 13.5px;">Flexible month-to-month unlimited sovereign protection.</p>
-            <div class="plan-price"><span id="price-monthly">&#8377;25</span><small id="monthly-interval">/ month</small></div>
-            <ul class="plan-features">
-              <li>Unlimited Encrypted Documents & Files</li>
-              <li>Unlimited Prescriptions & Lab Reports</li>
-              <li>Full On-Device OCR Scanner</li>
-              <li>Encrypted Google Drive Cloud Backup</li>
-              <li>Cancel or renew anytime</li>
+            <div class="plan-price"><span data-plan-price="pro_monthly" data-price-inr="₹25" data-price-usd="$0.49">₹25</span><small>/ month</small></div>
+            <p class="plan-offer" data-plan-offer="pro_monthly" hidden></p>
+            <ul class="check-list">
+              <li>Unlimited items in every section</li>
+              <li>Everything in Free</li>
+              <li>Licence valid for 30 days</li>
             </ul>
+            <a id="monthly-buy-btn" href="buy.html?plan=pro_monthly" class="btn btn-ghost">Buy monthly</a>
           </div>
-          <a id="monthly-buy-btn" href="https://rzp.io/rzp/RzGKEOuM" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="width: 100%; justify-content: center; margin-top: 16px;">
-            Buy Monthly (&rarr;)
-          </a>
+          <div class="plan featured">
+            <span class="plan-badge">2 MONTHS FREE</span>
+            <h3>Yearly Pro</h3>
+            <div class="plan-price"><span data-plan-price="pro_yearly" data-price-inr="₹250" data-price-usd="$4.99">₹250</span><small>/ year</small></div>
+            <p class="plan-offer" data-plan-offer="pro_yearly" hidden></p>
+            <ul class="check-list">
+              <li>Unlimited items in every section</li>
+              <li>12 months for the price of 10</li>
+              <li>Licence valid for 365 days</li>
+            </ul>
+            <a id="yearly-buy-btn" href="buy.html?plan=pro_yearly" class="btn btn-green">Buy yearly</a>
+          </div>
+          <div class="plan lifetime">
+            <span class="plan-badge">BEST VALUE</span>
+            <h3>Lifetime</h3>
+            <div class="plan-price"><span data-plan-price="pro_lifetime" data-price-inr="₹999" data-price-usd="$19.99">₹999</span><small>once</small></div>
+            <p class="plan-offer" data-plan-offer="pro_lifetime" hidden></p>
+            <ul class="check-list">
+              <li>Unlimited items, forever</li>
+              <li>All future updates included</li>
+              <li>Priority email support</li>
+            </ul>
+            <a id="lifetime-buy-btn" href="buy.html?plan=pro_lifetime" class="btn btn-gold">Buy lifetime</a>
+          </div>
         </div>
+        <p class="pricing-note">
+          <strong>Windows:</strong> buy here with UPI or card through Razorpay; your licence key arrives by email. Refund within 7 days on request.<br>
+          <strong>Android and iPhone:</strong> buy Pro inside the app through Google Play or the App Store, at the price shown there.<br>
+          <span class="muted">Website payments are charged in Indian rupees; dollar prices are approximate.</span>
+        </p>
+      </div>
+    </section>
 
-        <!-- Yearly Pro (Best Offer) -->
-        <div class="pricing-card featured">
-          <div class="popular-badge">SAVE 2 MONTHS FREE</div>
+    <section id="download">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Download</span>
+          <h2>Get MyLifeDock</h2>
+          <p class="lead">Your vault stays on the device you install it on. Move it between devices with an encrypted backup.</p>
+        </div>
+        <div class="grid grid-3">
+          <article class="card download-card">
+            <div class="platform-icon" aria-hidden="true">🪟</div>
+            <span class="status-pill live">Available</span>
+            <h3>Windows 10 &amp; 11</h3>
+            <p>Desktop app with system-tray lock, file backups and Google Drive backup through your browser.</p>
+            <a class="btn btn-primary" href="https://github.com/mylifedock/mylifedock.github.io/releases">Download for Windows</a>
+          </article>
+          <article class="card download-card">
+            <div class="platform-icon" aria-hidden="true">🤖</div>
+            <span class="status-pill">Coming soon</span>
+            <h3>Android</h3>
+            <p>Fingerprint unlock, camera scanning of receipts and screenshots blocked inside the app.</p>
+            <span class="btn btn-ghost" aria-disabled="true">Google Play · coming soon</span>
+          </article>
+          <article class="card download-card">
+            <div class="platform-icon" aria-hidden="true">🍎</div>
+            <span class="status-pill">Coming soon</span>
+            <h3>iPhone</h3>
+            <p>Face ID unlock, camera scanning and a blurred screen in the app switcher.</p>
+            <span class="btn btn-ghost" aria-disabled="true">App Store · coming soon</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="container">
+        <div class="founder">
+          <img src="assets/founder.jpg" alt="B.S.S. Dinesh, founder of MyLifeDock" width="96" height="96">
           <div>
-            <h3 style="color: #34d399;">Yearly Pro</h3>
-            <p style="color: var(--text-muted); font-size: 13.5px;">Pay for 10 months, get 12 months! Saves &#8377;50 vs monthly.</p>
-            <div class="plan-price"><span id="price-yearly" style="color: #34d399;">&#8377;250</span><small id="yearly-interval">/ year</small></div>
-            <div style="font-size: 11px; color: #34d399; font-weight: 700; margin-top: -10px; margin-bottom: 12px;">★ 12 Months Access for Price of 10</div>
-            <ul class="plan-features">
-              <li><strong>Everything in Monthly Pro</strong></li>
-              <li>Save 2 Months Free (Save &#8377;50/yr)</li>
-              <li>Unlimited Family & Child Profiles</li>
-              <li>Encrypted Google Drive Cloud Backup</li>
-              <li>Full 365 Days of Guaranteed Updates</li>
-            </ul>
+            <blockquote>&ldquo;Your family's most important records should belong to your family alone. MyLifeDock keeps them on your own device, encrypted, with no account and nothing to sell.&rdquo;</blockquote>
+            <strong>B.S.S. Dinesh</strong> <span class="muted">· Founder</span> ·
+            <a href="https://in.linkedin.com/in/srisaidineshbollupalli" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           </div>
-          <a id="yearly-buy-btn" href="https://rzp.io/rzp/aPFk0yOg" target="_blank" rel="noopener noreferrer" class="btn-cta" style="width: 100%; justify-content: center; margin-top: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-            Get Yearly Pro &rarr;
-          </a>
-        </div>
-
-        <!-- Lifetime Founder -->
-        <div class="pricing-card lifetime">
-          <div class="popular-badge gold">BEST VALUE</div>
-          <div>
-            <h3 style="color: #facc15;">Lifetime Founder</h3>
-            <p style="color: var(--text-muted); font-size: 13.5px;">One single payment. Permanent sovereign vault ownership.</p>
-            <div class="plan-price"><span id="price-lifetime" style="color: #facc15;">&#8377;999</span><small id="lifetime-interval">/ lifetime</small></div>
-            <div style="font-size: 11px; color: #facc15; font-weight: 700; margin-top: -10px; margin-bottom: 12px;">★ Price Doubles Every 15 Spots!</div>
-            <ul class="plan-features">
-              <li>Everything in Pro, FOREVER</li>
-              <li>Unlimited Lifetime Vault Capacity</li>
-              <li>All Future Updates & Releases Included</li>
-              <li>Priority Customer Support</li>
-              <li>Never Pay a Renewal Fee Again</li>
-            </ul>
-          </div>
-          <a id="lifetime-buy-btn" href="https://rzp.io/rzp/lT9C4JH4" target="_blank" rel="noopener noreferrer" class="btn-cta" style="width: 100%; justify-content: center; margin-top: 16px;">
-            Get Lifetime &rarr;
-          </a>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-
-  <!-- Native Downloads Section -->
-  <section id="download" class="container" style="padding: 80px 0 60px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-    <div class="section-title">
-      <div class="badge" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8;">100% NATIVE • ZERO CLOUD SERVERS</div>
-      <h2 style="font-size: 36px; margin: 12px 0; color: #fff;">Download MyLifeDock for Your Devices</h2>
-      <p style="color: #cbd5e1; max-width: 680px; margin: 0 auto; font-size: 16px;">
-        Absolute sovereignty means code executes natively on your own hardware. Your encrypted files and life records never touch any web or cloud server.
-      </p>
-    </div>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1050px; margin: 0 auto;">
-      <!-- Windows Desktop -->
-      <div class="feature-card" style="text-align: center; border-color: rgba(56, 189, 248, 0.35); display: flex; flex-direction: column; justify-content: space-between;">
-        <div>
-          <div style="font-size: 42px; margin-bottom: 12px; line-height: 1;">🪟</div>
-          <h3 style="font-size: 20px; color: #fff; margin-bottom: 8px;">Windows PC</h3>
-          <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.5; margin-bottom: 20px;">
-            Native 64-bit installer for Windows 10 & 11. Includes background taskbar tray minimization, auto-lock on screen saver, and offline biometric PIN.
-          </p>
+    <section id="faq">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Questions</span>
+          <h2>Frequently asked</h2>
         </div>
-        <a href="https://github.com/mylifedock/mylifedock.github.io/releases" class="btn-cta" style="width: 100%; justify-content: center; padding: 12px;">
-          Download Windows (.exe)
-        </a>
-      </div>
-
-      <!-- Android App -->
-      <div class="feature-card" style="text-align: center; border-color: rgba(74, 222, 128, 0.35); display: flex; flex-direction: column; justify-content: space-between;">
-        <div>
-          <div style="font-size: 42px; margin-bottom: 12px; line-height: 1;">📱</div>
-          <h3 style="font-size: 20px; color: #fff; margin-bottom: 8px;">Android Mobile</h3>
-          <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.5; margin-bottom: 20px;">
-            Available on Google Play. Features fingerprint / biometric face unlock, offline camera prescription OCR, and FLAG_SECURE screenshot protection.
-          </p>
+        <div class="faq">
+          <details><summary>Where is my data stored?</summary><p>Only on the device where you installed MyLifeDock, encrypted. If you choose Google Drive backup, Drive stores an encrypted backup file that only your passphrase can open.</p></details>
+          <details><summary>What if I forget my passphrase?</summary><p>Use the 64-character recovery key you saved when you created the vault. We cannot reset your passphrase because we never have your key.</p></details>
+          <details><summary>Can I use it on my phone and my PC?</summary><p>Yes. Each device has its own vault. Move or copy your vault with an encrypted backup file or Google Drive, then restore it on the other device.</p></details>
+          <details><summary>Does it need the internet?</summary><p>No. Everything works offline, including receipt scanning. The internet is only used for Google Drive backup and for buying Pro.</p></details>
+          <details><summary>Can I keep records for my children and parents?</summary><p>Yes. Add family members, and keep their documents, medical records and emergency kit separately, all in your vault.</p></details>
+          <details><summary>Does Pro work on all my devices?</summary><p>A licence key bought on this website works in the Windows, Android and iPhone apps. Pro bought in the Android app works on Android devices signed in to the same Google account, and Pro bought in the iPhone app works on Apple devices with the same Apple ID (use Restore purchases).</p></details>
+          <details><summary>How do refunds work?</summary><p>For purchases on this website, email us within 7 days for a full refund. Purchases made in the Android or iPhone app are refunded by Google or Apple under their policies.</p></details>
         </div>
-        <a href="https://play.google.com/store/apps/details?id=com.mylifedock.app" class="btn-secondary" style="width: 100%; justify-content: center; padding: 12px; border-color: #4ade80 !important; color: #4ade80 !important;">
-          Get it on Google Play
-        </a>
       </div>
+    </section>
+  </main>
 
-      <!-- Apple iOS -->
-      <div class="feature-card" style="text-align: center; border-color: rgba(167, 139, 250, 0.35); display: flex; flex-direction: column; justify-content: space-between;">
-        <div>
-          <div style="font-size: 42px; margin-bottom: 12px; line-height: 1;">🍏</div>
-          <h3 style="font-size: 20px; color: #fff; margin-bottom: 8px;">Apple iOS (iPhone/iPad)</h3>
-          <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.5; margin-bottom: 20px;">
-            Native iOS client with FaceID security, offline Sandboxed storage, and zero background analytics.
-          </p>
-        </div>
-        <span class="btn-secondary" style="width: 100%; justify-content: center; padding: 12px; opacity: 0.75; cursor: default; border-color: rgba(167, 139, 250, 0.4) !important;">
-          App Store (Coming Soon)
-        </span>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- Footer -->
-  <footer>
+  <footer class="site-footer">
     <div class="container">
-      <div class="footer-links">
-        <a href="PersonalVault_Master_Product_Documentation.html" target="_blank">Master Product Documentation</a>
-        <a href="MyLifeDock_Security_Audit_2026.html" target="_blank">Security Audit</a>
-        <a href="#security">Privacy Policy</a>
-        <a href="#pricing">Refund Policy (7-Day Money-Back)</a>
-        <a href="mailto:mylifedock@gmail.com">Contact Support (mylifedock@gmail.com)</a>
-        <a href="admin.html" style="color: #64748b; font-size: 12px;">🔒 Founder Portal</a>
-      </div>
-      <p>&copy; 2026 MyLifeDock Technologies. Built with Zero-Knowledge Architecture. All rights reserved.</p>
-      <p style="font-size: 11.5px; color: #64748b; margin-top: 8px;">
-        Refund Policy: If you are not completely satisfied with MyLifeDock Pro, email mylifedock@gmail.com within 7 days of purchase for a 100% full refund.
-      </p>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="guide.html">User guide</a>
+        <a href="brochure.html">Product brochure</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="terms.html">Terms of service</a>
+        <a href="refunds.html">Refunds &amp; delivery</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <p>© 2026 MyLifeDock Technologies. All rights reserved.</p>
     </div>
   </footer>
 
-      <script>
-    const DEFAULT_PRICING = {
-      inr: { monthly: 25, yearly: 250, lifetime: 999 },
-      usd: { monthly: 0.49, yearly: 4.99, lifetime: 19.99 },
-      links: {
-        monthly: "https://rzp.io/rzp/RzGKEOuM",
-        yearly: "https://rzp.io/rzp/aPFk0yOg",
-        lifetime: "https://rzp.io/rzp/9OJ0xeJS"
-      }
-    };
+  <script src="assets/pricing.js"></script>
+  <script>
+    // INR / USD switch and live prices/offers (from the Pricing tab, see assets/pricing.js).
+    // The data-price-* attributes hold the regular prices until live prices arrive.
+    (function () {
+      var currency = "INR";
+      var live = null;
+      var buttons = document.querySelectorAll("[data-currency]");
 
-    function getLivePricing() {
-      try {
-        const stored = localStorage.getItem("mld_public_pricing");
-        if (stored) return JSON.parse(stored);
-      } catch (e) {}
-      return DEFAULT_PRICING;
-    }
-
-    const DEFAULT_PUBLIC_OFFERS = [
-      {
-        code: "FOUNDER50",
-        discount: "50% OFF",
-        plan: "Lifetime Founder",
-        inTicker: true,
-        type: "percent",
-        value: 50
-      },
-      {
-        code: "LAUNCH20",
-        discount: "20% OFF",
-        plan: "All Plans",
-        inTicker: true,
-        type: "percent",
-        value: 20
-      },
-      {
-        code: "SAVE50INR",
-        discount: "₹50 FLAT OFF",
-        plan: "Yearly Pro",
-        inTicker: true,
-        type: "flat",
-        value: 50
-      }
-    ];
-
-    let currentCurrency = 'INR';
-    let appliedCoupon = null;
-
-    function renderPublicOffers() {
-      const wrapper = document.getElementById("live-offers-wrapper");
-      if (!wrapper) return;
-
-      const isEnabled = localStorage.getItem("mld_offers_ticker_enabled") !== "false";
-      if (!isEnabled) {
-        wrapper.style.display = "none";
-        return;
-      }
-
-      let rawOffers = localStorage.getItem("mld_public_offers") || localStorage.getItem("mld_admin_coupons");
-      let offers = rawOffers ? JSON.parse(rawOffers) : DEFAULT_PUBLIC_OFFERS;
-      
-      // Strict filter: must have inTicker !== false AND status not paused/inactive
-      offers = offers.filter(o => o.inTicker !== false && o.status !== "Paused" && o.status !== "Inactive");
-
-      // STRICT TOTAL HIDING: if all offers turned off or empty array, hide wrapper completely!
-      if (!offers || offers.length === 0) {
-        wrapper.style.display = "none";
-        return;
-      }
-
-      // Display the compact bar
-      wrapper.style.display = "block";
-
-      const pillsList = document.getElementById("offers-chips-list");
-      if (!pillsList) return;
-      pillsList.innerHTML = "";
-
-      offers.forEach(o => {
-        const pill = document.createElement("button");
-        pill.type = "button";
-        const isActive = appliedCoupon && appliedCoupon.code === o.code;
-        pill.className = "offer-pill-btn" + (isActive ? " active" : "");
-        const dText = o.discount || (o.value ? (o.type === "percent" ? o.value + "% OFF" : "₹" + o.value + " OFF") : "");
-        pill.innerHTML = `
-          <span class="offer-pill-code">${o.code}</span>
-          <span class="offer-pill-disc">${dText}</span>
-        `;
-        pill.title = `Click to copy code '${o.code}' & preview discount`;
-        pill.onclick = () => selectOfferPill(o.code);
-        pillsList.appendChild(pill);
-      });
-    }
-
-    function selectOfferPill(code) {
-      let rawOffers = localStorage.getItem("mld_public_offers") || localStorage.getItem("mld_admin_coupons");
-      let offers = rawOffers ? JSON.parse(rawOffers) : DEFAULT_PUBLIC_OFFERS;
-      const found = offers.find(o => o.code === code);
-      if (!found) return;
-
-      appliedCoupon = found;
-      navigator.clipboard.writeText(code);
-      showWebToast(`🎉 Copied '${code}'! Apply this code at final Razorpay checkout.`);
-
-      const msg = document.getElementById("coupon-status-msg");
-      const resetBtn = document.getElementById("coupon-reset-btn");
-      if (msg) {
-        msg.style.display = "inline";
-        msg.innerText = `● Code '${found.code}' (${found.discount}) Active!`;
-      }
-      if (resetBtn) resetBtn.style.display = "inline";
-
-      updatePrices();
-      renderPublicOffers();
-    }
-
-    function resetCouponPreview() {
-      appliedCoupon = null;
-      const msg = document.getElementById("coupon-status-msg");
-      const resetBtn = document.getElementById("coupon-reset-btn");
-      if (msg) msg.style.display = "none";
-      if (resetBtn) resetBtn.style.display = "none";
-      updatePrices();
-      renderPublicOffers();
-      showWebToast("Prices reset to standard rates.");
-    }
-
-    function updatePrices() {
-      const pricing = getLivePricing();
-      const pMonthly = document.getElementById('price-monthly');
-      const pYearly = document.getElementById('price-yearly');
-      const pLifetime = document.getElementById('price-lifetime');
-      const monthlyBtn = document.getElementById('monthly-buy-btn');
-      const yearlyBtn = document.getElementById('yearly-buy-btn');
-      const lifetimeBtn = document.getElementById('lifetime-buy-btn');
-
-      if (monthlyBtn && pricing.links && pricing.links.monthly) monthlyBtn.href = pricing.links.monthly;
-      if (yearlyBtn && pricing.links && pricing.links.yearly) yearlyBtn.href = pricing.links.yearly;
-      if (lifetimeBtn && pricing.links && pricing.links.lifetime) lifetimeBtn.href = pricing.links.lifetime;
-
-      if (!pMonthly || !pYearly || !pLifetime) return;
-
-      if (currentCurrency === 'INR') {
-        const baseM = pricing.inr.monthly;
-        const baseY = pricing.inr.yearly;
-        const baseL = pricing.inr.lifetime;
-
-        let m = baseM;
-        let y = baseY;
-        let l = baseL;
-
-        if (appliedCoupon) {
-          if (appliedCoupon.code === "FOUNDER50" || appliedCoupon.value === 50) {
-            l = Math.round(baseL * 0.5);
-          } else if (appliedCoupon.code === "LAUNCH20" || appliedCoupon.value === 20) {
-            m = Math.round(baseM * 0.8);
-            y = Math.round(baseY * 0.8);
-            l = Math.round(baseL * 0.8);
-          } else if (appliedCoupon.code === "SAVE50INR") {
-            y = Math.max(0, baseY - 50);
-          } else if (appliedCoupon.type === "percent") {
-            const factor = (100 - appliedCoupon.value) / 100;
-            m = Math.round(baseM * factor);
-            y = Math.round(baseY * factor);
-            l = Math.round(baseL * factor);
-          } else if (appliedCoupon.type === "flat") {
-            m = Math.max(0, baseM - appliedCoupon.value);
-            y = Math.max(0, baseY - appliedCoupon.value);
-            l = Math.max(0, baseL - appliedCoupon.value);
+      function render() {
+        document.querySelectorAll("[data-price-inr]").forEach(function (el) {
+          el.textContent = currency === "USD" ? el.getAttribute("data-price-usd") : el.getAttribute("data-price-inr");
+        });
+        buttons.forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.getAttribute("data-currency") === currency));
+        });
+        if (!live) return;
+        var P = window.MLDPricing;
+        var banner = null;
+        P.PLAN_IDS.forEach(function (id) {
+          var plan = live[id];
+          var note = document.querySelector('[data-plan-offer="' + id + '"]');
+          if (!plan || !note) return;
+          if (plan.offer) {
+            var was = currency === "USD" ? P.usd(plan.priceUSD) : P.inr(plan.priceINR);
+            var ends = P.day(plan.offer.endsOn);
+            note.textContent = plan.offer.text + " · was " + was + (ends ? " · ends " + ends : "");
+            note.hidden = false;
+            banner = banner || plan.offer.text + ": " + (plan.label || id) + " now " + P.inr(plan.offer.priceINR) + (ends ? " until " + ends : "");
+          } else {
+            note.hidden = true;
           }
-        }
-
-        pMonthly.innerHTML = (m === baseM) ? `&#8377;${baseM}` : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;${baseM}</span>&#8377;${m}`;
-        pYearly.innerHTML = (y === baseY) ? `&#8377;${baseY}` : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;${baseY}</span>&#8377;${y}`;
-        pLifetime.innerHTML = (l === baseL) ? `&#8377;${baseL}` : `<span style="text-decoration:line-through; font-size:20px; opacity:0.6; margin-right:4px;">&#8377;${baseL}</span>&#8377;${l}`;
-      } else {
-        const baseM = pricing.usd.monthly;
-        const baseY = pricing.usd.yearly;
-        const baseL = pricing.usd.lifetime;
-        pMonthly.innerText = '$' + baseM;
-        pYearly.innerText = '$' + baseY;
-        pLifetime.innerText = '$' + baseL;
+        });
+        var bar = document.getElementById("offer-bar");
+        bar.textContent = banner ? "🎉 " + banner + " →" : "";
+        bar.hidden = !banner;
       }
-    }
 
-    function setCurrency(curr) {
-      currentCurrency = curr;
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      if (curr === 'INR') {
-        document.getElementById('price-free').innerHTML = '&#8377;0';
-        document.getElementById('monthly-interval').innerHTML = '/ month';
-        document.getElementById('yearly-interval').innerHTML = '/ year';
-        document.getElementById('lifetime-interval').innerHTML = '/ lifetime';
-      } else {
-        document.getElementById('price-free').innerText = '$0';
-        document.getElementById('monthly-interval').innerText = '/ month';
-        document.getElementById('yearly-interval').innerText = '/ year';
-        document.getElementById('lifetime-interval').innerText = '/ lifetime';
+      buttons.forEach(function (b) {
+        b.addEventListener("click", function () {
+          currency = b.getAttribute("data-currency");
+          render();
+        });
+      });
+
+      if (window.MLDPricing) {
+        window.MLDPricing.loadPricing().then(function (plans) {
+          if (!plans) return;
+          live = plans;
+          Object.keys(plans).forEach(function (id) {
+            var el = document.querySelector('[data-plan-price="' + id + '"]');
+            if (!el) return;
+            var p = plans[id];
+            el.setAttribute("data-price-inr", window.MLDPricing.inr(p.offer ? p.offer.priceINR : p.priceINR));
+            el.setAttribute("data-price-usd", window.MLDPricing.usd(p.offer ? p.offer.priceUSD : p.priceUSD));
+          });
+          render();
+        });
       }
-      updatePrices();
-    }
-
-    function showWebToast(msg) {
-      let t = document.getElementById("web-toast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "web-toast";
-        t.style.position = "fixed";
-        t.style.bottom = "24px";
-        t.style.right = "24px";
-        t.style.background = "#0f172a";
-        t.style.border = "1px solid #38bdf8";
-        t.style.color = "#fff";
-        t.style.padding = "12px 20px";
-        t.style.borderRadius = "8px";
-        t.style.boxShadow = "0 10px 30px rgba(0,0,0,0.8)";
-        t.style.zIndex = "9999";
-        t.style.fontSize = "13.5px";
-        document.body.appendChild(t);
-      }
-      t.innerText = msg;
-      t.style.display = "block";
-      clearTimeout(window.__toastTimeout);
-      window.__toastTimeout = setTimeout(() => { t.style.display = "none"; }, 4500);
-    }
-
-    // Initialize on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderPublicOffers();
-      updatePrices();
-    });
+    })();
   </script>
 </body>
 </html>
