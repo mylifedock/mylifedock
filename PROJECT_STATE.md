@@ -32,8 +32,15 @@ There is no web/PWA app. `docs/` is the marketing website on GitHub Pages.
 - **Pricing:** the Pricing tab of the "MyLifeDock Orders" Google Sheet drives website and Windows prices/offers through
   the Apps Script web app (`PRICING_API_URL`, live and verified). The same script creates Razorpay orders for
   `docs/buy.html` and emails RSA-signed licence keys.
-- **Blocked on Razorpay:** the business website `mylifedock.github.io` is *under review*, and live API keys cannot be
-  generated until it is approved. The Apps Script has only `ORDERS_SHEET_ID` in Script Properties; it still needs
+- **Blocked on Razorpay (2026-10-28):** Razorpay declined the business website `mylifedock.github.io` until an
+  MSME (Udyam) or GST certificate is uploaded; live API keys cannot be generated until it is approved. The three
+  backup Payment Pages were still active on 2026-10-28 (correct amounts), so website buyers are sent there.
+- **New plan (2026-10-28):** MSME certificate obtained (Udyam `UDYAM-TS-20-0223805`, enterprise "MYLIFEDOCK", Micro,
+  services, proprietor = the founder's wife, address 201 Vayuputra Towers, KPHB Phase 2, Hyderabad 500072). A **new
+  Razorpay account in her name** (Proprietorship) replaces the old one. The website now uses the name "MyLifeDock"
+  (not "MyLifeDock Technologies"), the Hyderabad address and the Udyam number; the proprietor's name is still to be
+  added to the Contact, Terms and Privacy pages. After approval: new API keys + webhook + three new Payment Pages
+  (update `PAYMENT_PAGES` in `docs/assets/pricing.js`), then deactivate the old account's pages. The Apps Script has only `ORDERS_SHEET_ID` in Script Properties; it still needs
   `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (live) and `MLD_LICENSE_PRIVATE_KEY`. Until then `buy.html` cannot create
   orders and falls back to the backup Payment Pages, and licences for those payments must be issued by hand
   (`tools/admin.html` → Issue key). ₹117 was collected before the keys existed; check those buyers got keys.

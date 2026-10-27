@@ -566,7 +566,7 @@ function sendLicenseEmail(email, rawName, plan, licenseKey) {
       </div>
 
       <div style="background: #060911; padding: 16px 24px; text-align: center; border-top: 1px solid #1e293b; font-size: 12px; color: #475569;">
-        © 2026 MyLifeDock Technologies · mylifedock@gmail.com
+        © 2026 MyLifeDock · mylifedock@gmail.com
       </div>
     </div>
   `;

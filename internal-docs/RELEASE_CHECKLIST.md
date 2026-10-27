@@ -26,7 +26,9 @@ Prices and offers: [PRICING_AND_OFFERS.md](PRICING_AND_OFFERS.md).
 
 **Status 2026-10-27:** the website is under Razorpay review; live API keys are available only after approval.
 Until then, website checkout falls back to the backup Payment Pages and licences are issued by hand from
-`tools/admin.html` (Issue key → Email customer → Copy row for Orders sheet).
+`tools/admin.html` (Issue key → Send via Gmail, paste with Ctrl+V and send → Copy row for Orders sheet).
+**2026-10-28:** Razorpay declined the website until an MSME (Udyam) or GST certificate is uploaded; keys stay manual
+until approval (a secret-token webhook is the fallback if approval takes weeks).
 
 - [x] Apps Script deployed with the pricing service; `setupOrdersSheet` run (Orders sheet + Pricing tab exist,
       `ORDERS_SHEET_ID` set). `?action=pricing` verified live.

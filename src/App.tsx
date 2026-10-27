@@ -485,7 +485,7 @@ function App() {
           <div className="footer-copyright-inner">
             <strong>MyLifeDock</strong>
             <span className="footer-sep">•</span>
-            <span>© 2026 MyLifeDock Technologies. All rights reserved.</span>
+            <span>© 2026 MyLifeDock. All rights reserved.</span>
           </div>
         </footer>
       </main>

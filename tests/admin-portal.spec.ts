@@ -127,6 +127,46 @@ test.describe('Founder Admin Tool (local-only, key-based signing)', () => {
     expect(status.tier).toBe('pro_yearly');
   });
 
+  test('Send via Gmail copies the formatted key email and opens a Gmail draft', async ({ page, context }) => {
+    const { spki, pem } = makeKeyPair();
+    await page.addInitScript(() => {
+      const copied: string[] = [];
+      (window as unknown as { copiedHtml: string[] }).copiedHtml = copied;
+      navigator.clipboard.write = async (items) => {
+        for (const item of items) copied.push(await (await item.getType('text/html')).text());
+      };
+    });
+    await context.route('https://mail.google.com/**', (route) => route.fulfill({ contentType: 'text/html', body: 'gmail' }));
+    await openAdminTool(page, spki);
+    await loadKey(page, pem);
+
+    await tab(page, 'Issue key');
+    await page.fill('#gen-name', '<b>Reviewer</b>');
+    await page.fill('#gen-email', 'reviewer@example.com');
+    await page.selectOption('#gen-reason', 'giveaway');
+    await page.click('#tab-generator button[type="submit"]');
+    const licenseKey = (await page.locator('#gen-key-display').innerText()).trim();
+
+    // The preview escapes the name and shows the key and the giveaway wording.
+    await page.click('.email-preview summary');
+    await expect(page.locator('#gen-email-preview')).toContainText('Hi <b>Reviewer</b>,');
+    await expect(page.locator('#gen-email-preview')).toContainText(licenseKey);
+    await expect(page.locator('#gen-email-preview')).toContainText('complimentary');
+
+    const [draft] = await Promise.all([context.waitForEvent('page'), page.click('#gen-gmail')]);
+    const url = new URL(draft.url());
+    expect(url.origin).toBe('https://mail.google.com');
+    expect(url.searchParams.get('to')).toBe('reviewer@example.com');
+    expect(url.searchParams.get('su')).toBe('Your MyLifeDock Pro license key');
+    expect(url.searchParams.get('authuser')).toBe('mylifedock@gmail.com');
+
+    const copied = await page.evaluate(() => (window as unknown as { copiedHtml: string[] }).copiedHtml);
+    expect(copied).toHaveLength(1);
+    expect(copied[0]).toContain(licenseKey);
+    expect(copied[0]).toContain('&lt;b&gt;Reviewer&lt;/b&gt;');
+    await expect(page.locator('#toast')).toContainText('press Ctrl+V');
+  });
+
   test('Custom duration: the amount is not replaced by the number of days, and expiry matches', async ({ page }) => {
     const { spki, pem } = makeKeyPair();
     await openAdminTool(page, spki);

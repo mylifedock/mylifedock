@@ -48,7 +48,7 @@ export const PRICING_CONFIG: {
   plans: PricingPlan[];
 } = {
   freeItemLimit: 10,
-  razorpayMerchantName: "MyLifeDock Technologies",
+  razorpayMerchantName: "MyLifeDock",
   supportEmail: "mylifedock@gmail.com",
   plans: [
     {

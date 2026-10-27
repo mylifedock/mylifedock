@@ -46,6 +46,9 @@
     textarea { resize: vertical; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
     .field { margin-bottom: 16px; }
     .hint { margin-top: 6px; color: var(--muted); font-size: 12.5px; }
+    .email-preview { margin-top: 16px; }
+    .email-preview summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+    #gen-email-preview { margin-top: 12px; padding: 16px; border-radius: 10px; background: #eef2f7; color: #334155; }
     .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
 
     /* Unlock */
@@ -274,15 +277,21 @@
           </form>
 
           <div id="gen-result" hidden style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
-            <div class="result-banner good">Key signed. Send it to the customer and add the row to your Orders sheet.</div>
+            <div class="result-banner good">Key signed. 1. Send via Gmail &nbsp;2. Copy row for Orders sheet.</div>
             <div id="gen-key-display" class="key-box"></div>
             <div class="actions">
-              <button type="button" class="btn btn-sm" id="gen-copy-key">Copy key</button>
-              <a class="btn btn-sm" id="gen-mailto" href="#">Email customer</a>
-              <button type="button" class="btn btn-sm" id="gen-copy-email">Copy email text</button>
+              <button type="button" class="btn btn-sm btn-primary" id="gen-gmail">Send via Gmail</button>
               <button type="button" class="btn btn-sm" id="gen-copy-row">Copy row for Orders sheet</button>
+              <button type="button" class="btn btn-sm" id="gen-copy-key">Copy key</button>
+              <a class="btn btn-sm" id="gen-mailto" href="#">Plain-text email</a>
+              <button type="button" class="btn btn-sm" id="gen-copy-email">Copy email text</button>
             </div>
+            <p class="hint">"Send via Gmail" copies the formatted email and opens a Gmail draft (from mylifedock@gmail.com) with the address and subject filled in: click in the message body, press Ctrl+V, check it and press Send.</p>
             <p class="hint">"Copy row" copies one tab-separated row; click the first empty cell in column A of the Orders sheet and paste.</p>
+            <details class="email-preview">
+              <summary>Preview the email</summary>
+              <div id="gen-email-preview"></div>
+            </details>
           </div>
         </div>
       </section>
@@ -360,6 +369,7 @@
       pro_lifetime: { label: "Lifetime", inr: 999, usd: "$19.99", days: null, title: "MyLifeDock Pro Lifetime" },
     };
     const CHECKOUT_PAGE_URL = "https://mylifedock.github.io/buy.html";
+    const SENDER_EMAIL = "mylifedock@gmail.com";
     const checkoutLink = (tier) => CHECKOUT_PAGE_URL + "?plan=" + tier;
     const ORDER_HEADERS = ["Timestamp", "Customer Name", "Customer Email", "Amount (INR)", "Plan", "License Key", "Payment ID", "Phone"];
     const LIFETIME_MILESTONE = 15;
@@ -608,7 +618,7 @@
               <td class="status-${st}">${STATUS_LABEL[st]}</td>
               <td><div class="actions">
                 <button type="button" class="btn btn-sm" data-action="copy" data-i="${i}">Copy key</button>
-                <a class="btn btn-sm" href="${esc(resendMailto(o))}">Resend</a>
+                <button type="button" class="btn btn-sm" data-action="resend" data-i="${i}">Resend via Gmail</button>
                 <button type="button" class="btn btn-sm" data-action="inspect" data-i="${i}">Inspect</button>
               </div></td>
             </tr>`;
@@ -630,12 +640,93 @@
     function activationText(key) {
       return `Your license key:\n\n${key}\n\nTo activate: open MyLifeDock on your Windows PC, Android phone or iPhone, unlock your vault, go to Settings & Backup > Plan, paste the key and tap Activate Key.`;
     }
-    function keyMailto(o, intro) {
-      const body = `Hi ${o.name || "there"},\n\n${intro}\n\n${activationText(o.key)}\n\nDinesh, MyLifeDock`;
-      return `mailto:${encodeURIComponent(o.email)}?subject=${encodeURIComponent("Your MyLifeDock Pro license key")}&body=${encodeURIComponent(body)}`;
+    const KEY_EMAIL_SUBJECT = "Your MyLifeDock Pro license key";
+    const RESEND_INTRO = "As requested, here is your MyLifeDock Pro license key again.";
+    function issueIntro(planTitle, reason) {
+      if (reason === "replacement") return `Here is your replacement license key for ${planTitle}.`;
+      if (reason === "giveaway") return `Here is a complimentary license key for ${planTitle}. Enjoy!`;
+      return `Thank you for buying ${planTitle}. Your payment was successful. Here is your license key:`;
     }
-    function resendMailto(o) {
-      return keyMailto(o, "As requested, here is your MyLifeDock Pro license key again.");
+    function keyEmailText(o, intro) {
+      return `Hi ${o.name || "there"},\n\n${intro}\n\n${activationText(o.key)}\n\nQuestions or a refund within 7 days? Just reply to this email.\n\nDinesh, MyLifeDock`;
+    }
+    function keyMailto(o, intro) {
+      return `mailto:${encodeURIComponent(o.email)}?subject=${encodeURIComponent(KEY_EMAIL_SUBJECT)}&body=${encodeURIComponent(keyEmailText(o, intro))}`;
+    }
+    // Table layout with solid colours and inline styles only, so it survives pasting into Gmail and most mail apps.
+    function keyEmailHtml(o, intro) {
+      const validity = o.expiresAt ? "Valid until " + formatDate(o.expiresAt) : "Lifetime: never expires";
+      const font = "font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;border-collapse:separate;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;${font}">
+  <tr><td style="background:#5b3fe0;padding:22px 24px;text-align:center;border-radius:12px 12px 0 0;">
+    <div style="color:#ffffff;font-size:22px;font-weight:700;${font}">MyLifeDock <span style="background:#facc15;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:13px;">PRO</span></div>
+    <div style="color:#ede9fe;font-size:13px;margin-top:6px;${font}">Your family's private life vault</div>
+  </td></tr>
+  <tr><td style="padding:28px 24px;color:#334155;font-size:14px;line-height:1.6;${font}">
+    <p style="margin:0 0 12px;font-size:16px;color:#0f172a;">Hi ${esc(o.name || "there")},</p>
+    <p style="margin:0 0 20px;">${esc(intro)}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:8px;">
+      <tr><td style="padding:16px;text-align:center;${font}">
+        <div style="font-size:11px;font-weight:700;color:#6d28d9;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">License key</div>
+        <div style="font-family:Consolas,'Courier New',monospace;font-size:13px;color:#3b0764;word-break:break-all;text-align:left;background:#ffffff;border:1px solid #ddd6fe;border-radius:6px;padding:10px;">${esc(o.key)}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:8px;">${esc(o.planTitle || "MyLifeDock Pro")} &middot; ${esc(validity)}</div>
+      </td></tr>
+    </table>
+    <p style="margin:24px 0 8px;font-weight:700;color:#0f172a;font-size:15px;">How to activate</p>
+    <ol style="margin:0;padding-left:20px;line-height:1.8;">
+      <li>Open MyLifeDock on your Windows PC, Android phone or iPhone and unlock your vault.</li>
+      <li>Go to <strong>Settings &amp; Backup</strong> &rarr; <strong>Plan</strong>.</li>
+      <li>Paste the key and tap <strong>Activate Key</strong>.</li>
+    </ol>
+    <p style="margin:20px 0 0;font-size:13px;color:#64748b;">The key is checked on your own device, so it works offline. Keep this email: you can use the same key again if you reinstall the app or move to a new device.</p>
+    <p style="margin:14px 0 0;font-size:13px;color:#64748b;">Questions or a refund within 7 days? Just reply to this email.</p>
+    <p style="margin:20px 0 0;font-size:14px;color:#334155;">Warm regards,<br><strong>Dinesh, MyLifeDock</strong></p>
+  </td></tr>
+  <tr><td style="background:#f8fafc;padding:14px 24px;text-align:center;border-top:1px solid #e2e8f0;border-radius:0 0 12px 12px;font-size:12px;color:#94a3b8;${font}">
+    &copy; ${new Date().getFullYear()} MyLifeDock &middot; <a href="https://mylifedock.github.io" style="color:#5b3fe0;text-decoration:none;">mylifedock.github.io</a> &middot; ${SENDER_EMAIL}
+  </td></tr>
+</table>`;
+    }
+    function gmailComposeUrl(o) {
+      return "https://mail.google.com/mail/?" + new URLSearchParams({ authuser: SENDER_EMAIL, view: "cm", fs: "1", to: o.email, su: KEY_EMAIL_SUBJECT });
+    }
+    // Copies as rich text (HTML) so the formatting pastes into Gmail; falls back to a selection copy.
+    async function copyRich(html, text) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([text], { type: "text/plain" }),
+        })]);
+        return true;
+      } catch {
+        const box = document.createElement("div");
+        box.contentEditable = "true";
+        box.style.cssText = "position:fixed;left:-9999px;top:0;";
+        box.innerHTML = html;
+        document.body.appendChild(box);
+        const range = document.createRange();
+        range.selectNodeContents(box);
+        const sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        let ok = false;
+        try {
+          ok = document.execCommand("copy");
+        } catch {
+          ok = false;
+        }
+        sel.removeAllRanges();
+        box.remove();
+        return ok;
+      }
+    }
+    // Copy first: the clipboard needs this page focused, and the Gmail tab takes the focus.
+    async function sendViaGmail(o, intro) {
+      const copied = await copyRich(keyEmailHtml(o, intro), keyEmailText(o, intro));
+      window.open(gmailComposeUrl(o), "_blank", "noopener");
+      showToast(copied
+        ? "Email copied. In the Gmail draft, click the message body, press Ctrl+V, then Send."
+        : "Could not copy the email. Use Preview, select it and copy it by hand.", copied ? "success" : "error");
     }
     function renewalMailto(o) {
       const p = PLANS[o.tier];
@@ -800,6 +891,7 @@
       const o = orders[Number(btn.dataset.i)];
       if (!o) return;
       if (btn.dataset.action === "copy") copy(o.key, "License key");
+      if (btn.dataset.action === "resend") sendViaGmail(o, RESEND_INTRO);
       if (btn.dataset.action === "inspect") {
         $("inspect-input").value = o.key;
         switchTab("verifier");
@@ -861,20 +953,23 @@
         expiresAt: payload.expiresAt || null,
         valid: true,
       };
+      order.intro = issueIntro(planTitle, reason);
       orders.unshift(order);
       lastIssued = order;
 
       $("gen-key-display").textContent = key;
-      $("gen-mailto").href = keyMailto(order, `Here is your MyLifeDock Pro license key (${planTitle}).`);
+      $("gen-mailto").href = keyMailto(order, order.intro);
+      $("gen-email-preview").innerHTML = keyEmailHtml(order, order.intro);
       $("gen-result").hidden = false;
       renderAll();
       showToast("Key signed.", "success");
     });
 
     $("gen-copy-key").addEventListener("click", () => lastIssued && copy(lastIssued.key, "License key"));
+    $("gen-gmail").addEventListener("click", () => lastIssued && sendViaGmail(lastIssued, lastIssued.intro));
     $("gen-copy-email").addEventListener("click", () => {
       if (!lastIssued) return;
-      copy(`Subject: Your MyLifeDock Pro license key\n\nHi ${lastIssued.name || "there"},\n\nHere is your MyLifeDock Pro license key (${lastIssued.planTitle}).\n\n${activationText(lastIssued.key)}\n\nDinesh, MyLifeDock`, "Email text");
+      copy(`Subject: ${KEY_EMAIL_SUBJECT}\n\n${keyEmailText(lastIssued, lastIssued.intro)}`, "Email text");
     });
     $("gen-copy-row").addEventListener("click", () => {
       if (!lastIssued) return;
