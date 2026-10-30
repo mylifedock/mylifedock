@@ -38,8 +38,9 @@ There is no web/PWA app. `docs/` is the marketing website on GitHub Pages.
 - **New plan (2026-10-28):** MSME certificate obtained (Udyam `UDYAM-TS-20-0223805`, enterprise "MYLIFEDOCK", Micro,
   services, proprietor = the founder's wife, address 201 Vayuputra Towers, KPHB Phase 2, Hyderabad 500072). A **new
   Razorpay account in her name** (Proprietorship) replaces the old one. The website now uses the name "MyLifeDock"
-  (not "MyLifeDock Technologies"), the Hyderabad address and the Udyam number; the proprietor's name is still to be
-  added to the Contact, Terms and Privacy pages. After approval: new API keys + webhook + three new Payment Pages
+  (not "MyLifeDock Technologies"), the Hyderabad address, the Udyam number and the proprietor "Tulabandula Nikkitha" (commit
+  5e6f9d2 on `final-release-readiness`; the user still has to run `git push origin final-release-readiness:main`
+  to publish it, before submitting the website to the new Razorpay account). After approval: new API keys + webhook + three new Payment Pages
   (update `PAYMENT_PAGES` in `docs/assets/pricing.js`), then deactivate the old account's pages. The Apps Script has only `ORDERS_SHEET_ID` in Script Properties; it still needs
   `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (live) and `MLD_LICENSE_PRIVATE_KEY`. Until then `buy.html` cannot create
   orders and falls back to the backup Payment Pages, and licences for those payments must be issued by hand
@@ -50,18 +51,17 @@ There is no web/PWA app. `docs/` is the marketing website on GitHub Pages.
 - Google sign-in: Web, Android, iOS and Desktop clients configured in `.env` (iOS URL scheme in `Info.plist`).
 - Android/iOS in-app purchase code is complete but off until the store products exist (`STORE_PRODUCTS_LIVE`).
 
-## Resume here (after Razorpay approves the website)
+## Resume here
 
-1. Razorpay (Test Mode off) → Account & Settings → API Keys → Generate Key (`rzp_live_…`).
-2. Apps Script → Project Settings → Script Properties: add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
-   `MLD_LICENSE_PRIVATE_KEY` (contents of `%USERPROFILE%\.mylifedock\license-signing-private-key.pem`); keep `ORDERS_SHEET_ID`.
-3. Paste the current `scripts/razorpay-auto-mailer.gs`, Deploy → Manage deployments → Edit → New version.
-4. Razorpay (Live) → Webhooks → Add: the Web App URL, event `payment.captured`.
-5. Verify the script creates a live order (`<Web App URL>?action=order&plan=pro_monthly` returns `ok: true` and a
-   `rzp_live_` key id; the order stays unpaid).
-6. Real ₹25 purchase on `buy.html` → email, sheet row, activation → refund. Then an offer test in the Pricing tab.
-7. Publish the Windows installer on GitHub Releases (tag `v1.4.0`); back up the signing key offline.
-8. Later: Google Play and App Store setup (`internal-docs/STORE_BILLING_SETUP.md`).
+**2026-10-30: Razorpay live.** The new account (proprietor's name) is approved. Live keys, the webhook
+(`payment.captured`) and `MLD_LICENSE_PRIVATE_KEY` are in Apps Script, and the latest mailer is deployed;
+`?action=order&plan=pro_monthly` returns `ok: true` with a `rzp_live_` key. New backup Payment Pages
+(`sV3WIhEH` ₹25, `rBBCp0Hy` ₹250, `NjZh2xbD` ₹999) are in `docs/assets/pricing.js`. (The Razorpay notes above are history.)
+
+1. Real ₹25 purchase on `buy.html` → email, sheet row, activation → refund. Then an offer test in the Pricing tab.
+2. Deactivate the old Razorpay account's Payment Pages; send keys to the earlier ₹117 buyers if not done.
+3. Publish the Windows installer on GitHub Releases (tag `v1.4.0`); back up the signing key offline.
+4. Later: Google Play and App Store setup (`internal-docs/STORE_BILLING_SETUP.md`).
 
 ## Working rules
 

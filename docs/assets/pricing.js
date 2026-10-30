@@ -16,9 +16,9 @@
 
   // Backup checkout (regular prices) when the pricing service cannot be reached.
   var PAYMENT_PAGES = {
-    pro_monthly: "https://rzp.io/rzp/DLxeq0Q",
-    pro_yearly: "https://rzp.io/rzp/rNnSJ56",
-    pro_lifetime: "https://rzp.io/rzp/lT9C4JH4"
+    pro_monthly: "https://rzp.io/rzp/sV3WIhEH",
+    pro_yearly: "https://rzp.io/rzp/rBBCp0Hy",
+    pro_lifetime: "https://rzp.io/rzp/NjZh2xbD"
   };
 
   var PLAN_IDS = ["pro_monthly", "pro_yearly", "pro_lifetime"];

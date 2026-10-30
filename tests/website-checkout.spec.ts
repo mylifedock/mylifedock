@@ -140,7 +140,7 @@ test.describe('Website checkout (buy.html)', () => {
     await page.check('#agree');
     await page.click('#pay-btn');
     const backup = page.locator('#checkout-status a');
-    await expect(backup).toHaveAttribute('href', 'https://rzp.io/rzp/lT9C4JH4');
+    await expect(backup).toHaveAttribute('href', 'https://rzp.io/rzp/NjZh2xbD');
     await expect(backup).toHaveText('Pay the regular price (₹999) on Razorpay');
     await expect(page.locator('#checkout-status')).toContainText('for the offer price');
   });
@@ -153,7 +153,7 @@ test.describe('Website checkout (buy.html)', () => {
     await page.fill('#buyer-name', 'Asha');
     await page.check('#agree');
     await page.click('#pay-btn');
-    await expect(page.locator('#checkout-status a')).toHaveAttribute('href', 'https://rzp.io/rzp/DLxeq0Q');
+    await expect(page.locator('#checkout-status a')).toHaveAttribute('href', 'https://rzp.io/rzp/sV3WIhEH');
   });
 });
 

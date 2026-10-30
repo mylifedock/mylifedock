@@ -42,7 +42,7 @@ until approval (a secret-token webhook is the fallback if approval takes weeks).
 - [x] Razorpay → Account & Settings → Business website: `https://mylifedock.github.io` (refund and contact pages,
       with the business address, are in `docs/`).
 - [ ] Backup Payment Pages (used only if the pricing service is unreachable) in `docs/assets/pricing.js`:
-      Monthly `DLxeq0Q` ₹25, Yearly `rNnSJ56` ₹250, Lifetime `lT9C4JH4` ₹999, each with Email, Phone and a **Name** field.
+      Monthly `sV3WIhEH` ₹25, Yearly `rBBCp0Hy` ₹250, Lifetime `NjZh2xbD` ₹999, each with Email, Phone and a **Name** field.
 - [ ] Back up `~/.mylifedock/license-signing-private-key.pem` offline. Losing it means no new licenses can be issued.
 - [ ] Make one real ₹-payment end to end through `buy.html`: key emailed once, activates in the app, appears once in
       the sheet with the buyer's name and phone. Then try an offer in the Pricing tab and check the website and checkout
