@@ -67,10 +67,10 @@
   }
 
   /** Asks the pricing service to create a Razorpay order for the plan at its current price. */
-  function createOrder(plan) {
+  function createOrder(plan, email) {
     var url = apiUrl();
     if (!url) return Promise.reject(new Error("not configured"));
-    return getJson(url + "?action=order&plan=" + encodeURIComponent(plan)).then(function (data) {
+    return getJson(url + "?action=order&plan=" + encodeURIComponent(plan) + "&email=" + encodeURIComponent(email || "")).then(function (data) {
       if (!data || !data.ok || !/^order_[A-Za-z0-9]+$/.test(data.orderId || "") || !data.keyId) {
         throw new Error((data && data.error) || "unavailable");
       }

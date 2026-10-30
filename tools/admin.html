@@ -141,7 +141,16 @@
       <h1>Founder Administration</h1>
       <p class="lead">Local tool: open this file from your computer. It is not part of the app or the website, and it cannot send anything over the internet.</p>
       <p class="notice" id="insecure-notice" hidden>This browser blocks the signing functions here. Open <code>tools/admin.html</code> directly from your disk (double-click it) in Chrome, Edge or Firefox.</p>
+      <div id="saved-key-box" hidden>
+        <button type="button" class="btn btn-primary" id="use-saved-key" style="width:100%;justify-content:center;">Open with my saved key</button>
+        <p class="hint" style="text-align:center;">Reads <code id="saved-key-name">the key file</code> from your disk. The browser may ask you to allow it. <button type="button" class="btn-link" id="forget-saved-key">Forget</button></p>
+        <p class="hint" style="text-align:center;margin:14px 0;">or choose the file again:</p>
+      </div>
       <form id="login-form">
+        <div class="field" id="pick-key-field" hidden>
+          <button type="button" class="btn" id="pick-key" style="width:100%;justify-content:center;">Choose key file and remember it</button>
+          <p class="hint">Chrome/Edge: the browser remembers where the file is (not the key itself), so next time it is one click.</p>
+        </div>
         <div class="field">
           <label for="signing-key-file">License signing key (.pem)</label>
           <input type="file" id="signing-key-file" accept=".pem,application/x-pem-file">
@@ -348,7 +357,7 @@
 
         <div class="panel">
           <div class="panel-head"><h2>Privacy of this tool</h2></div>
-          <p class="muted" style="margin:0;">Orders you import and keys you issue stay in this tab's memory and disappear when you close or lock it. Nothing is saved in the browser or sent anywhere. Keep the signing key file and exported CSVs out of the repository and out of shared folders.</p>
+          <p class="muted" style="margin:0;">Orders you import and keys you issue stay in this tab's memory and disappear when you close or lock it. Nothing is sent anywhere. If you chose "remember", the browser keeps only the location of the key file (not the key) and asks before reading it; "Forget" on the unlock screen removes it. Keep the signing key file and exported CSVs out of the repository and out of shared folders.</p>
         </div>
       </section>
     </main>
@@ -516,7 +525,9 @@
       $("key-chip").textContent = signingKey ? "Signing key loaded" : "View only";
       $("key-chip").classList.toggle("ok", !!signingKey);
       if (admin) {
-        switchTab("overview");
+        // admin.html#generator (etc.) opens that tab, e.g. from hub.html.
+        const wanted = location.hash.slice(1);
+        switchTab(document.getElementById("tab-" + wanted) ? wanted : "overview");
         renderAll();
       }
     }
@@ -822,6 +833,28 @@
     }
 
     // ---------- events ----------
+    /** Imports the PEM, checks it against the app's public key, and opens the admin view. */
+    async function loadSigningKey(pem) {
+      try {
+        const body = pem.replace(/-----(BEGIN|END) PRIVATE KEY-----/g, "").replace(/\s+/g, "");
+        const key = await crypto.subtle.importKey("pkcs8", base64ToBytes(body), SIGNATURE_ALGORITHM, false, ["sign"]);
+        const probe = new TextEncoder().encode("mld-key-check");
+        const sig = await crypto.subtle.sign(SIGNATURE_ALGORITHM, key, probe);
+        if (!(await crypto.subtle.verify(SIGNATURE_ALGORITHM, await getPublicKey(), sig, probe))) {
+          showToast("This key does not match the app's license public key.", "error");
+          return false;
+        }
+        signingKey = key;
+        $("signing-key-file").value = "";
+        showToast("Signing key loaded for this tab.", "success");
+        showView(true);
+        return true;
+      } catch {
+        showToast("Could not read the key. Use the PKCS#8 .pem from generate-license-keypair.cjs.", "error");
+        return false;
+      }
+    }
+
     $("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const file = $("signing-key-file").files[0];
@@ -829,24 +862,74 @@
         showToast("Choose your license signing key (.pem) file.", "error");
         return;
       }
+      await loadSigningKey(await file.text());
+    });
+
+    // ---------- remembered key file (Chrome/Edge File System Access) ----------
+    // Only the file handle is stored (IndexedDB, this browser only); the key itself
+    // is read from disk each time, after the browser's own permission prompt.
+    const canRememberKey = typeof window.showOpenFilePicker === "function" && "indexedDB" in window;
+
+    function handleStore(mode, fn) {
+      return new Promise((resolve, reject) => {
+        const open = indexedDB.open("mld-admin", 1);
+        open.onupgradeneeded = () => open.result.createObjectStore("handles");
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction("handles", mode);
+          const req = fn(tx.objectStore("handles"));
+          tx.oncomplete = () => resolve(req.result);
+          tx.onerror = () => reject(tx.error);
+        };
+      });
+    }
+    const getSavedKeyHandle = () => handleStore("readonly", (s) => s.get("signing-key")).catch(() => null);
+    const saveKeyHandle = (h) => handleStore("readwrite", (s) => s.put(h, "signing-key"));
+    const forgetKeyHandle = () => handleStore("readwrite", (s) => s.delete("signing-key"));
+
+    async function refreshSavedKeyUi() {
+      if (!canRememberKey) return;
+      $("pick-key-field").hidden = false;
+      const handle = await getSavedKeyHandle();
+      $("saved-key-box").hidden = !handle;
+      if (handle) $("saved-key-name").textContent = handle.name;
+    }
+
+    $("pick-key").addEventListener("click", async () => {
       try {
-        const pem = await file.text();
-        const body = pem.replace(/-----(BEGIN|END) PRIVATE KEY-----/g, "").replace(/\s+/g, "");
-        const key = await crypto.subtle.importKey("pkcs8", base64ToBytes(body), SIGNATURE_ALGORITHM, false, ["sign"]);
-        const probe = new TextEncoder().encode("mld-key-check");
-        const sig = await crypto.subtle.sign(SIGNATURE_ALGORITHM, key, probe);
-        if (!(await crypto.subtle.verify(SIGNATURE_ALGORITHM, await getPublicKey(), sig, probe))) {
-          showToast("This key does not match the app's license public key.", "error");
-          return;
+        const [handle] = await window.showOpenFilePicker({ types: [{ description: "Signing key", accept: { "application/x-pem-file": [".pem"] } }] });
+        if (await loadSigningKey(await (await handle.getFile()).text())) {
+          await saveKeyHandle(handle);
+          refreshSavedKeyUi();
         }
-        signingKey = key;
-        $("signing-key-file").value = "";
-        showToast("Signing key loaded for this tab.", "success");
-        showView(true);
-      } catch {
-        showToast("Could not read the key. Use the PKCS#8 .pem from generate-license-keypair.cjs.", "error");
+      } catch (err) {
+        if (err?.name !== "AbortError") showToast("Could not open the key file.", "error");
       }
     });
+
+    $("use-saved-key").addEventListener("click", async () => {
+      const handle = await getSavedKeyHandle();
+      if (!handle) return refreshSavedKeyUi();
+      try {
+        if ((await handle.requestPermission({ mode: "read" })) !== "granted") {
+          showToast("Permission to read the key file was not given.", "error");
+          return;
+        }
+        await loadSigningKey(await (await handle.getFile()).text());
+      } catch {
+        showToast("The saved key file was moved or deleted. Choose it again.", "error");
+        await forgetKeyHandle();
+        refreshSavedKeyUi();
+      }
+    });
+
+    $("forget-saved-key").addEventListener("click", async () => {
+      await forgetKeyHandle();
+      refreshSavedKeyUi();
+      showToast("The browser no longer remembers the key file.", "info");
+    });
+
+    refreshSavedKeyUi();
 
     $("continue-without-key").addEventListener("click", () => {
       signingKey = null;

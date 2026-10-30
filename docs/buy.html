@@ -58,6 +58,10 @@
           <label for="buyer-name">Your name</label>
           <input type="text" id="buyer-name" autocomplete="name" maxlength="80" required>
         </div>
+        <div class="field">
+          <label for="buyer-email">Email for your licence key</label>
+          <input type="email" id="buyer-email" autocomplete="email" maxlength="254" inputmode="email" required>
+        </div>
         <label class="agree">
           <input type="checkbox" id="agree" required>
           <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and the <a href="refunds.html" target="_blank" rel="noopener">Refund &amp; delivery policy</a>.</span>
@@ -65,12 +69,12 @@
 
         <button type="submit" class="btn btn-primary" id="pay-btn">Pay securely</button>
         <p class="checkout-status" id="checkout-status" role="status" aria-live="polite"></p>
-        <p class="muted" style="margin:12px 0 0;font-size:13px;">Razorpay asks for your email and mobile number; the licence key is sent to that email. Prices are in Indian rupees.</p>
+        <p class="muted" style="margin:12px 0 0;font-size:13px;">The licence key is sent to the email above. Razorpay may also ask for your mobile number. Prices are in Indian rupees.</p>
       </form>
 
       <div class="checkout-success" id="checkout-success" hidden>
         <h2 style="margin-top:0;">Payment received. Thank you!</h2>
-        <p>Your licence key is on its way to the email you entered in Razorpay. It usually arrives within a few minutes; please check your spam folder too.</p>
+        <p>Your licence key is on its way to <strong id="sent-to">your email</strong>. It usually arrives within a few minutes; please check your spam folder too.</p>
         <p>Then open MyLifeDock → <strong>Settings &amp; Backup → Plan</strong>, paste the key and choose <strong>Activate Key</strong>.</p>
         <p class="muted" style="margin-bottom:0;">Payment ID: <code id="payment-id"></code>. No email after an hour? Write to <a href="mailto:mylifedock@gmail.com">mylifedock@gmail.com</a> with this payment ID.</p>
       </div>
@@ -84,9 +88,10 @@
         <a href="privacy.html">Privacy policy</a>
         <a href="terms.html">Terms of service</a>
         <a href="refunds.html">Refunds &amp; delivery</a>
+        <a href="business.html">Business details</a>
         <a href="contact.html">Contact</a>
       </nav>
-      <p>© 2026 MyLifeDock, a sole proprietorship of Tulabandula Nikkitha. All rights reserved.</p>
+      <p>© 2026 MyLifeDock. All rights reserved.</p>
     </div>
   </footer>
 
@@ -196,6 +201,12 @@
           document.getElementById("buyer-name").focus();
           return;
         }
+        var email = document.getElementById("buyer-email").value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setStatus("Please enter a valid email: your licence key is sent there.", true);
+          document.getElementById("buyer-email").focus();
+          return;
+        }
         if (!document.getElementById("agree").checked) {
           setStatus("Please accept the Terms and the Refund & delivery policy.", true);
           return;
@@ -208,7 +219,8 @@
         busy = true;
         payBtn.disabled = true;
         setStatus("Opening secure checkout…", false);
-        Promise.all([P.createOrder(plan), loadCheckoutScript()])
+        document.getElementById("sent-to").textContent = email;
+        Promise.all([P.createOrder(plan, email), loadCheckoutScript()])
           .then(function (results) {
             var order = results[0];
             var rzp = new window.Razorpay({
@@ -218,8 +230,9 @@
               currency: order.currency,
               name: "MyLifeDock",
               description: order.description,
-              prefill: { name: name },
-              notes: { name: name },
+              prefill: { name: name, email: email },
+              readonly: { email: true },
+              notes: { name: name, email: email },
               theme: { color: "#7c3aed" },
               handler: function (response) {
                 succeeded(response && response.razorpay_payment_id);

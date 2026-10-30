@@ -30,7 +30,7 @@ async function setup(page: Page, { pricing = LIVE, pricingStatus = 200, order, c
     if (url.searchParams.get('action') === 'pricing') {
       return route.fulfill({ status: pricingStatus, headers: CORS, contentType: 'application/json', body: JSON.stringify(pricing) });
     }
-    orderRequests.push(url.searchParams.get('plan') ?? '');
+    orderRequests.push(`${url.searchParams.get('plan')} ${url.searchParams.get('email')}`);
     return route.fulfill({
       headers: CORS,
       contentType: 'application/json',
@@ -98,22 +98,26 @@ test.describe('Website checkout (buy.html)', () => {
     await expect(page.locator('#checkout-status')).toHaveText('Please enter your name.');
     await page.fill('#buyer-name', 'Asha Rao');
     await page.click('#pay-btn');
+    await expect(page.locator('#checkout-status')).toContainText('valid email');
+    await page.fill('#buyer-email', 'asha@example.com');
+    await page.click('#pay-btn');
     await expect(page.locator('#checkout-status')).toContainText('accept the Terms');
     expect(orderRequests).toEqual([]);
 
     await page.check('#agree');
     await page.click('#pay-btn');
     await expect.poll(() => page.evaluate(() => (window as unknown as { __rzp?: { opened?: boolean } }).__rzp?.opened)).toBe(true);
-    expect(orderRequests).toEqual(['pro_lifetime']);
+    expect(orderRequests).toEqual(['pro_lifetime asha@example.com']);
     const options = await page.evaluate(() => {
       const o = (window as unknown as { __rzp: { options: Record<string, unknown> } }).__rzp.options;
-      return { key: o.key, order_id: o.order_id, amount: o.amount, currency: o.currency, notes: o.notes, prefill: o.prefill };
+      return { key: o.key, order_id: o.order_id, amount: o.amount, currency: o.currency, notes: o.notes, prefill: o.prefill, readonly: o.readonly };
     });
-    expect(options).toEqual({ key: 'rzp_test_KEY', order_id: 'order_TEST1', amount: 69900, currency: 'INR', notes: { name: 'Asha Rao' }, prefill: { name: 'Asha Rao' } });
+    expect(options).toEqual({ key: 'rzp_test_KEY', order_id: 'order_TEST1', amount: 69900, currency: 'INR', notes: { name: 'Asha Rao', email: 'asha@example.com' }, prefill: { name: 'Asha Rao', email: 'asha@example.com' }, readonly: { email: true } });
 
     await page.evaluate(() => (window as unknown as { __rzp: { options: { handler: (r: unknown) => void } } }).__rzp.options.handler({ razorpay_payment_id: 'pay_TEST42' }));
     await expect(page.locator('#checkout-success')).toBeVisible();
     await expect(page.locator('#payment-id')).toHaveText('pay_TEST42');
+    await expect(page.locator('#sent-to')).toHaveText('asha@example.com');
     await expect(page.locator('#checkout-form')).toBeHidden();
   });
 
@@ -125,6 +129,7 @@ test.describe('Website checkout (buy.html)', () => {
     await expect(page.locator('#pay-btn')).toHaveText('Pay ₹25 securely');
     await page.check('input[value="pro_yearly"]');
     await page.fill('#buyer-name', 'Ravi');
+    await page.fill('#buyer-email', 'buyer@example.com');
     await page.check('#agree');
     await page.click('#pay-btn');
     await expect.poll(() => page.evaluate(() => !!(window as unknown as { __rzp?: unknown }).__rzp)).toBe(true);
@@ -137,6 +142,7 @@ test.describe('Website checkout (buy.html)', () => {
     await page.goto('/docs/buy.html?plan=pro_lifetime');
     await expect(page.locator('#pay-btn')).toHaveText('Pay ₹699 securely');
     await page.fill('#buyer-name', 'Asha');
+    await page.fill('#buyer-email', 'buyer@example.com');
     await page.check('#agree');
     await page.click('#pay-btn');
     const backup = page.locator('#checkout-status a');
@@ -151,6 +157,7 @@ test.describe('Website checkout (buy.html)', () => {
     await expect(page.locator('input[value="pro_monthly"]')).toBeChecked();
     await expect(page.locator('#pay-btn')).toHaveText('Pay ₹25 securely');
     await page.fill('#buyer-name', 'Asha');
+    await page.fill('#buyer-email', 'buyer@example.com');
     await page.check('#agree');
     await page.click('#pay-btn');
     await expect(page.locator('#checkout-status a')).toHaveAttribute('href', 'https://rzp.io/rzp/sV3WIhEH');

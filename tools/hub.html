@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>MyLifeDock Founder Hub</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%234f46e5'/%3E%3Cpath d='M12 19s5.5-2.7 5.5-6.9V7.3L12 5.2 6.5 7.3v4.8C6.5 16.3 12 19 12 19z' fill='none' stroke='white' stroke-width='1.8'/%3E%3C/svg%3E">
+  <!--
+    Local founder start page. Open it from disk (bookmark it); never publish tools/.
+    It reads only the public ?action=pricing endpoint; everything else is links.
+  -->
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090b10;
+      --panel: #10141d;
+      --panel-2: #161b26;
+      --border: rgba(255, 255, 255, 0.09);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --violet: #7c3aed;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    a { color: var(--accent); }
+    code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.9em; color: #7dd3fc; }
+    h1, h2, h3 { margin: 0; line-height: 1.25; }
+    p { margin: 0 0 12px; }
+    [hidden] { display: none !important; }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel-2); color: var(--text); font: inherit; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; cursor: pointer; }
+    .btn:hover { border-color: rgba(255, 255, 255, 0.25); }
+    .btn:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .btn-primary { background: linear-gradient(135deg, var(--violet), #4f46e5); border-color: transparent; color: #fff; }
+    .btn-sm { padding: 5px 10px; font-size: 12.5px; border-radius: 8px; }
+
+    header { padding: 28px 20px 8px; max-width: 1100px; margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+    .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--violet), #2563eb); }
+    header p { color: var(--muted); margin: 8px 0 0; }
+    main { max-width: 1100px; margin: 0 auto; padding: 16px 20px 64px; }
+    .panel { padding: 22px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); }
+    .panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .panel-head h2 { font-size: 17px; }
+    .muted { color: var(--muted); }
+
+    .hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .action { display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 14px; border: 1px solid var(--border); background: var(--panel); color: var(--text); text-decoration: none; }
+    .action:hover { border-color: rgba(56, 189, 248, 0.5); }
+    .action strong { font-size: 16px; }
+    .action span { color: var(--muted); font-size: 13.5px; }
+    .action.primary { background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(79, 70, 229, 0.15)); border-color: rgba(124, 58, 237, 0.5); }
+
+    .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .plan { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--panel-2); }
+    .plan .name { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    .plan .price { font-size: 24px; font-weight: 800; margin-top: 4px; }
+    .plan .price s { font-size: 15px; color: var(--muted); font-weight: 600; margin-left: 6px; }
+    .plan .offer { font-size: 13px; margin-top: 4px; }
+    .on { color: var(--green); }
+    .off { color: var(--muted); }
+    .bad { color: var(--red); }
+    .status-line { font-size: 13px; color: var(--muted); margin-top: 12px; }
+
+    .links { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+    .links h3 { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .links ul { list-style: none; margin: 0; padding: 0; }
+    .links li { margin: 0 0 6px; }
+
+    details { border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2); margin-bottom: 10px; }
+    summary { cursor: pointer; padding: 13px 16px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--muted); font-weight: 400; }
+    details[open] summary::after { content: "–"; }
+    details .body { padding: 0 16px 14px; color: #cbd5e1; font-size: 14.5px; }
+    details ol, details ul { margin: 0 0 8px; padding-left: 20px; }
+    details li { margin-bottom: 6px; }
+    .note { padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.07); font-size: 13.5px; margin-top: 8px; }
+
+    @media (max-width: 640px) {
+      header, main { padding-left: 16px; padding-right: 16px; }
+      .panel { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>MyLifeDock Founder Hub</div>
+    <p>Your start page for keys, prices, payments and the website. Local file: bookmark it, never publish it.</p>
+  </header>
+
+  <main>
+    <div class="hero">
+      <a class="action primary" href="admin.html"><strong>Open Admin tool →</strong><span>Orders, renewals, revenue. Load the signing key once with "remember" and later it is one click.</span></a>
+      <a class="action" href="admin.html#generator"><strong>Issue a license key →</strong><span>For a payment without an email, a support case or a gift. Opens straight on "Issue key".</span></a>
+      <a class="action" href="admin.html#verifier"><strong>Check a customer's key →</strong><span>Paste a key to see its email, plan and expiry.</span></a>
+    </div>
+
+    <section class="panel" aria-labelledby="live-title">
+      <div class="panel-head">
+        <h2 id="live-title">Live prices and offers (what customers see now)</h2>
+        <button type="button" class="btn btn-sm" id="refresh">Refresh</button>
+      </div>
+      <div class="plans" id="plans"><p class="muted">Loading…</p></div>
+      <p class="status-line" id="live-status"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="links-title">
+      <div class="panel-head"><h2 id="links-title">Quick links</h2></div>
+      <div class="links">
+        <div>
+          <h3>Prices and orders</h3>
+          <ul>
+            <li><a href="https://docs.google.com/spreadsheets/u/0/?q=MyLifeDock%20Orders" target="_blank" rel="noopener">MyLifeDock Orders sheet (Pricing tab)</a></li>
+            <li><a href="https://script.google.com/home" target="_blank" rel="noopener">Apps Script projects</a></li>
+            <li><a href="https://script.google.com/home/executions" target="_blank" rel="noopener">Apps Script executions (errors)</a></li>
+            <li><a id="pricing-json" href="#" target="_blank" rel="noopener">Pricing JSON (health check)</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Razorpay</h3>
+          <ul>
+            <li><a href="https://dashboard.razorpay.com/app/payments" target="_blank" rel="noopener">Payments (refunds)</a></li>
+            <li><a href="https://dashboard.razorpay.com/app/paymentpages" target="_blank" rel="noopener">Payment Pages (backup checkout)</a></li>
+            <li><a href="https://dashboard.razorpay.com/app/webhooks" target="_blank" rel="noopener">Webhooks</a></li>
+            <li><a href="https://dashboard.razorpay.com/app/settlements" target="_blank" rel="noopener">Settlements</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Website</h3>
+          <ul>
+            <li><a href="https://mylifedock.github.io/" target="_blank" rel="noopener">Home</a></li>
+            <li><a href="https://mylifedock.github.io/buy.html" target="_blank" rel="noopener">Buy page</a></li>
+            <li><a href="https://mylifedock.github.io/contact.html" target="_blank" rel="noopener">Contact (business details)</a></li>
+            <li><a href="https://github.com/mylifedock/mylifedock.github.io/actions" target="_blank" rel="noopener">GitHub deploys</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Mail</h3>
+          <ul>
+            <li><a href="https://mail.google.com/" target="_blank" rel="noopener">Gmail (mylifedock@gmail.com)</a></li>
+            <li><a href="https://mail.google.com/mail/#sent" target="_blank" rel="noopener">Sent licence emails</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="howto-title">
+      <div class="panel-head"><h2 id="howto-title">How to…</h2></div>
+
+      <details>
+        <summary>Start a discount offer</summary>
+        <div class="body">
+          <ol>
+            <li>Open the <strong>Pricing</strong> tab of the MyLifeDock Orders sheet.</li>
+            <li>On the plan's row: tick the <strong>Offer on</strong> checkbox (a real tick, not typed text).</li>
+            <li><strong>Offer price ₹</strong>: a whole number <em>lower</em> than <strong>Price ₹</strong> (e.g. 199 for Lifetime 999 is fine; 999 or more is ignored).</li>
+            <li><strong>Offer text</strong>: e.g. "Diwali offer" (shown on the website).</li>
+            <li><strong>Offer ends (last day)</strong>: today or a later date, or leave it empty for no end.</li>
+            <li>Wait one minute, then press <strong>Refresh</strong> above. The plan should say "Offer on".</li>
+          </ol>
+          <p>The website, the Windows app and the Razorpay checkout all use the offer price. It stops by itself after the last day.</p>
+          <p class="note">Backup Payment Pages keep their fixed amount (they are only used if the main checkout is down). Buyers there get the plan of the amount they paid.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Change a regular price</summary>
+        <div class="body">
+          <ol>
+            <li>Change <strong>Price ₹</strong> (and <strong>Price $</strong> if needed) in the Pricing tab. Live in about a minute.</li>
+            <li>Razorpay → Payment Pages: change that plan's backup page amount to match.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>Someone paid but did not get a key</summary>
+        <div class="body">
+          <ol>
+            <li>Ask them to check spam for "Your MyLifeDock Pro license key".</li>
+            <li>Look for their row in the Orders sheet. If it is there, copy the <strong>License Key</strong> and resend it (Admin tool → Inspect key, or a normal Gmail reply).</li>
+            <li>No row? Check Razorpay → Payments that it is <em>Captured</em>, then <a href="https://script.google.com/home/executions" target="_blank" rel="noopener">Apps Script executions</a> for an error.</li>
+            <li>Issue one by hand: <a href="admin.html#generator">Admin → Issue key</a>, enter the email and plan, <strong>Send via Gmail</strong> (paste with Ctrl+V, Send), then <strong>Copy row</strong> and paste it into the Orders sheet so it is on record.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>Refund a payment</summary>
+        <div class="body">
+          <ol>
+            <li>Razorpay → Payments → open the payment → <strong>Refund</strong>.</li>
+            <li>Write "Refunded" next to the order in the Orders sheet.</li>
+          </ol>
+          <p class="note">Keys work offline, so a refunded key cannot be switched off remotely. That is why refunds are limited to 7 days.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Send renewal reminders</summary>
+        <div class="body">
+          <ol>
+            <li>Orders sheet → File → Download → Comma-separated values (.csv).</li>
+            <li><a href="admin.html">Admin tool</a> → <strong>Import orders CSV</strong>. "Renewals to follow up" lists plans ending soon, each with an email button.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>Update the Apps Script (after a code change)</summary>
+        <div class="body">
+          <ol>
+            <li>Copy all of <code>scripts/razorpay-auto-mailer.gs</code> and paste it over the code in the MyLifeDock-License-Mailer project. Save.</li>
+            <li>Deploy → Manage deployments → pencil → Version: <strong>New version</strong> → Deploy. The URL stays the same.</li>
+            <li>Press <strong>Refresh</strong> above to check that it still answers.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>Open this hub and the Admin tool quickly</summary>
+        <div class="body">
+          <ul>
+            <li>Bookmark this page in Chrome or Edge (Ctrl+D). The Admin tool needs Chrome or Edge for the one-click "remember my key".</li>
+            <li>First time in the Admin tool: <strong>Choose key file and remember it</strong> → pick <code>%USERPROFILE%\.mylifedock\license-signing-private-key.pem</code>. Later: <strong>Open with my saved key</strong>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>Keep things safe</summary>
+        <div class="body">
+          <ul>
+            <li>Never send or upload the <code>.pem</code> signing key. Keep a copy on a USB stick or offline drive: if it is lost, no new keys can be made for existing app versions.</li>
+            <li>Razorpay key secret lives only in Apps Script → Script Properties.</li>
+            <li>The <code>tools/</code> folder is for your computer only; it is not part of the website.</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    // Same web app as PRICING_API_URL in docs/assets/pricing.js and src/config/pricingConfig.ts.
+    const PRICING_API_URL = "https://script.google.com/macros/s/AKfycbw44GxaH1cqekPHWf3C9pYyxD6nuH1VeJhXLbnYDIY0XtQp_IIBmn57EXywRgTlHd3y/exec";
+    const $ = (id) => document.getElementById(id);
+
+    function esc(value) {
+      return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+    }
+
+    async function loadPricing() {
+      $("live-status").textContent = "Checking…";
+      try {
+        const res = await fetch(PRICING_API_URL + "?action=pricing", { cache: "no-store" });
+        const data = await res.json();
+        if (!data.ok) throw new Error("not ok");
+        $("plans").innerHTML = Object.values(data.plans).map((p) => {
+          const o = p.offer;
+          const price = o ? `₹${o.priceINR}<s>₹${p.priceINR}</s>` : `₹${p.priceINR}`;
+          const offer = o
+            ? `<div class="offer on">Offer on: ${esc(o.text)}${o.endsOn ? " · until " + esc(o.endsOn) : ""}</div>`
+            : `<div class="offer off">No offer</div>`;
+          return `<div class="plan"><div class="name">${esc(p.label)}</div><div class="price">${price}</div>${offer}</div>`;
+        }).join("");
+        $("live-status").textContent = "Checked " + new Date().toLocaleTimeString() + ". Sheet changes show here within about a minute.";
+      } catch {
+        $("plans").innerHTML = "";
+        $("live-status").innerHTML = '<span class="bad">Could not reach the pricing service.</span> Open the Pricing JSON link below; if it errors, check Apps Script executions.';
+      }
+    }
+
+    $("pricing-json").href = PRICING_API_URL + "?action=pricing";
+    $("refresh").addEventListener("click", loadPricing);
+    loadPricing();
+  </script>
+</body>
+</html>

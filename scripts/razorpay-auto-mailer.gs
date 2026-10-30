@@ -288,10 +288,27 @@ function chargeFor(planPricing) {
   return planPricing.offer ? planPricing.offer.priceINR : planPricing.priceINR;
 }
 
+/**
+ * A usable customer email, or "". Razorpay's checkout can skip the email field
+ * and then reports the placeholder void@razorpay.com.
+ */
+function cleanEmail(value) {
+  var s = String(value || "").trim().toLowerCase();
+  if (s.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) || s === "void@razorpay.com") {
+    return "";
+  }
+  return s;
+}
+
 /** Creates the Razorpay order for one plan at the current (offer) price. */
-function createOrder(planId) {
+function createOrder(planId, email) {
   if (!Object.prototype.hasOwnProperty.call(PLANS, planId)) {
     return { ok: false, error: "unknown plan" };
+  }
+  var notes = { plan: planId, source: ORDER_SOURCE };
+  var buyerEmail = cleanEmail(email);
+  if (buyerEmail) {
+    notes.email = buyerEmail;
   }
 
   // Simple abuse guard: order creation is public.
@@ -305,11 +322,12 @@ function createOrder(planId) {
 
   var planPricing = getPricing()[planId];
   var rupees = chargeFor(planPricing);
+  notes.price_inr = String(rupees);
   var order = razorpayRequest("post", "orders", {
     amount: rupees * 100,
     currency: "INR",
     receipt: "mld_" + planId + "_" + Date.now(),
-    notes: { plan: planId, source: ORDER_SOURCE, price_inr: String(rupees) }
+    notes: notes
   });
   if (!order || !order.id) {
     return { ok: false, error: "unavailable" };
@@ -338,7 +356,7 @@ function doGet(e) {
       return jsonResponse({ ok: true, currency: "INR", plans: getPricing() });
     }
     if (action === "order") {
-      return jsonResponse(createOrder(String(e.parameter.plan || "")));
+      return jsonResponse(createOrder(String(e.parameter.plan || ""), e.parameter.email));
     }
   } catch (err) {
     // For example "Missing Script Property: RAZORPAY_KEY_ID" (see Apps Script -> Executions).
@@ -416,17 +434,27 @@ function planForAmount(amountInRupees, pricing) {
   return best ? planInfo(best) : TEST_PASS;
 }
 
+/** The order this script created for a website checkout payment, or null (Payment Pages). */
+function websiteOrderFor(paymentEntity) {
+  if (!paymentEntity.order_id || !/^order_[A-Za-z0-9]+$/.test(paymentEntity.order_id)) {
+    return null;
+  }
+  var order = fetchRazorpay("orders/" + paymentEntity.order_id);
+  return order && order.notes && order.notes.source === ORDER_SOURCE ? order : null;
+}
+
 /** The plan this payment bought. */
-function planForPayment(paymentEntity) {
+function planForPayment(paymentEntity, order) {
   // Website checkout: the plan was written on the order by createOrder (customers cannot change order notes).
-  if (paymentEntity.order_id && /^order_[A-Za-z0-9]+$/.test(paymentEntity.order_id)) {
-    var order = fetchRazorpay("orders/" + paymentEntity.order_id);
-    var notes = (order && order.notes) || {};
-    if (notes.source === ORDER_SOURCE && Object.prototype.hasOwnProperty.call(PLANS, notes.plan) && paymentEntity.amount >= order.amount) {
-      return planInfo(notes.plan);
-    }
+  if (order && Object.prototype.hasOwnProperty.call(PLANS, order.notes.plan) && paymentEntity.amount >= order.amount) {
+    return planInfo(order.notes.plan);
   }
   return planForAmount(paymentEntity.amount / 100, getPricing());
+}
+
+/** Where the key goes: the email typed on buy.html (saved on the order), else the one Razorpay collected. */
+function customerEmailFor(paymentEntity, order) {
+  return cleanEmail(order && order.notes.email) || cleanEmail(paymentEntity.email) || cleanEmail((paymentEntity.notes || {}).email);
 }
 
 /** The customer's name: the website checkout and Payment Pages both put it in the payment notes. */
@@ -442,9 +470,14 @@ function customerNameFrom(paymentEntity) {
 }
 
 function issueLicenseForVerifiedPayment(paymentEntity) {
-  var customerEmail = paymentEntity.email;
+  var order = websiteOrderFor(paymentEntity);
+  var customerEmail = customerEmailFor(paymentEntity, order);
   if (!customerEmail) {
-    return jsonResponse({ status: "ignored", reason: "no email in payment" });
+    GmailApp.sendEmail(FOUNDER_EMAIL,
+      "[MyLifeDock] Manual license needed: " + paymentEntity.id,
+      "A verified payment of ₹" + (paymentEntity.amount / 100) + " (payment " + paymentEntity.id + ", mobile " +
+      (paymentEntity.contact || "unknown") + ") has no email address. Contact the buyer and issue the key in the admin tool.");
+    return jsonResponse({ status: "ignored", reason: "no email; founder notified" });
   }
 
   if (paymentEntity.currency !== "INR") {
@@ -457,7 +490,7 @@ function issueLicenseForVerifiedPayment(paymentEntity) {
   }
 
   var amountInRupees = paymentEntity.amount / 100;
-  var plan = planForPayment(paymentEntity);
+  var plan = planForPayment(paymentEntity, order);
   var customerName = customerNameFrom(paymentEntity);
   var phone = truncate(paymentEntity.contact || "", 20);
 
