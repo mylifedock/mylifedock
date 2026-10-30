@@ -301,6 +301,26 @@ test.describe('Pricing tab: one place for prices and offers', () => {
     expect(m.get({ action: 'order', plan: '__proto__' })).toEqual({ ok: false, error: 'unknown plan' });
   });
 
+  test('The key goes to the email typed on buy.html; a payment without a real email notifies the founder', () => {
+    const m = runMailer({
+      pay_E1: payment('pay_E1', 25, { order_id: 'order_T1', email: 'void@razorpay.com' }), // Razorpay skipped the email
+      pay_E2: payment('pay_E2', 25, { email: 'void@razorpay.com' }), // backup page, no email at all
+    });
+    expect(m.get({ action: 'order', plan: 'pro_monthly', email: ' Asha@Example.com ' }).ok).toBe(true);
+    expect(m.orderRequests[0]).toMatchObject({ notes: { plan: 'pro_monthly', email: 'Asha@Example.com' } });
+    expect(m.get({ action: 'order', plan: 'pro_monthly', email: 'not-an-email' }).ok).toBe(true);
+    expect((m.orderRequests[1] as { notes: Record<string, string> }).notes.email).toBeUndefined();
+
+    expect(m.post('pay_E1').status).toBe('success');
+    expect(m.mails.map((x) => x.to)).toEqual(['Asha@Example.com']);
+    expect(decodeKey(String(m.rows[1][5])).payload.email).toBe('asha@example.com');
+
+    expect(m.post('pay_E2')).toEqual({ status: 'ignored', reason: 'no email; founder notified' });
+    expect(m.mails[1]).toMatchObject({ to: 'mylifedock@gmail.com' });
+    expect(m.mails[1].subject).toContain('pay_E2');
+    expect(m.rows).toHaveLength(2);
+  });
+
   test('Order creation is rate limited', () => {
     const m = runMailer({});
     for (let i = 0; i < 60; i++) expect(m.get({ action: 'order', plan: 'pro_monthly' }).ok).toBe(true);

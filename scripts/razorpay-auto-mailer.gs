@@ -293,8 +293,8 @@ function chargeFor(planPricing) {
  * and then reports the placeholder void@razorpay.com.
  */
 function cleanEmail(value) {
-  var s = String(value || "").trim().toLowerCase();
-  if (s.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) || s === "void@razorpay.com") {
+  var s = String(value || "").trim();
+  if (s.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) || s.toLowerCase() === "void@razorpay.com") {
     return "";
   }
   return s;

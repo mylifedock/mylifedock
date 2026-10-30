@@ -24,29 +24,28 @@ cd src-tauri; cargo test; cargo audit
 
 Prices and offers: [PRICING_AND_OFFERS.md](PRICING_AND_OFFERS.md).
 
-**Status 2026-10-27:** the website is under Razorpay review; live API keys are available only after approval.
-Until then, website checkout falls back to the backup Payment Pages and licences are issued by hand from
-`tools/admin.html` (Issue key → Send via Gmail, paste with Ctrl+V and send → Copy row for Orders sheet).
-**2026-10-28:** Razorpay declined the website until an MSME (Udyam) or GST certificate is uploaded; keys stay manual
-until approval (a secret-token webhook is the fallback if approval takes weeks).
+**Status 2026-10-31: live.** Razorpay account in the proprietor's name (Udyam registered) approved; automatic
+checkout and licence emails verified with a real payment. Manual keys: `tools/hub.html` → Issue a license key.
 
 - [x] Apps Script deployed with the pricing service; `setupOrdersSheet` run (Orders sheet + Pricing tab exist,
       `ORDERS_SHEET_ID` set). `?action=pricing` verified live.
-- [ ] Paste the latest `scripts/razorpay-auto-mailer.gs` (logs Razorpay errors to Executions), Deploy → New version.
-- [ ] Script Properties: `MLD_LICENSE_PRIVATE_KEY` (can be added now), `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET`
-      (live, after Razorpay approves the website).
-- [ ] Razorpay webhook in **Live** mode: the Web App URL, event `payment.captured`.
-- [ ] Check the ₹117 collected before the keys existed: issue licences by hand to any real buyer who got none.
+- [x] Latest `scripts/razorpay-auto-mailer.gs` deployed (buyer email from `buy.html` saved on the order; founder
+      emailed when a payment has no email).
+- [x] Script Properties: `MLD_LICENSE_PRIVATE_KEY`, live `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET`.
+- [x] Razorpay webhook in **Live** mode: the Web App URL, event `payment.captured`.
+- [ ] Check the ₹117 collected on the old account before the keys existed: issue licences by hand to any real buyer
+      who got none. Deactivate the old account's Payment Pages.
 - [x] Put the Web App URL (`https://script.google.com/macros/s/…/exec`) in `PRICING_API_URL` in both
       `src/config/pricingConfig.ts` and `docs/assets/pricing.js`.
-- [x] Razorpay → Account & Settings → Business website: `https://mylifedock.github.io` (refund and contact pages,
-      with the business address, are in `docs/`).
-- [ ] Backup Payment Pages (used only if the pricing service is unreachable) in `docs/assets/pricing.js`:
-      Monthly `sV3WIhEH` ₹25, Yearly `rBBCp0Hy` ₹250, Lifetime `NjZh2xbD` ₹999, each with Email, Phone and a **Name** field.
+- [x] Razorpay → Account & Settings → Business website: `https://mylifedock.github.io` (refund and contact pages;
+      proprietor, Udyam number and address on `docs/business.html`, linked from every footer).
+- [x] Backup Payment Pages (used only if the pricing service is unreachable) in `docs/assets/pricing.js`:
+      Monthly `sV3WIhEH` ₹25, Yearly `rBBCp0Hy` ₹250, Lifetime `NjZh2xbD` ₹999 (Email and Phone are built in).
 - [ ] Back up `~/.mylifedock/license-signing-private-key.pem` offline. Losing it means no new licenses can be issued.
-- [ ] Make one real ₹-payment end to end through `buy.html`: key emailed once, activates in the app, appears once in
-      the sheet with the buyer's name and phone. Then try an offer in the Pricing tab and check the website and checkout
-      show it. Import the sheet CSV in `tools/admin.html` and check the orders show as valid.
+- [x] Real payment end to end through `buy.html`: key emailed. Offer from the Pricing tab shown on the website and
+      charged by Razorpay.
+- [ ] Re-test once with the email field (key goes to the typed email), check activation in the app and the sheet row,
+      untick the test offer, and import the sheet CSV in `tools/admin.html` to check the orders show as valid.
 - [ ] Re-issue keys sold before the RSA switch (old HMAC keys are rejected with a support message).
 
 ## 2. Google sign-in for Drive backup **(you)**

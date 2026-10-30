@@ -6,7 +6,7 @@ Sheet. One edit there changes, within about a minute:
 | What | How it follows the sheet |
 | :--- | :--- |
 | Website pricing cards, offer line and top banner | `docs/landing.html` loads `?action=pricing` from the Apps Script |
-| Website checkout (`docs/buy.html`) | Asks the Apps Script to create the Razorpay order at the current price (`?action=order&plan=…`) |
+| Website checkout (`docs/buy.html`) | Collects name and email, then asks the Apps Script to create the Razorpay order at the current price (`?action=order&plan=…&email=…`); the key is emailed to that address |
 | Amount Razorpay charges | The order amount set by the Apps Script |
 | License plan in the email | Read from the order (the script writes the plan on it), so offers never confuse it |
 | Windows app Upgrade screen | Loads the same prices; **Pay** opens the website checkout |
@@ -21,13 +21,16 @@ Created by running `setupOrdersSheet` once in the Apps Script editor.
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | pro_monthly | Monthly Pro | 25 | 0.49 | ☐ | | | |
 | pro_yearly | Yearly Pro | 250 | 4.99 | ☐ | | | |
-| pro_lifetime | Lifetime | 999 | 19.99 | ☑ | 699 | Diwali offer | 15/11/2026 |
+| pro_lifetime | Lifetime | 999 | 19.99 | ☑ | 699 | Diwali offer | 2026-11-15 |
 
 Rules the script applies:
 - Prices are whole rupees ≥ ₹1; an invalid cell falls back to the default price.
 - An offer applies only when **Offer on** is ticked, the offer price is **below** the regular price, and today (India time)
   is on or before **Offer ends**. Empty end date = runs until you untick it.
 - Prices are cached for 60 seconds, so changes show within about a minute.
+- Type dates as `2026-11-15` (year-month-day). A date like `05-11-2026` is read in the sheet's locale (US = 11 May),
+  so the offer may count as already ended. File → Settings → Locale: India avoids this.
+- Check what customers see: `tools/hub.html` → Live prices and offers.
 - Payments are always in rupees; dollar prices are only displayed (offer dollar prices are scaled automatically).
 
 ## One-time setup
